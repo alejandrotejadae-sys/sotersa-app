@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+/* ============================================================
+   SOTERSA — tokens de marca
+   Colores extraidos por muestreo de pixeles del logo oficial.
+   NO inventar colores nuevos ni escribir hex sueltos en los
+   componentes: todo color sale de aqui.
+   ============================================================ */
+
+:root {
+  /* --- Azul SOTERSA (primario) --- */
+  --sot-azul-50: #eaf6fc;
+  --sot-azul-100: #cfeaf8;
+  --sot-azul-200: #a3d8f1;
+  --sot-azul-300: #7fd4f0; /* cian claro del logo (realce) */
+  --sot-azul-400: #45b4e2;
+  --sot-azul-500: #1b9cd8; /* PRIMARIO — bin dominante del logo */
+  --sot-azul-600: #1580b4;
+  --sot-azul-700: #0f6693;
+  --sot-azul-800: #0a4c7a; /* azul profundo del logo (base oscura) */
+  --sot-azul-900: #073757;
+
+  /* --- Grafito (texto y superficies) --- */
+  --sot-gris-50: #f6f7f8;
+  --sot-gris-100: #eceef0;
+  --sot-gris-200: #d7dbdf;
+  --sot-gris-300: #b4bcc3;
+  --sot-gris-400: #8b959f;
+  --sot-gris-500: #6b757f;
+  --sot-gris-600: #525b64;
+  --sot-gris-700: #3e454c;
+  --sot-gris-800: #2a2f34;
+  --sot-gris-900: #191d21;
+
+  /* --- Severidad operativa ---
+     Deliberadamente FUERA de la paleta azul de marca. Un guardia
+     debe distinguir de un vistazo, de noche, una novedad informativa
+     de una emergencia. Si la severidad se pinta de azul institucional,
+     esa lectura se pierde. */
+  --sot-normal: #16874f; /* verde  — todo en orden */
+  --sot-novedad: #c77800; /* ambar  — novedad que requiere atencion */
+  --sot-emergencia: #c02434; /* rojo   — emergencia / panico */
+
+  /* --- Semanticos --- */
+  --background: #ffffff;
+  --foreground: var(--sot-gris-900);
+  --superficie: var(--sot-gris-50);
+  --borde: var(--sot-gris-200);
+}
+
+@theme inline {
+  --color-azul-50: var(--sot-azul-50);
+  --color-azul-100: var(--sot-azul-100);
+  --color-azul-200: var(--sot-azul-200);
+  --color-azul-300: var(--sot-azul-300);
+  --color-azul-400: var(--sot-azul-400);
+  --color-azul-500: var(--sot-azul-500);
+  --color-azul-600: var(--sot-azul-600);
+  --color-azul-700: var(--sot-azul-700);
+  --color-azul-800: var(--sot-azul-800);
+  --color-azul-900: var(--sot-azul-900);
+
+  --color-gris-50: var(--sot-gris-50);
+  --color-gris-100: var(--sot-gris-100);
+  --color-gris-200: var(--sot-gris-200);
+  --color-gris-300: var(--sot-gris-300);
+  --color-gris-400: var(--sot-gris-400);
+  --color-gris-500: var(--sot-gris-500);
+  --color-gris-600: var(--sot-gris-600);
+  --color-gris-700: var(--sot-gris-700);
+  --color-gris-800: var(--sot-gris-800);
+  --color-gris-900: var(--sot-gris-900);
+
+  --color-normal: var(--sot-normal);
+  --color-novedad: var(--sot-novedad);
+  --color-emergencia: var(--sot-emergencia);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-superficie: var(--superficie);
+  --color-borde: var(--borde);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* La app del guardia se usa de noche, a la intemperie y en garitas
+   con poca luz. El tema oscuro no es un lujo estetico: reduce el
+   deslumbramiento y delata menos la posicion del guardia. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: var(--sot-gris-900);
+    --foreground: var(--sot-gris-50);
+    --superficie: var(--sot-gris-800);
+    --borde: var(--sot-gris-700);
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Objetivos tactiles grandes: la app del guardia se opera de pie,
+   de noche y a veces con guantes. 56px de alto minimo en los
+   controles principales, muy por encima de los 44px recomendados. */
+@layer components {
+  .boton-campo {
+    min-height: 56px;
+  }
+}
