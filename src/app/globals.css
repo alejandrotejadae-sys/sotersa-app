@@ -100,6 +100,15 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+  /* Un halo azul muy tenue arriba, del color del logo. Da profundidad sin
+     restar contraste al texto: en una garita de noche, el contraste es
+     legibilidad, no gusto. */
+  background-image: radial-gradient(
+    120% 55% at 50% -10%,
+    color-mix(in oklab, var(--sot-azul-600) 22%, transparent),
+    transparent 70%
+  );
+  background-attachment: fixed;
 }
 
 /* Objetivos tactiles grandes: la app del guardia se opera de pie,
@@ -108,5 +117,39 @@ body {
 @layer components {
   .boton-campo {
     min-height: 56px;
+  }
+
+  /* Tarjeta base: superficie elevada con un borde que se ve en penumbra. */
+  .tarjeta {
+    background: color-mix(in oklab, var(--superficie) 85%, transparent);
+    border: 1px solid var(--borde);
+    border-radius: 1rem;
+    backdrop-filter: blur(8px);
+  }
+
+  /* Filo de color a la izquierda para marcar jerarquia sin gritar. */
+  .filo-azul {
+    box-shadow: inset 3px 0 0 0 var(--sot-azul-500);
+  }
+  .filo-emergencia {
+    box-shadow: inset 3px 0 0 0 var(--sot-emergencia);
+  }
+}
+
+/* Foco visible siempre. Un guardia puede estar usando un teclado externo
+   en la garita, y sin foco visible no sabe donde esta parado. */
+:where(a, button, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--sot-azul-400);
+  outline-offset: 2px;
+}
+
+/* Respeta a quien pidio menos movimiento en su sistema. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -167,8 +167,14 @@ base de datos porque una restricción hecha solo en la interfaz es falsificable.
 
 ## Fases
 
-- [ ] **Fase 0 — Entorno y marca:** Next.js, Tailwind, paleta del logo como tokens
-- [ ] **Fase 1 — Base de datos:** tablas, los 4 roles, RLS, ingreso por cédula + PIN
+- [x] **Fase 0 — Entorno y marca:** Next.js 16.3.3, Tailwind v4, paleta del logo como tokens. ✅ 2026-08-27
+- [x] **Fase 1 — Base de datos:** esquema, 4 roles, RLS e ingreso por cédula + PIN. ✅ 2026-08-27
+      Verificado contra un Postgres real con PGlite (`npm run verificar:esquema`): **24 pruebas, 0 fallidas**.
+      Y contra el proyecto real (`npm run verificar:nube`): 14 pruebas.
+      La verificación encontró y corrigió **dos defectos que habrían llegado a producción**:
+      1. **Recursión infinita en las políticas RLS** (`puestos` ↔ `turnos`) — habría reventado al abrir el portal del cliente.
+      2. **Fuga de datos entre clientes por las vistas.** Una vista de Postgres corre con los permisos de quien la creó, no de quien la consulta: `v_sla_novedades` le mostraba a un cliente el SLA de los demás. Corregido con `security_invoker = true`, y **verificado en la nube** el 2026-08-27 (`reloptions = {security_invoker=true}` en ambas vistas).
+      ⚠️ Pendiente: ejecutarlo en el proyecto de Supabase en la nube. Storage, Realtime y los límites de intentos de ingreso solo se prueban allá.
 - [ ] **Fase 2 — App del guardia:** apertura de turno, checklist, novedades **con cola sin señal**
 - [ ] **Fase 3 — Rondas:** puntos con QR, escaneo, generación e impresión de códigos
 - [ ] **Fase 4 — Supervisor:** validación de novedades y alerta de puesto vacío
@@ -202,7 +208,9 @@ Tagline oficial: **Seguridad Estratégica**. Razón social en documentos formale
 
 - [ ] **Confirmar el número de certificado BASC.** El material de garita muestra
       `ECUVIC00659` en el encabezado y `ECUUI000659` en el pie — **del mismo documento**.
-      Uno de los dos está mal, y va impreso en material que ya está en los puestos.
+      Puede ser ruido del OCR o una diferencia real en el arte — leyendo la imagen no
+      puedo distinguirlo. Hay que contrastarlo contra el certificado físico, porque ese
+      código va impreso en material que ya está en los puestos.
 - [ ] **Consentimiento LOPDP.** La app registra **GPS y fotos de trabajadores**. En Ecuador
       eso es dato personal: hace falta consentimiento informado firmado por cada guardia y
       una política de tratamiento de datos. El estudio de Citimed ya invoca la LOPDP para
