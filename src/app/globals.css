@@ -38,7 +38,7 @@
      de una emergencia. Si la severidad se pinta de azul institucional,
      esa lectura se pierde. */
   --sot-normal: #16874f; /* verde  — todo en orden */
-  --sot-novedad: #1b9cd8; /* azul informativo — novedad que requiere atencion */
+  --sot-novedad: #c77800; /* ambar  — novedad que requiere atencion */
   --sot-emergencia: #c02434; /* rojo   — emergencia / panico */
 
   /* --- Semanticos --- */
@@ -127,7 +127,7 @@ body {
   }
 
   .boton-primario {
-    background: linear-gradient(100deg, var(--sot-azul-700), var(--sot-azul-500), var(--sot-azul-300));
+    background: linear-gradient(100deg, var(--sot-azul-700), var(--sot-azul-600), var(--sot-azul-500));
     box-shadow: 0 16px 35px color-mix(in oklab, var(--sot-azul-600) 28%, transparent);
   }
 
