@@ -86,7 +86,7 @@ export default function FormularioApertura({ turnoId }: { turnoId: string }) {
                 className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-sm font-bold ${
                   presente
                     ? "bg-normal/25 text-green-300"
-                    : "bg-novedad/25 text-amber-300"
+                    : "bg-novedad/25 text-azul-200"
                 }`}
               >
                 {presente ? "✓" : "!"}
@@ -96,7 +96,7 @@ export default function FormularioApertura({ turnoId }: { turnoId: string }) {
               </span>
               <span
                 className={`text-sm font-semibold ${
-                  presente ? "text-green-300" : "text-amber-300"
+                  presente ? "text-green-300" : "text-azul-200"
                 }`}
               >
                 {presente ? "Conforme" : "Falta"}
@@ -107,7 +107,7 @@ export default function FormularioApertura({ turnoId }: { turnoId: string }) {
       </section>
 
       {faltantes.length > 0 && (
-        <p className="rounded-xl border border-novedad/40 bg-novedad/10 px-4 py-3 text-sm text-amber-100">
+        <p className="rounded-xl border border-novedad/40 bg-novedad/10 px-4 py-3 text-sm text-azul-100">
           Va a abrir el turno reportando {faltantes.length}{" "}
           {faltantes.length === 1 ? "novedad" : "novedades"} de equipo. Queda
           registrado con su nombre y la hora — es lo correcto, no un problema.

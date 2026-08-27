@@ -108,6 +108,18 @@ for (const c of [
 }
 paso("Contactos del puesto: 4");
 
+// Puntos de ronda. En sitio, cada uno lleva un adhesivo con su QR impreso.
+const PUNTOS = [
+  { codigo: 'PR-01', nombre: 'Lobby - puerta principal', orden: 1 },
+  { codigo: 'PR-02', nombre: 'Estacionamiento norte', orden: 2 },
+  { codigo: 'PR-03', nombre: 'Subsuelo 2 - salida de emergencia', orden: 3 },
+  { codigo: 'PR-04', nombre: 'Azotea - cuarto de máquinas', orden: 4 },
+];
+for (const p of PUNTOS) {
+  await asegurar("puntos_ronda", { puesto_id: puesto.id, codigo: p.codigo }, p);
+}
+paso(`Puntos de ronda: ${PUNTOS.length}`);
+
 // --- Cuenta del guardia -----------------------------------------------------
 const correo = cedulaACorreo(CEDULA);
 const { data: usuarios } = await db.auth.admin.listUsers();
