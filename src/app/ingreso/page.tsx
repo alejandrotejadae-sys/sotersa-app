@@ -43,7 +43,7 @@ export default async function PaginaIngreso() {
       <footer className="text-center text-xs leading-relaxed text-gris-500">
         {MARCA.razonSocial}
         <br />
-        Acceso protegido · Operación segura 24/7
+        Si olvidaste tu PIN, comunícate con tu supervisor de zona.
       </footer>
     </main>
   );

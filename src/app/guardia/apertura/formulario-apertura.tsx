@@ -63,7 +63,7 @@ export default function FormularioApertura({ turnoId }: { turnoId: string }) {
           Verificación de equipo
         </h2>
         <p className="-mt-1 mb-1 text-xs text-gris-500">
-          Toque para cambiar el estado de cada equipo.
+          Toca para cambiar el estado de cada equipo.
         </p>
         {CHECKLIST_APERTURA.map((c) => {
           const presente = equipos[c.clave];
@@ -108,15 +108,15 @@ export default function FormularioApertura({ turnoId }: { turnoId: string }) {
 
       {faltantes.length > 0 && (
         <p className="rounded-xl border border-novedad/40 bg-novedad/10 px-4 py-3 text-sm text-azul-100">
-          Va a abrir el turno reportando {faltantes.length}{" "}
+          Vas a abrir el turno reportando {faltantes.length}{" "}
           {faltantes.length === 1 ? "novedad" : "novedades"} de equipo. Queda
-          registrado con su nombre y la hora — es lo correcto, no un problema.
+          registrado con tu nombre y la hora — es lo correcto, no un problema.
         </p>
       )}
 
       <label className="flex flex-col gap-2">
         <span className="text-sm font-medium text-gris-300">
-          ¿Cómo recibe el puesto?
+          ¿Cómo recibes el puesto?
         </span>
         <input
           type="text"
