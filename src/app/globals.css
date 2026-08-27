@@ -38,14 +38,14 @@
      de una emergencia. Si la severidad se pinta de azul institucional,
      esa lectura se pierde. */
   --sot-normal: #16874f; /* verde  — todo en orden */
-  --sot-novedad: #c77800; /* ambar  — novedad que requiere atencion */
+  --sot-novedad: #1b9cd8; /* azul informativo — novedad que requiere atencion */
   --sot-emergencia: #c02434; /* rojo   — emergencia / panico */
 
   /* --- Semanticos --- */
-  --background: #ffffff;
-  --foreground: var(--sot-gris-900);
-  --superficie: var(--sot-gris-50);
-  --borde: var(--sot-gris-200);
+  --background: #020b18;
+  --foreground: var(--sot-gris-50);
+  --superficie: #07182b;
+  --borde: #1b3b5a;
 }
 
 @theme inline {
@@ -87,15 +87,6 @@
 /* La app del guardia se usa de noche, a la intemperie y en garitas
    con poca luz. El tema oscuro no es un lujo estetico: reduce el
    deslumbramiento y delata menos la posicion del guardia. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: var(--sot-gris-900);
-    --foreground: var(--sot-gris-50);
-    --superficie: var(--sot-gris-800);
-    --borde: var(--sot-gris-700);
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
@@ -103,11 +94,11 @@ body {
   /* Un halo azul muy tenue arriba, del color del logo. Da profundidad sin
      restar contraste al texto: en una garita de noche, el contraste es
      legibilidad, no gusto. */
-  background-image: radial-gradient(
-    120% 55% at 50% -10%,
-    color-mix(in oklab, var(--sot-azul-600) 22%, transparent),
-    transparent 70%
-  );
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--sot-azul-700) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--sot-azul-700) 8%, transparent) 1px, transparent 1px),
+    radial-gradient(110% 60% at 50% -12%, color-mix(in oklab, var(--sot-azul-500) 26%, transparent), transparent 68%);
+  background-size: 32px 32px, 32px 32px, auto;
   background-attachment: fixed;
 }
 
@@ -121,10 +112,23 @@ body {
 
   /* Tarjeta base: superficie elevada con un borde que se ve en penumbra. */
   .tarjeta {
-    background: color-mix(in oklab, var(--superficie) 85%, transparent);
+    background: linear-gradient(145deg, color-mix(in oklab, var(--superficie) 96%, white 4%), color-mix(in oklab, var(--superficie) 91%, transparent));
     border: 1px solid var(--borde);
-    border-radius: 1rem;
-    backdrop-filter: blur(8px);
+    border-radius: 1.25rem;
+    box-shadow: 0 20px 50px rgb(0 0 0 / 22%), inset 0 1px 0 rgb(255 255 255 / 3%);
+    backdrop-filter: blur(12px);
+  }
+
+  .panel-operativo {
+    background: linear-gradient(135deg, color-mix(in oklab, var(--sot-azul-900) 45%, var(--superficie)), var(--superficie));
+    border: 1px solid color-mix(in oklab, var(--sot-azul-500) 32%, var(--borde));
+    border-radius: 1.25rem;
+    box-shadow: 0 24px 70px rgb(0 0 0 / 28%);
+  }
+
+  .boton-primario {
+    background: linear-gradient(100deg, var(--sot-azul-700), var(--sot-azul-500), var(--sot-azul-300));
+    box-shadow: 0 16px 35px color-mix(in oklab, var(--sot-azul-600) 28%, transparent);
   }
 
   /* Filo de color a la izquierda para marcar jerarquia sin gritar. */

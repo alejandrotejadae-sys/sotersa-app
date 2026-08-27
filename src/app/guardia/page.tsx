@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
-import { formatearHora } from "@/lib/marca";
 import { BarraSuperior, Pulso } from "@/app/componentes/marca";
 import {
   IconoAlerta,
@@ -105,10 +104,12 @@ export default async function PaginaGuardia() {
         }
       />
 
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-5 py-6">
-        <h1 className="text-2xl font-bold tracking-tight text-white">
-          Buen turno, {primerNombre}
-        </h1>
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-5 py-6 pb-10">
+        <header>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-azul-400">Guardia · En línea</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">Hola, {primerNombre}</h1>
+          <p className="mt-1 text-sm text-gris-400">Mantente atento y reporta cualquier novedad.</p>
+        </header>
 
         {!turno ? (
           <section className="tarjeta p-5">
@@ -120,7 +121,7 @@ export default async function PaginaGuardia() {
           </section>
         ) : (
           <>
-            <section className="tarjeta filo-azul overflow-hidden">
+            <section className="panel-operativo filo-azul overflow-hidden">
               <div className="flex items-start justify-between gap-3 p-5">
                 <div className="min-w-0">
                   <p className="font-mono text-xs tracking-widest text-azul-400">
@@ -135,7 +136,7 @@ export default async function PaginaGuardia() {
                   </p>
                 </div>
                 {puesto?.armado && (
-                  <span className="shrink-0 rounded-full border border-novedad/40 bg-novedad/10 px-3 py-1 text-xs font-medium text-amber-200">
+                  <span className="shrink-0 rounded-full border border-novedad/40 bg-novedad/10 px-3 py-1 text-xs font-medium text-azul-100">
                     Armado
                   </span>
                 )}
@@ -155,7 +156,7 @@ export default async function PaginaGuardia() {
                 <div className="border-t border-borde/60 p-4">
                   <Link
                     href="/guardia/apertura"
-                    className="boton-campo flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-azul-600 to-azul-500 text-base font-semibold text-white shadow-lg shadow-azul-900/40 transition active:from-azul-700 active:to-azul-600"
+                    className="boton-campo boton-primario flex items-center justify-center gap-2 rounded-xl text-base font-semibold text-white transition active:scale-[0.99]"
                   >
                     <IconoLista className="h-5 w-5" />
                     Abrir turno
@@ -165,7 +166,7 @@ export default async function PaginaGuardia() {
             </section>
 
             {faltantes.length > 0 && (
-              <p className="rounded-xl border border-novedad/40 bg-novedad/10 px-4 py-3 text-sm text-amber-100">
+              <p className="rounded-xl border border-novedad/40 bg-novedad/10 px-4 py-3 text-sm text-azul-100">
                 Reportado en falta al abrir:{" "}
                 <strong className="font-semibold">
                   {faltantes.join(", ")}

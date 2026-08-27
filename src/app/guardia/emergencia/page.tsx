@@ -73,7 +73,7 @@ export default function PaginaEmergencia() {
           </section>
         ))}
 
-        <p className="rounded-2xl border border-novedad/40 bg-novedad/10 px-5 py-4 text-center text-sm font-medium leading-relaxed text-amber-100">
+        <p className="rounded-2xl border border-novedad/40 bg-novedad/10 px-5 py-4 text-center text-sm font-medium leading-relaxed text-azul-100">
           {PRINCIPIO_EMERGENCIA}
         </p>
       </main>

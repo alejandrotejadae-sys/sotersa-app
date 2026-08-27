@@ -12,10 +12,10 @@ export function Marca({ tamano = "normal" }: { tamano?: "normal" | "grande" }) {
   const grande = tamano === "grande";
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col leading-none">
       <span
-        className={`bg-gradient-to-r from-azul-800 via-azul-500 to-azul-300 bg-clip-text font-bold tracking-tight text-transparent ${
-          grande ? "text-4xl" : "text-xl"
+        className={`bg-gradient-to-r from-azul-600 via-azul-400 to-azul-300 bg-clip-text font-bold tracking-[0.08em] text-transparent ${
+          grande ? "text-4xl" : "text-lg"
         }`}
       >
         {MARCA.nombre}
@@ -23,8 +23,8 @@ export function Marca({ tamano = "normal" }: { tamano?: "normal" | "grande" }) {
       <span
         className={`font-medium uppercase text-gris-400 ${
           grande
-            ? "text-[0.7rem] tracking-[0.35em]"
-            : "text-[0.55rem] tracking-[0.25em]"
+            ? "mt-2 text-[0.62rem] tracking-[0.38em]"
+            : "mt-1 text-[0.48rem] tracking-[0.28em]"
         }`}
       >
         {MARCA.tagline}
@@ -36,8 +36,8 @@ export function Marca({ tamano = "normal" }: { tamano?: "normal" | "grande" }) {
 /** Barra superior comun a las pantallas del guardia. */
 export function BarraSuperior({ derecha }: { derecha?: React.ReactNode }) {
   return (
-    <header className="sticky top-0 z-10 border-b border-borde/60 bg-gris-900/80 backdrop-blur-md">
-      <div className="mx-auto flex w-full max-w-md items-center justify-between px-5 py-3">
+    <header className="sticky top-0 z-10 border-b border-azul-800/50 bg-[#020b18]/88 backdrop-blur-xl">
+      <div className="mx-auto flex w-full max-w-md items-center justify-between px-5 py-4">
         <Marca />
         {derecha}
       </div>

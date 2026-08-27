@@ -77,7 +77,7 @@ export default function FormularioIngreso() {
           placeholder="1710034065"
           value={cedula}
           onChange={(e) => setCedula(e.target.value)}
-          className="boton-campo rounded-xl border border-gris-700 bg-gris-900 px-4 text-xl tracking-wider text-white outline-none focus:border-azul-500"
+          className="boton-campo rounded-xl border border-azul-900/80 bg-[#020b18]/80 px-4 text-xl tracking-wider text-white outline-none transition focus:border-azul-400 focus:ring-4 focus:ring-azul-500/10"
         />
       </div>
 
@@ -95,7 +95,7 @@ export default function FormularioIngreso() {
           placeholder="••••••"
           value={pin}
           onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-          className="boton-campo rounded-xl border border-gris-700 bg-gris-900 px-4 text-2xl tracking-[0.4em] text-white outline-none focus:border-azul-500"
+          className="boton-campo rounded-xl border border-azul-900/80 bg-[#020b18]/80 px-4 text-2xl tracking-[0.4em] text-white outline-none transition focus:border-azul-400 focus:ring-4 focus:ring-azul-500/10"
         />
       </div>
 
@@ -111,9 +111,9 @@ export default function FormularioIngreso() {
       <button
         type="submit"
         disabled={cargando}
-        className="boton-campo mt-2 rounded-xl bg-azul-500 text-lg font-semibold text-white transition active:bg-azul-600 disabled:opacity-50"
+        className="boton-campo boton-primario mt-2 rounded-xl text-lg font-semibold text-white transition active:scale-[0.99] disabled:opacity-50"
       >
-        {cargando ? "Entrando…" : "Entrar"}
+        {cargando ? "Ingresando…" : "Ingresar de forma segura"}
       </button>
     </form>
   );
