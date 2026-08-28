@@ -15,6 +15,7 @@ const CLAVE_SESION = "sotersa:pantalla-apertura-v1";
 export function PantallaApertura() {
   const [visible, setVisible] = useState(true);
   const [saliendo, setSaliendo] = useState(false);
+  const [imagenLista, setImagenLista] = useState(false);
 
   useEffect(() => {
     const forzar = new URLSearchParams(window.location.search).get("apertura") === "1";
@@ -23,6 +24,11 @@ export function PantallaApertura() {
       const ocultarVisto = window.setTimeout(() => setVisible(false), 0);
       return () => window.clearTimeout(ocultarVisto);
     }
+
+  }, []);
+
+  useEffect(() => {
+    if (!imagenLista) return;
 
     const inicioSalida = window.setTimeout(() => setSaliendo(true), 2400);
     const ocultar = window.setTimeout(() => {
@@ -34,7 +40,7 @@ export function PantallaApertura() {
       window.clearTimeout(inicioSalida);
       window.clearTimeout(ocultar);
     };
-  }, []);
+  }, [imagenLista]);
 
   if (!visible) return null;
 
@@ -53,7 +59,11 @@ export function PantallaApertura() {
         priority
         sizes="100vw"
         quality={100}
-        className="object-cover object-center"
+        unoptimized
+        onLoad={() => setImagenLista(true)}
+        className={`object-cover object-center transition-opacity duration-200 ${
+          imagenLista ? "opacity-100" : "opacity-0"
+        }`}
       />
     </div>
   );
