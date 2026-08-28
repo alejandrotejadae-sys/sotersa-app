@@ -7,9 +7,10 @@ import { MARCA } from "@/lib/marca";
  * El PNG salio de los renders aprobados, recortado con transparencia. No es
  * un dibujo mio: reproducir a mano el simbolo de una marca es falsificarlo.
  */
-export function Marca({ tamano = "normal" }: { tamano?: "normal" | "grande" }) {
+export function Marca({ tamano = "normal" }: { tamano?: "normal" | "panel" | "grande" }) {
   const grande = tamano === "grande";
-  const lado = grande ? 92 : 34;
+  const panel = tamano === "panel";
+  const lado = grande ? 92 : panel ? 46 : 34;
 
   return (
     <div className={`flex items-center ${grande ? "flex-col gap-3" : "gap-2.5"}`}>
@@ -24,7 +25,7 @@ export function Marca({ tamano = "normal" }: { tamano?: "normal" | "grande" }) {
       <div className="flex flex-col leading-none">
         <span
           className={`bg-gradient-to-r from-azul-500 via-azul-400 to-azul-300 bg-clip-text font-bold tracking-[0.14em] text-transparent ${
-            grande ? "text-3xl" : "text-base"
+            grande ? "text-3xl" : panel ? "text-xl" : "text-base"
           }`}
         >
           {MARCA.nombre}
@@ -33,6 +34,8 @@ export function Marca({ tamano = "normal" }: { tamano?: "normal" | "grande" }) {
           className={`font-medium uppercase text-gris-400 ${
             grande
               ? "mt-1.5 text-[0.6rem] tracking-[0.3em]"
+              : panel
+                ? "mt-1 text-[0.48rem] tracking-[0.24em]"
               : "mt-1 text-[0.42rem] tracking-[0.22em]"
           }`}
         >

@@ -120,14 +120,16 @@ body {
   }
 
   .panel-operativo {
-    background: linear-gradient(135deg, color-mix(in oklab, var(--sot-azul-900) 45%, var(--superficie)), var(--superficie));
-    border: 1px solid color-mix(in oklab, var(--sot-azul-500) 32%, var(--borde));
+    background:
+      radial-gradient(circle at 82% 38%, color-mix(in oklab, var(--sot-azul-500) 12%, transparent), transparent 42%),
+      linear-gradient(135deg, color-mix(in oklab, var(--sot-azul-900) 52%, var(--superficie)), var(--superficie));
+    border: 1px solid color-mix(in oklab, var(--sot-azul-400) 36%, var(--borde));
     border-radius: 1.25rem;
     box-shadow: 0 24px 70px rgb(0 0 0 / 28%);
   }
 
   .boton-primario {
-    background: linear-gradient(100deg, var(--sot-azul-700), var(--sot-azul-600), var(--sot-azul-500));
+    background: linear-gradient(100deg, #0657d7, #087deb, #0aa7f1);
     box-shadow: 0 16px 35px color-mix(in oklab, var(--sot-azul-600) 28%, transparent);
   }
 
@@ -138,6 +140,20 @@ body {
   .filo-emergencia {
     box-shadow: inset 3px 0 0 0 var(--sot-emergencia);
   }
+}
+
+.guardia-dispositivo {
+  background:
+    radial-gradient(90% 45% at 48% 2%, rgb(10 76 122 / 22%), transparent 72%),
+    linear-gradient(180deg, #020b18 0%, #031326 52%, #020b18 100%);
+}
+
+.guardia-render .tarjeta {
+  border-color: color-mix(in oklab, var(--sot-azul-300) 20%, var(--borde));
+  border-radius: 1rem;
+  background:
+    radial-gradient(circle at 92% 20%, rgb(27 156 216 / 7%), transparent 45%),
+    linear-gradient(145deg, rgb(7 24 43 / 98%), rgb(5 18 34 / 98%));
 }
 
 /* Foco visible siempre. Un guardia puede estar usando un teclado externo

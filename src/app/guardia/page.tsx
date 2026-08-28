@@ -3,15 +3,14 @@ import { redirect } from "next/navigation";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { Marca } from "@/app/componentes/marca";
 import { EstadoConexion } from "@/app/componentes/estado-conexion";
-import { BotonSalirIcono } from "@/app/componentes/boton-salir-icono";
 import { CronometroTurno } from "@/app/componentes/cronometro-turno";
-import { NORMAS_GARITA } from "@/lib/protocolos";
 import {
   IconoAlerta,
   IconoCiclo,
   IconoEscudo,
   IconoEscudoOk,
   IconoFlecha,
+  IconoHuella,
   IconoLibro,
   IconoLista,
   IconoPersona,
@@ -160,23 +159,18 @@ export default async function PaginaGuardia() {
         .map(([clave]) => clave)
     : [];
 
-  // "Instrucción del día": el diseño la muestra como texto libre por puesto,
-  // pero ese campo no existe todavía. En vez de inventarlo se muestra la norma
-  // de conducta del reglamento, que es la que rige todos los días.
-  const conducta = NORMAS_GARITA.find((n) => n.codigo === "04");
-
   return (
     <>
       <Cabecera />
 
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 px-5 py-5">
+      <main className="guardia-render mx-auto flex w-full max-w-md flex-1 flex-col gap-3.5 px-4 pb-5 pt-2">
         <Saludo nombre={primerNombre} />
 
         {/* ---------------- Turno ---------------- */}
-        <section className="panel-operativo relative overflow-hidden p-5">
+        <section className="panel-operativo relative overflow-hidden p-4.5">
           <div className="flex items-start gap-4">
-            <span className="relative grid h-[4.5rem] w-[4.5rem] shrink-0 place-items-center rounded-full border-2 border-azul-600/40 text-azul-300">
-              <IconoTurno className="h-9 w-9" />
+            <span className="relative grid h-[5.4rem] w-[5.4rem] shrink-0 place-items-center rounded-full border-2 border-azul-500 text-azul-400 shadow-[0_0_35px_rgba(27,156,216,0.12)]">
+              <IconoTurno className="h-10 w-10" />
               <span
                 aria-hidden
                 className={`absolute bottom-1 right-1 h-3 w-3 rounded-full ring-4 ring-[#07182b] ${
@@ -186,28 +180,28 @@ export default async function PaginaGuardia() {
             </span>
 
             <div className="min-w-0 flex-1">
-              <h2 className="text-2xl font-bold leading-tight text-white">
+              <h2 className="text-[1.65rem] font-bold leading-tight text-white">
                 {apertura ? "Turno activo" : "Turno por abrir"}
               </h2>
-              <p className="mt-1 truncate text-sm text-gris-300">
+              <p className="mt-1 truncate text-base text-gris-400">
                 {puesto?.nombre}
               </p>
-              <p className="mt-1.5 font-mono text-base text-gris-200">
+              <p className="mt-1.5 text-lg font-medium text-white">
                 {soloHora(turno.inicio_programado)} –{" "}
                 {soloHora(turno.fin_programado)}
               </p>
             </div>
 
-            <div className="shrink-0 border-l border-borde/70 pl-4 text-right">
-              <p className="text-[0.68rem] leading-tight text-gris-500">
+            <div className="shrink-0 border-l border-borde/70 pl-3 text-right">
+              <p className="text-xs leading-tight text-gris-400">
                 {apertura ? "Tiempo transcurrido" : "Puesto"}
               </p>
               {apertura ? (
                 <>
-                  <p className="mt-1 font-mono text-2xl font-bold leading-none text-white">
+                  <p className="mt-2 font-mono text-[1.55rem] font-bold leading-none text-white">
                     <CronometroTurno desde={apertura.hora_captura} />
                   </p>
-                  <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-normal/50 bg-normal/10 px-2.5 py-1 text-xs font-medium text-green-300">
+                  <span className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-normal bg-normal/10 px-3 py-1.5 text-xs font-medium text-green-300">
                     <span
                       aria-hidden
                       className="h-1.5 w-1.5 rounded-full bg-normal"
@@ -232,17 +226,17 @@ export default async function PaginaGuardia() {
         {/* ---------------- Asistencia / QR ---------------- */}
         <div className="grid grid-cols-2 gap-3">
           {apertura ? (
-            <div className="tarjeta flex items-center gap-3 px-4 py-4">
-              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-normal/15 text-green-300">
-                <IconoEscudoOk className="h-6 w-6" />
+            <div className="boton-primario flex min-h-[88px] items-center gap-3 rounded-2xl px-4 py-4">
+              <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border border-white/25 bg-white/10 text-white">
+                <IconoHuella className="h-8 w-8" />
               </span>
               <span className="min-w-0">
-                <span className="block text-sm font-semibold leading-tight text-white">
+                <span className="block text-base font-bold leading-tight text-white">
                   Asistencia
                   <br />
                   marcada
                 </span>
-                <span className="font-mono text-xs text-gris-400">
+                <span className="font-mono text-xs text-blue-100/80">
                   {soloHora(apertura.hora_captura)}
                 </span>
               </span>
@@ -250,12 +244,12 @@ export default async function PaginaGuardia() {
           ) : (
             <Link
               href="/guardia/apertura"
-              className="boton-primario flex items-center gap-3 rounded-2xl px-4 py-4 text-white transition active:scale-[0.99]"
+              className="boton-primario flex min-h-[88px] items-center gap-3 rounded-2xl px-4 py-4 text-white transition active:scale-[0.99]"
             >
-              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white/15">
-                <IconoLista className="h-6 w-6" />
+              <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border border-white/25 bg-white/10">
+                <IconoHuella className="h-8 w-8" />
               </span>
-              <span className="text-base font-bold leading-tight">
+              <span className="text-lg font-bold leading-tight">
                 Marcar
                 <br />
                 asistencia
@@ -283,7 +277,7 @@ export default async function PaginaGuardia() {
         )}
 
         {/* ---------------- Ronda ---------------- */}
-        <section className="tarjeta relative overflow-hidden p-5">
+        <section className="tarjeta relative overflow-hidden p-4.5">
           <IconoEscudo
             aria-hidden
             className="pointer-events-none absolute -right-6 top-1/2 h-36 w-36 -translate-y-1/2 text-azul-500/[0.07]"
@@ -291,7 +285,7 @@ export default async function PaginaGuardia() {
 
           <div className="relative flex items-center gap-2.5">
             <IconoCiclo className="h-6 w-6 text-azul-400" />
-            <h2 className="text-lg font-semibold text-white">Ronda del turno</h2>
+            <h2 className="text-xl font-semibold text-white">Ronda activa</h2>
           </div>
 
           {total === 0 ? (
@@ -301,8 +295,8 @@ export default async function PaginaGuardia() {
             </p>
           ) : (
             <div className="relative">
-              <p className="mt-1 text-base font-medium text-azul-400">
-                Ronda de {total} puntos
+              <p className="mt-2 text-xl font-semibold text-azul-400">
+                Ronda exterior
               </p>
 
               <div className="mt-4 flex items-baseline justify-between">
@@ -343,8 +337,8 @@ export default async function PaginaGuardia() {
                     </p>
                   )}
                 </div>
-                <span className="shrink-0 rounded-xl border border-dashed border-borde px-4 py-2.5 text-sm font-medium text-gris-500 opacity-60">
-                  Continuar · pronto
+                <span aria-disabled="true" className="boton-primario shrink-0 rounded-xl border border-azul-400/60 px-4 py-3 text-sm font-semibold text-white opacity-75">
+                  Continuar ronda
                 </span>
               </div>
             </div>
@@ -353,7 +347,7 @@ export default async function PaginaGuardia() {
 
         {/* ---------------- Mi puesto asignado ---------------- */}
         <section className="tarjeta overflow-hidden">
-          <h2 className="flex items-center gap-2.5 border-b border-borde/60 px-5 py-4 text-lg font-semibold text-white">
+          <h2 className="flex items-center gap-2.5 px-5 pb-2 pt-4 text-xl font-semibold text-white">
             <IconoEscudoOk className="h-6 w-6 text-azul-400" />
             Mi puesto asignado
           </h2>
@@ -372,28 +366,18 @@ export default async function PaginaGuardia() {
             />
           </div>
 
-          {conducta && (
-            <div className="flex gap-3 border-t border-borde/60 px-5 py-4">
-              <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-azul-500/12 text-azul-300">
-                <IconoLista className="h-5 w-5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs uppercase tracking-wider text-gris-500">
-                  Conducta en el puesto · reglamento
-                </p>
-                <p className="mt-1.5 text-sm leading-relaxed text-gris-200">
-                  {conducta.pasos.slice(0, 2).join(" ")}
-                </p>
-                <Link
-                  href="/guardia/emergencia"
-                  className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-azul-400"
-                >
-                  Ver protocolo completo
-                  <IconoFlecha className="h-4 w-4" />
-                </Link>
-              </div>
+          <div className="flex gap-3 border-t border-borde/60 px-5 py-4">
+            <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-azul-500/12 text-azul-300">
+              <IconoLista className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-gris-500">Instrucción del día</p>
+              <p className="mt-1 text-sm leading-relaxed text-gris-200">
+                Verifica accesos, realiza tu ronda cada 60 minutos y reporta
+                cualquier novedad.
+              </p>
             </div>
-          )}
+          </div>
         </section>
 
         {/* ---------------- Acciones ---------------- */}
@@ -442,12 +426,9 @@ export default async function PaginaGuardia() {
 function Cabecera() {
   return (
     <header className="sticky top-0 z-10 border-b border-azul-900/60 bg-[#020b18]/90 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-md items-center justify-between gap-2 px-5 py-3">
-        <Marca />
-        <div className="flex shrink-0 items-center gap-2">
-          <EstadoConexion />
-          <BotonSalirIcono />
-        </div>
+      <div className="mx-auto flex w-full max-w-md items-center justify-between gap-2 px-5 pb-3 pt-5">
+        <Marca tamano="panel" />
+        <EstadoConexion />
       </div>
     </header>
   );
@@ -455,15 +436,18 @@ function Cabecera() {
 
 function Saludo({ nombre }: { nombre: string }) {
   return (
-    <header className="flex items-center gap-3">
-      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-azul-700/50 bg-azul-500/10 text-azul-300">
-        <IconoEscudo className="h-6 w-6" />
+    <header className="flex items-start gap-3 px-0.5 pb-1">
+      <span className="mt-0.5 grid h-12 w-12 shrink-0 place-items-center rounded-[0.9rem] border border-azul-500/80 bg-azul-500/5 text-azul-400">
+        <IconoTurno className="h-6 w-6" />
       </span>
       <div>
-        <p className="text-sm font-semibold text-azul-400">Guardia</p>
-        <h1 className="text-2xl font-bold leading-tight tracking-tight text-white">
+        <p className="text-base font-semibold text-azul-400">Guardia</p>
+        <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-white">
           Hola, {nombre}
         </h1>
+        <p className="mt-1 text-sm leading-snug text-gris-400">
+          Buen día, mantente atento y reporta cualquier novedad.
+        </p>
       </div>
     </header>
   );
@@ -529,9 +513,9 @@ function BotonSOS() {
         SOS
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-lg font-bold text-white">Emergencia</span>
-        <span className="block text-sm text-red-200/80">
-          911, protocolos y contactos del puesto
+        <span className="block text-xl font-bold text-white">SOS · Activar alerta</span>
+        <span className="block text-sm text-red-100/70">
+          Usar solo en caso de emergencia
         </span>
       </span>
       <IconoFlecha className="h-5 w-5 shrink-0 text-red-300" />
@@ -548,9 +532,9 @@ function TilePendiente({
   titulo: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-[104px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-borde px-2 py-4 text-center opacity-45">
-      <span className="text-gris-400">{icono}</span>
-      <span className="text-xs font-medium leading-tight text-gris-300">
+    <div className="tarjeta flex min-h-[96px] flex-col items-center justify-center gap-2 px-2 py-4 text-center">
+      <span className="text-azul-400">{icono}</span>
+      <span className="text-sm font-medium leading-tight text-gris-200">
         {titulo}
       </span>
     </div>
@@ -565,11 +549,11 @@ function TilePendienteAncho({
   titulo: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-dashed border-borde px-4 py-4 opacity-45">
-      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gris-700/40 text-gris-400">
+    <div className="tarjeta flex min-h-[88px] items-center gap-3 rounded-2xl px-4 py-4">
+      <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border border-azul-500/70 bg-azul-500/5 text-white">
         {icono}
       </span>
-      <span className="text-base font-bold leading-tight text-gris-300">
+      <span className="text-lg font-bold leading-tight text-white">
         {titulo}
       </span>
     </div>

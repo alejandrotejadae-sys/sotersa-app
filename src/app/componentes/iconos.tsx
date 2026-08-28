@@ -152,3 +152,25 @@ export function IconoSalir({ className }: Props) {
     </svg>
   );
 }
+
+export function IconoMensaje({ className }: Props) {
+  return (
+    <svg {...base} className={className} aria-hidden>
+      <path d="M5 4.5h14A1.5 1.5 0 0 1 20.5 6v9A1.5 1.5 0 0 1 19 16.5H10L5.5 20v-3.5H5A1.5 1.5 0 0 1 3.5 15V6A1.5 1.5 0 0 1 5 4.5Z" />
+      <path d="M8 9h8M8 12.5h5" />
+    </svg>
+  );
+}
+
+export function IconoHuella({ className }: Props) {
+  return (
+    <svg {...base} className={className} aria-hidden>
+      <path d="M8.3 9.1a4.5 4.5 0 0 1 7.4 3.4c0 3.2-.8 5.8-2.4 7.8" />
+      <path d="M5.6 10.5A7 7 0 0 1 19 13c0 3.4-.7 6.1-2.2 8" />
+      <path d="M4.1 14.2c.2-1.6.4-2.7.7-3.5" />
+      <path d="M8.1 13.2c0 3.1-.5 5.3-1.7 6.9" />
+      <path d="M11.9 12.3c.1 4.1-.5 7.1-1.7 9" />
+      <path d="M4.5 17.5c.7-1.3 1-2.8 1-4.5" />
+    </svg>
+  );
+}
