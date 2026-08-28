@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { Marca } from "@/app/componentes/marca";
 import { EstadoConexion } from "@/app/componentes/estado-conexion";
+import { BotonSalirIcono } from "@/app/componentes/boton-salir-icono";
 import { CronometroTurno } from "@/app/componentes/cronometro-turno";
 import { NORMAS_GARITA } from "@/lib/protocolos";
 import {
@@ -441,9 +442,12 @@ export default async function PaginaGuardia() {
 function Cabecera() {
   return (
     <header className="sticky top-0 z-10 border-b border-azul-900/60 bg-[#020b18]/90 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-md items-center justify-between gap-3 px-5 py-3">
+      <div className="mx-auto flex w-full max-w-md items-center justify-between gap-2 px-5 py-3">
         <Marca />
-        <EstadoConexion />
+        <div className="flex shrink-0 items-center gap-2">
+          <EstadoConexion />
+          <BotonSalirIcono />
+        </div>
       </div>
     </header>
   );
