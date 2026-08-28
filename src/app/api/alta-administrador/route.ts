@@ -21,8 +21,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: "credencial_invalida" }, { status: 400 });
   }
 
+  let etapa = "inicializacion";
   try {
     const db = crearClienteAdministrador();
+    etapa = "listar_usuarios";
     const { data: listado, error: errorListado } = await db.auth.admin.listUsers({
       page: 1,
       perPage: 1000,
@@ -33,6 +35,7 @@ export async function POST(request: NextRequest) {
     let creado = false;
 
     if (usuario) {
+      etapa = "actualizar_usuario";
       const { data, error } = await db.auth.admin.updateUserById(usuario.id, {
         password: cuerpo.password,
         email_confirm: true,
@@ -42,6 +45,7 @@ export async function POST(request: NextRequest) {
       if (error) throw error;
       usuario = data.user;
     } else {
+      etapa = "crear_usuario";
       const { data, error } = await db.auth.admin.createUser({
         email: CORREO_INTERNO,
         password: cuerpo.password,
@@ -54,6 +58,7 @@ export async function POST(request: NextRequest) {
       creado = true;
     }
 
+    etapa = "guardar_perfil";
     const { error: errorPerfil } = await db.from("perfiles").upsert({
       id: usuario.id,
       rol: "admin",
@@ -64,6 +69,7 @@ export async function POST(request: NextRequest) {
     });
     if (errorPerfil) throw errorPerfil;
 
+    etapa = "verificar_perfil";
     const { data: perfil, error: errorVerificacion } = await db
       .from("perfiles")
       .select("rol, nombre, activo")
@@ -81,7 +87,15 @@ export async function POST(request: NextRequest) {
       activo: perfil.activo,
       creado,
     });
-  } catch {
-    return NextResponse.json({ ok: false, error: "alta_no_completada" }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "alta_no_completada",
+        etapa,
+        detalle: error instanceof Error ? error.message : "error_desconocido",
+      },
+      { status: 500 },
+    );
   }
 }
