@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PantallaApertura } from "@/app/componentes/pantalla-apertura";
+import { PantallaBienvenida } from "@/app/componentes/pantalla-bienvenida";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col bg-gris-900 text-gris-50">
         <PantallaApertura />
+        <PantallaBienvenida />
         {children}
       </body>
     </html>
