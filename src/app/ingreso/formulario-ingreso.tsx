@@ -55,7 +55,7 @@ export default function FormularioIngreso() {
 
   return (
     <form onSubmit={ingresar} className="absolute inset-0 z-10">
-      <label className="absolute left-[11%] top-[39.85%] flex h-[7.85%] w-[78%] items-center gap-[3.5%] rounded-[1.15rem] border border-[#078ce8] bg-[#020b18]/95 px-[4%] shadow-[inset_0_0_28px_rgba(0,126,220,0.06)]">
+      <label className="absolute left-[11%] top-[39.85%] flex h-[7.85%] w-[78%] items-center gap-[3.5%] rounded-[1.15rem] border border-[#078ce8] bg-[#020b18] px-[4%] shadow-[inset_0_0_28px_rgba(0,126,220,0.06)]">
         <IconoUsuario />
         <span className="min-w-0 flex-1">
           <span className="block text-[clamp(0.72rem,2.7vw,1rem)] font-medium text-[#039cf8]">
@@ -76,7 +76,7 @@ export default function FormularioIngreso() {
         </span>
       </label>
 
-      <label className="absolute left-[11%] top-[49.45%] flex h-[7.85%] w-[78%] items-center gap-[3.5%] rounded-[1.15rem] border border-[#078ce8] bg-[#020b18]/95 px-[4%] shadow-[inset_0_0_28px_rgba(0,126,220,0.06)]">
+      <label className="absolute left-[11%] top-[49.45%] flex h-[7.85%] w-[78%] items-center gap-[3.5%] rounded-[1.15rem] border border-[#078ce8] bg-[#020b18] px-[4%] shadow-[inset_0_0_28px_rgba(0,126,220,0.06)]">
         <IconoCandado />
         <span className="min-w-0 flex-1">
           <span className="block text-[clamp(0.72rem,2.7vw,1rem)] font-medium text-[#039cf8]">
@@ -109,21 +109,16 @@ export default function FormularioIngreso() {
         type="button"
         onClick={() => setRecordar((actual) => !actual)}
         aria-pressed={recordar}
-        className="absolute left-[11%] top-[58.8%] flex h-[4.5%] items-center gap-2 text-[clamp(0.75rem,3vw,1rem)] text-white"
-      >
-        <span className={`grid aspect-square h-[55%] place-items-center rounded ${recordar ? "bg-[#078cf2]" : "bg-[#020b18] ring-1 ring-[#078cf2]"}`}>
-          {recordar && <span aria-hidden>✓</span>}
-        </span>
-        Recordarme
-      </button>
+        aria-label="Recordarme"
+        className="absolute left-[11%] top-[58.8%] h-[4.5%] w-[28%] bg-transparent"
+      />
 
       <button
         type="button"
         onClick={() => ayuda("Comunícate con tu supervisor para recuperar la contraseña.")}
-        className="absolute right-[11%] top-[58.8%] h-[4.5%] text-[clamp(0.72rem,2.8vw,1rem)] text-[#069cf8]"
-      >
-        ¿Olvidaste tu contraseña?
-      </button>
+        aria-label="Recuperar contraseña"
+        className="absolute right-[11%] top-[58.8%] h-[4.5%] w-[39%] bg-transparent"
+      />
 
       {error && (
         <p role="alert" className="absolute left-[18%] top-[62.3%] z-20 w-[64%] rounded-xl border border-emergencia/50 bg-[#2a0912]/95 px-3 py-2 text-center text-[clamp(0.65rem,2.4vw,0.85rem)] text-red-100 shadow-xl">
