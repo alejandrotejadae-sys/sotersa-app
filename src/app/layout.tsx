@@ -18,12 +18,20 @@ export const metadata: Metadata = {
   title: "SOTERSA — Puesto de control",
   description:
     "Sistema de operaciones y bitácora digital de SOTERSA Seguridad Estratégica.",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/icono-sotersa-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icono-sotersa-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icono-sotersa-192.png", sizes: "192x192", type: "image/png" }],
+  },
 };
 
 export const viewport: Viewport = {
   // La app del guardia se usa de noche. El tema claro deslumbra y delata la
   // posicion de quien la mira.
-  themeColor: "#191d21",
+  themeColor: "#020b18",
   // Sin zoom accidental: el guardia opera con una mano y a veces con guantes.
   maximumScale: 1,
 };

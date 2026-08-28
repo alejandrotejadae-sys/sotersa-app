@@ -15,7 +15,7 @@ const perfiles: Array<{ id: Perfil; etiqueta: string; top: string }> = [
 
 const destinos: Record<Perfil, string> = {
   cliente: "/portal",
-  guardia: "/guardia",
+  guardia: "/guardia?desde=perfiles",
   supervisor: "/supervisor",
   central: "/admin",
 };

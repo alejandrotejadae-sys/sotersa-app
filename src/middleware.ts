@@ -8,6 +8,21 @@ import { NextResponse, type NextRequest } from "next/server";
  * es exactamente cuando no puede ponerse a resolver un problema de sesion.
  */
 export async function middleware(request: NextRequest) {
+  // Los accesos directos móviles creados antes del manifiesto guardaron
+  // /guardia como dirección de arranque. Una navegación completa a esa ruta
+  // debe pasar primero por la selección de perfil; la navegación interna
+  // desde /perfiles lleva la marca `desde=perfiles` y continúa normalmente.
+  if (
+    request.nextUrl.pathname === "/guardia" &&
+    request.nextUrl.searchParams.get("desde") !== "perfiles" &&
+    request.headers.get("sec-fetch-dest") === "document"
+  ) {
+    const destino = request.nextUrl.clone();
+    destino.pathname = "/perfiles";
+    destino.search = "";
+    return NextResponse.redirect(destino);
+  }
+
   let respuesta = NextResponse.next({ request });
 
   const supabase = createServerClient(
