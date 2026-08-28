@@ -18,9 +18,11 @@ export function PantallaApertura() {
   const [imagenLista, setImagenLista] = useState(false);
 
   useEffect(() => {
-    const forzar = new URLSearchParams(window.location.search).get("apertura") === "1";
+    const parametros = new URLSearchParams(window.location.search);
+    const forzar = parametros.get("apertura") === "1";
+    const revisarIngreso = parametros.get("pantalla") === "ingreso";
 
-    if (!forzar && sessionStorage.getItem(CLAVE_SESION) === "vista") {
+    if (revisarIngreso || (!forzar && sessionStorage.getItem(CLAVE_SESION) === "vista")) {
       const ocultarVisto = window.setTimeout(() => setVisible(false), 0);
       return () => window.clearTimeout(ocultarVisto);
     }

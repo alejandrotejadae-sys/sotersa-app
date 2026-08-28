@@ -10,50 +10,38 @@ import {
   PIN_LARGO,
 } from "@/lib/auth";
 
-/**
- * Ingreso del guardia: cedula + PIN.
- *
- * Decisiones de interfaz, todas por la misma razon — esto se usa de pie, de
- * noche, a la intemperie y a veces con guantes:
- *   - inputMode="numeric" para que el telefono abra el teclado de numeros.
- *   - Campos altos (56px) y texto grande.
- *   - La cedula se valida ANTES de llamar al servidor: no tiene sentido
- *     gastar un intento de ingreso en un numero mal tecleado.
- */
 export default function FormularioIngreso() {
   const router = useRouter();
-  const [cedula, setCedula] = useState("");
+  const [usuario, setUsuario] = useState("");
   const [pin, setPin] = useState("");
+  const [mostrarPin, setMostrarPin] = useState(false);
+  const [recordar, setRecordar] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
 
-  async function ingresar(e: React.FormEvent) {
-    e.preventDefault();
+  async function ingresar(evento: React.FormEvent) {
+    evento.preventDefault();
     setError(null);
 
-    const ced = normalizarCedula(cedula);
-
-    if (!cedulaEsValida(ced)) {
-      setError("Esa cédula no es válida. Revise los 10 dígitos.");
+    const cedula = normalizarCedula(usuario);
+    if (!cedulaEsValida(cedula)) {
+      setError("El usuario ingresado no es válido.");
       return;
     }
     if (pin.length !== PIN_LARGO) {
-      setError(`El PIN tiene ${PIN_LARGO} dígitos.`);
+      setError(`La contraseña debe tener ${PIN_LARGO} dígitos.`);
       return;
     }
 
     setCargando(true);
-    const supabase = crearClienteNavegador();
-    const { error: err } = await supabase.auth.signInWithPassword({
-      email: cedulaACorreo(ced),
+    const { error: fallo } = await crearClienteNavegador().auth.signInWithPassword({
+      email: cedulaACorreo(cedula),
       password: pin,
     });
     setCargando(false);
 
-    if (err) {
-      // A proposito NO se dice si fallo la cedula o el PIN: decirlo permite
-      // averiguar que cedulas existen en el sistema probando una por una.
-      setError("Cédula o PIN incorrectos.");
+    if (fallo) {
+      setError("Usuario o contraseña incorrectos.");
       return;
     }
 
@@ -61,49 +49,84 @@ export default function FormularioIngreso() {
     router.refresh();
   }
 
-  return (
-    <form onSubmit={ingresar} className="flex flex-col gap-5">
-      <div className="flex flex-col gap-2">
-        <label htmlFor="cedula" className="text-sm font-medium text-gris-300">
-          Cédula
-        </label>
-        <input
-          id="cedula"
-          name="cedula"
-          type="text"
-          inputMode="numeric"
-          autoComplete="username"
-          maxLength={13}
-          placeholder="1710034065"
-          value={cedula}
-          onChange={(e) => setCedula(e.target.value)}
-          className="boton-campo rounded-xl border border-azul-900/80 bg-[#020b18]/80 px-4 text-xl tracking-wider text-white outline-none transition focus:border-azul-400 focus:ring-4 focus:ring-azul-500/10"
-        />
-      </div>
+  function ayuda(mensaje: string) {
+    setError(mensaje);
+  }
 
-      <div className="flex flex-col gap-2">
-        <label htmlFor="pin" className="text-sm font-medium text-gris-300">
-          PIN
-        </label>
-        <input
-          id="pin"
-          name="pin"
-          type="password"
-          inputMode="numeric"
-          autoComplete="current-password"
-          maxLength={PIN_LARGO}
-          placeholder="••••••"
-          value={pin}
-          onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-          className="boton-campo rounded-xl border border-azul-900/80 bg-[#020b18]/80 px-4 text-2xl tracking-[0.4em] text-white outline-none transition focus:border-azul-400 focus:ring-4 focus:ring-azul-500/10"
-        />
-      </div>
+  return (
+    <form onSubmit={ingresar} className="absolute inset-0 z-10">
+      <label className="absolute left-[11%] top-[39.85%] flex h-[7.85%] w-[78%] items-center gap-[3.5%] rounded-[1.15rem] border border-[#078ce8] bg-[#020b18]/95 px-[4%] shadow-[inset_0_0_28px_rgba(0,126,220,0.06)]">
+        <IconoUsuario />
+        <span className="min-w-0 flex-1">
+          <span className="block text-[clamp(0.72rem,2.7vw,1rem)] font-medium text-[#039cf8]">
+            Usuario
+          </span>
+          <input
+            name="usuario"
+            type="text"
+            inputMode="numeric"
+            autoComplete="username"
+            maxLength={13}
+            value={usuario}
+            onChange={(evento) => setUsuario(evento.target.value)}
+            placeholder="Ingresa tu usuario"
+            aria-label="Usuario"
+            className="mt-[2%] block w-full bg-transparent text-[clamp(0.9rem,3.5vw,1.35rem)] text-white outline-none placeholder:text-white/55"
+          />
+        </span>
+      </label>
+
+      <label className="absolute left-[11%] top-[49.45%] flex h-[7.85%] w-[78%] items-center gap-[3.5%] rounded-[1.15rem] border border-[#078ce8] bg-[#020b18]/95 px-[4%] shadow-[inset_0_0_28px_rgba(0,126,220,0.06)]">
+        <IconoCandado />
+        <span className="min-w-0 flex-1">
+          <span className="block text-[clamp(0.72rem,2.7vw,1rem)] font-medium text-[#039cf8]">
+            Contraseña
+          </span>
+          <input
+            name="contrasena"
+            type={mostrarPin ? "text" : "password"}
+            inputMode="numeric"
+            autoComplete="current-password"
+            maxLength={PIN_LARGO}
+            value={pin}
+            onChange={(evento) => setPin(evento.target.value.replace(/\D/g, ""))}
+            placeholder="••••••"
+            aria-label="Contraseña"
+            className="mt-[2%] block w-full bg-transparent text-[clamp(1rem,4vw,1.5rem)] tracking-[0.35em] text-white outline-none placeholder:text-white/70"
+          />
+        </span>
+        <button
+          type="button"
+          onClick={() => setMostrarPin((actual) => !actual)}
+          aria-label={mostrarPin ? "Ocultar contraseña" : "Mostrar contraseña"}
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-white"
+        >
+          <IconoOjo />
+        </button>
+      </label>
+
+      <button
+        type="button"
+        onClick={() => setRecordar((actual) => !actual)}
+        aria-pressed={recordar}
+        className="absolute left-[11%] top-[58.8%] flex h-[4.5%] items-center gap-2 text-[clamp(0.75rem,3vw,1rem)] text-white"
+      >
+        <span className={`grid aspect-square h-[55%] place-items-center rounded ${recordar ? "bg-[#078cf2]" : "bg-[#020b18] ring-1 ring-[#078cf2]"}`}>
+          {recordar && <span aria-hidden>✓</span>}
+        </span>
+        Recordarme
+      </button>
+
+      <button
+        type="button"
+        onClick={() => ayuda("Comunícate con tu supervisor para recuperar la contraseña.")}
+        className="absolute right-[11%] top-[58.8%] h-[4.5%] text-[clamp(0.72rem,2.8vw,1rem)] text-[#069cf8]"
+      >
+        ¿Olvidaste tu contraseña?
+      </button>
 
       {error && (
-        <p
-          role="alert"
-          className="rounded-xl bg-emergencia/15 px-4 py-3 text-sm text-red-200"
-        >
+        <p role="alert" className="absolute left-[18%] top-[62.3%] z-20 w-[64%] rounded-xl border border-emergencia/50 bg-[#2a0912]/95 px-3 py-2 text-center text-[clamp(0.65rem,2.4vw,0.85rem)] text-red-100 shadow-xl">
           {error}
         </p>
       )}
@@ -111,10 +134,56 @@ export default function FormularioIngreso() {
       <button
         type="submit"
         disabled={cargando}
-        className="boton-campo boton-primario mt-2 rounded-xl text-lg font-semibold text-white transition active:scale-[0.99] disabled:opacity-50"
+        aria-label="Ingresar de forma segura"
+        className="absolute left-[11%] top-[64.05%] h-[6.9%] w-[78%] rounded-[1.15rem] bg-transparent disabled:cursor-wait"
       >
-        {cargando ? "Ingresando…" : "Ingresar de forma segura"}
+        {cargando && (
+          <span className="absolute inset-0 grid place-items-center rounded-[1.15rem] bg-[#087fe9]/90 text-sm font-semibold text-white">
+            Ingresando…
+          </span>
+        )}
       </button>
+
+      <button
+        type="button"
+        onClick={() => ayuda("El ingreso con huella se habilitará después del primer acceso seguro.")}
+        aria-label="Ingresar con huella"
+        className="absolute left-[11%] top-[77.75%] h-[6.3%] w-[78%] rounded-[1.15rem] bg-transparent"
+      />
+
+      <button
+        type="button"
+        onClick={() => ayuda("Solicita asistencia a la central operativa de SOTERSA.")}
+        aria-label="Contactar soporte"
+        className="absolute left-[43%] top-[86.7%] h-[4.5%] w-[36%] bg-transparent"
+      />
     </form>
+  );
+}
+
+function IconoUsuario() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-[28%] min-h-6 w-[8%] min-w-6 shrink-0 text-white/90" aria-hidden>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M5 20a7 7 0 0 1 14 0" />
+    </svg>
+  );
+}
+
+function IconoCandado() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-[28%] min-h-6 w-[8%] min-w-6 shrink-0 text-white/90" aria-hidden>
+      <rect x="5" y="10" width="14" height="11" rx="2" />
+      <path d="M8 10V7a4 4 0 0 1 8 0v3M12 15v2" />
+    </svg>
+  );
+}
+
+function IconoOjo() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-6 w-6" aria-hidden>
+      <path d="M2.5 12s3.5-5 9.5-5 9.5 5 9.5 5-3.5 5-9.5 5-9.5-5-9.5-5Z" />
+      <circle cx="12" cy="12" r="2.4" />
+    </svg>
   );
 }

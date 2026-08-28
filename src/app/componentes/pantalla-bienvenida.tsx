@@ -10,8 +10,10 @@ export function PantallaBienvenida() {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const forzar = new URLSearchParams(window.location.search).get("bienvenida") === "1";
-    if (!forzar && localStorage.getItem(CLAVE_BIENVENIDA) === "completada") {
+    const parametros = new URLSearchParams(window.location.search);
+    const forzar = parametros.get("bienvenida") === "1";
+    const revisarIngreso = parametros.get("pantalla") === "ingreso";
+    if (revisarIngreso || (!forzar && localStorage.getItem(CLAVE_BIENVENIDA) === "completada")) {
       const ocultarCompletada = window.setTimeout(() => setVisible(false), 0);
       return () => window.clearTimeout(ocultarCompletada);
     }
