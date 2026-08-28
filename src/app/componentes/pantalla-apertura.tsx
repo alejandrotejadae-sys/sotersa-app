@@ -21,8 +21,9 @@ export function PantallaApertura() {
     const parametros = new URLSearchParams(window.location.search);
     const forzar = parametros.get("apertura") === "1";
     const revisarIngreso = parametros.get("pantalla") === "ingreso";
+    const revisarPerfiles = window.location.pathname === "/perfiles";
 
-    if (revisarIngreso || (!forzar && sessionStorage.getItem(CLAVE_SESION) === "vista")) {
+    if (revisarIngreso || revisarPerfiles || (!forzar && sessionStorage.getItem(CLAVE_SESION) === "vista")) {
       const ocultarVisto = window.setTimeout(() => setVisible(false), 0);
       return () => window.clearTimeout(ocultarVisto);
     }

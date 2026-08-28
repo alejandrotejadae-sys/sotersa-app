@@ -13,7 +13,8 @@ export function PantallaBienvenida() {
     const parametros = new URLSearchParams(window.location.search);
     const forzar = parametros.get("bienvenida") === "1";
     const revisarIngreso = parametros.get("pantalla") === "ingreso";
-    if (revisarIngreso || (!forzar && localStorage.getItem(CLAVE_BIENVENIDA) === "completada")) {
+    const revisarPerfiles = window.location.pathname === "/perfiles";
+    if (revisarIngreso || revisarPerfiles || (!forzar && localStorage.getItem(CLAVE_BIENVENIDA) === "completada")) {
       const ocultarCompletada = window.setTimeout(() => setVisible(false), 0);
       return () => window.clearTimeout(ocultarCompletada);
     }
