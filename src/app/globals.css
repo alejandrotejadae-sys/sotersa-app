@@ -80,8 +80,8 @@
   --color-superficie: var(--superficie);
   --color-borde: var(--borde);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: system-ui, sans-serif;
+  --font-mono: ui-monospace, monospace;
 }
 
 /* La app del guardia se usa de noche, a la intemperie y en garitas

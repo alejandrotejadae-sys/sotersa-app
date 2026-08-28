@@ -13,7 +13,7 @@ import { IconoSalir } from "./iconos";
  * de noche y con guantes. El boton completo, con el nombre y los datos, sigue
  * estando en Perfil.
  */
-export function BotonSalirIcono() {
+export function BotonSalirIcono({ rutaRetorno = "/ingreso" }: { rutaRetorno?: string }) {
   const router = useRouter();
   const [confirmando, setConfirmando] = useState(false);
   const [saliendo, setSaliendo] = useState(false);
@@ -21,7 +21,7 @@ export function BotonSalirIcono() {
   async function salir() {
     setSaliendo(true);
     await crearClienteNavegador().auth.signOut();
-    router.push("/ingreso");
+    router.push(rutaRetorno);
     router.refresh();
   }
 

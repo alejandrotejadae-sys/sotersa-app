@@ -1,0 +1,4 @@
+import Link from "next/link"; import { redirect } from "next/navigation";
+import { Marca } from "@/app/componentes/marca"; import { crearClienteServidor } from "@/lib/supabase/servidor"; import { FormularioAcceso } from "./formulario-acceso";
+export const metadata = { title: "Acceso corporativo — SOTERSA" };
+export default async function Acceso() { const { data: { user } } = await (await crearClienteServidor()).auth.getUser(); if (user) redirect("/"); return <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-7 px-6 py-10"><header className="text-center"><Marca tamano="grande" /><h1 className="mt-7 text-3xl font-bold">Acceso corporativo</h1><p className="mt-2 text-sm text-gris-400">Supervisión, clientes y administración</p></header><section className="panel-operativo p-6"><FormularioAcceso /></section><Link href="/ingreso" className="text-center text-sm text-azul-300">¿Eres Guardia? Ingresa con cédula y PIN</Link></main>; }
