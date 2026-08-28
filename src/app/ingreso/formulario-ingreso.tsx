@@ -45,7 +45,7 @@ export default function FormularioIngreso() {
       return;
     }
 
-    router.push("/guardia");
+    router.push("/perfiles");
     router.refresh();
   }
 

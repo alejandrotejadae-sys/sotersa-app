@@ -33,7 +33,7 @@ export function FormularioAcceso() {
       return;
     }
 
-    router.push("/");
+    router.push("/perfiles");
     router.refresh();
   }
 
