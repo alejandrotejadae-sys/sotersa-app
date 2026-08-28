@@ -6,7 +6,7 @@ import { crearClienteNavegador } from "@/lib/supabase/navegador";
 
 export function FormularioAcceso() {
   const router = useRouter();
-  const [correo, setCorreo] = useState("");
+  const [usuario, setUsuario] = useState("");
   const [clave, setClave] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
@@ -15,11 +15,18 @@ export function FormularioAcceso() {
     evento.preventDefault();
     setError(null);
 
-    const email = correo.trim().toLowerCase();
-    if (!email.includes("@") || clave.length < 6) {
-      setError("Revisa el correo y la contraseña.");
+    const identificador = usuario.trim().toLowerCase();
+    if (identificador.length < 3 || clave.length < 6) {
+      setError("Revisa el usuario y la contraseña.");
       return;
     }
+
+    // Supabase autentica con correo. Para el personal SOTERSA se completa el
+    // dominio internamente, sin obligar a escribir ni conocer el signo @.
+    // Los clientes que ya usan un correo completo conservan compatibilidad.
+    const email = identificador.includes("@")
+      ? identificador
+      : `${identificador}@sotersa.com`;
 
     setCargando(true);
     const { error: fallo } = await crearClienteNavegador().auth.signInWithPassword({
@@ -29,7 +36,7 @@ export function FormularioAcceso() {
     setCargando(false);
 
     if (fallo) {
-      setError("Correo o contraseña incorrectos.");
+      setError("Usuario o contraseña incorrectos.");
       return;
     }
 
@@ -40,17 +47,20 @@ export function FormularioAcceso() {
   return (
     <form onSubmit={ingresar} className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
-        <label htmlFor="correo" className="text-sm font-medium text-gris-300">
-          Correo corporativo
+        <label htmlFor="usuario" className="text-sm font-medium text-gris-300">
+          Usuario
         </label>
         <input
-          id="correo"
-          type="email"
+          id="usuario"
+          name="usuario"
+          type="text"
           autoComplete="username"
-          value={correo}
-          onChange={(evento) => setCorreo(evento.target.value)}
+          autoCapitalize="none"
+          spellCheck={false}
+          value={usuario}
+          onChange={(evento) => setUsuario(evento.target.value)}
           className="boton-campo rounded-xl border border-azul-900/80 bg-[#020b18]/80 px-4 text-base text-white outline-none transition focus:border-azul-400 focus:ring-4 focus:ring-azul-500/10"
-          placeholder="nombre@empresa.com"
+          placeholder="Ingresa tu usuario"
         />
       </div>
       <div className="flex flex-col gap-2">
