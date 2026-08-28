@@ -1,16 +1,5 @@
-import type { ReactNode } from "react";
-import { CabeceraPanel } from "@/app/componentes/cabecera-panel";
-import { TarjetaMetrica } from "@/app/componentes/tarjeta-metrica";
-import {
-  IconoAlerta,
-  IconoCiclo,
-  IconoEscudoOk,
-  IconoLista,
-  IconoPersona,
-  IconoRonda,
-  IconoTurno,
-} from "@/app/componentes/iconos";
-import { ahoraConDesfase, exigirPerfil, fechaHoraEcuador, uno } from "@/lib/sesion";
+import Image from "next/image";
+import { ahoraConDesfase, exigirPerfil, horaEcuador, uno } from "@/lib/sesion";
 
 export const metadata = { title: "Central operativa — SOTERSA" };
 export const dynamic = "force-dynamic";
@@ -19,81 +8,116 @@ export default async function PaginaAdmin() {
   const { supabase, perfil } = await exigirPerfil(["admin"]);
   const desde = ahoraConDesfase(-24);
 
-  const [guardiasR, puestosR, turnosR, rondasR, novedadesR, vaciosR, clientesR] = await Promise.all([
+  const [guardiasR, rondasR, novedadesR, vaciosR] = await Promise.all([
     supabase.from("guardias").select("id", { count: "exact", head: true }).eq("activo", true),
-    supabase.from("puestos").select("id", { count: "exact", head: true }).eq("activo", true),
-    supabase.from("turnos").select("id", { count: "exact", head: true }).eq("estado", "abierto"),
     supabase.from("rondas").select("id", { count: "exact", head: true }).gte("hora_captura", desde),
     supabase
       .from("novedades")
       .select("id, tipo, severidad, descripcion, hora_captura, estado, puestos(codigo, nombre), guardias(nombre)")
       .order("hora_captura", { ascending: false })
-      .limit(8),
+      .limit(3),
     supabase.from("v_puestos_sin_apertura").select("turno_id", { count: "exact", head: true }),
-    supabase.from("empresas_cliente").select("id", { count: "exact", head: true }).eq("activo", true),
   ]);
 
   const guardias = guardiasR.count ?? 0;
-  const puestos = puestosR.count ?? 0;
-  const turnos = turnosR.count ?? 0;
   const rondas = rondasR.count ?? 0;
-  const alertas = (vaciosR.count ?? 0) + (novedadesR.data ?? []).filter((n) => n.estado === "registrada").length;
+  const novedades = novedadesR.data ?? [];
+  const alertas =
+    (vaciosR.count ?? 0) + novedades.filter((novedad) => novedad.estado === "registrada").length;
+  const nombre = perfil.nombre.split(" ")[0];
 
   return (
-    <div className="min-h-dvh pb-12">
-      <CabeceraPanel rol="admin" nombre={perfil.nombre} />
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm text-gris-400">Buenos días, <span className="text-azul-400">{perfil.nombre.split(" ")[0]}</span></p>
-            <h1 className="mt-1 text-3xl font-bold text-white">Operación general</h1>
+    <main className="flex min-h-dvh w-full items-center justify-center overflow-hidden bg-[#020b18]">
+      <div className="relative h-dvh aspect-[941/1672] shrink-0 overflow-hidden">
+        <Image
+          src="/pantalla-central-operativa-sotersa.webp"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          unoptimized
+          className="object-fill"
+        />
+
+        <section aria-label="Resumen de Central Operativa" className="absolute inset-0 z-10">
+          <div className="absolute left-[18.7%] top-[7.35%] h-[3%] min-w-[28%] bg-[#020b18] px-[0.5%] text-[clamp(0.82rem,3vw,1.22rem)] text-[#079cf4]">
+            {nombre}
           </div>
-          <span className="w-fit rounded-full border border-normal/30 bg-normal/10 px-4 py-2 text-xs font-medium uppercase tracking-wider text-green-300">Central operativa · en línea</span>
-        </div>
 
-        <section className="panel-operativo flex items-center justify-between gap-6 p-6 sm:p-8">
-          <div><p className="text-xl text-gris-200">Operación general</p><p className="mt-2 text-3xl font-bold text-azul-400 sm:text-4xl">{alertas ? "Atención operativa" : "Todo bajo control"}</p><p className="mt-2 text-sm text-gris-400">Datos en tiempo real desde Supabase</p></div>
-          <IconoEscudoOk className="h-24 w-24 shrink-0 text-azul-500/45 sm:h-32 sm:w-32" />
-        </section>
-
-        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <TarjetaMetrica titulo="Personal activo" valor={guardias} detalle="guardias habilitados" icono={<IconoPersona className="h-7 w-7" />} />
-          <TarjetaMetrica titulo="Turnos abiertos" valor={turnos} detalle={`${puestos} puestos activos`} icono={<IconoCiclo className="h-7 w-7" />} tono="normal" />
-          <TarjetaMetrica titulo="Alertas" valor={alertas} detalle="requieren revisión" icono={<IconoAlerta className="h-7 w-7" />} tono={alertas ? "emergencia" : "normal"} />
-          <TarjetaMetrica titulo="Rondas 24 h" valor={rondas} detalle="puntos registrados" icono={<IconoRonda className="h-7 w-7" />} />
-        </section>
-
-        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <AccesoRapido icono={<IconoPersona className="h-6 w-6" />} titulo="Personal" detalle={`${guardias} habilitados`} />
-          <AccesoRapido icono={<IconoTurno className="h-6 w-6" />} titulo="Puestos" detalle={`${puestos} configurados`} />
-          <AccesoRapido icono={<IconoCiclo className="h-6 w-6" />} titulo="Rondas" detalle="Seguimiento 24 h" />
-          <AccesoRapido icono={<IconoLista className="h-6 w-6" />} titulo="Clientes" detalle={`${clientesR.count ?? 0} activos`} />
-        </section>
-
-        <section className="tarjeta overflow-hidden">
-          <div className="flex items-center justify-between border-b border-borde/60 px-5 py-4"><h2 className="font-semibold text-white">Actividad reciente</h2><span className="text-xs text-gris-500">Últimos registros</span></div>
-          {(novedadesR.data ?? []).length === 0 ? <p className="px-5 py-8 text-center text-sm text-gris-500">Todavía no hay actividad registrada.</p> : (
-            <div className="divide-y divide-borde/50">
-              {(novedadesR.data ?? []).map((novedad) => (
-                <article key={novedad.id} className="grid gap-2 px-5 py-4 sm:grid-cols-[auto_1fr_auto] sm:items-center">
-                  <span className={`h-3 w-3 rounded-full ${novedad.severidad === "emergencia" ? "bg-emergencia" : novedad.severidad === "novedad" ? "bg-novedad" : "bg-azul-500"}`} />
-                  <div><p className="font-medium text-white">{novedad.tipo}</p><p className="mt-0.5 text-sm text-gris-500">{uno(novedad.puestos)?.codigo} · {uno(novedad.guardias)?.nombre ?? "Sistema"}</p></div>
-                  <div className="text-left sm:text-right"><p className="text-sm text-gris-300">{fechaHoraEcuador(novedad.hora_captura)}</p><p className="mt-0.5 text-xs text-gris-500">{novedad.estado}</p></div>
-                </article>
-              ))}
+          {alertas > 0 && (
+            <div className="absolute left-[37%] top-[17.05%] flex h-[4.6%] w-[48%] items-center bg-[#07172a] text-[clamp(1.1rem,4.2vw,1.85rem)] font-medium text-[#079cf4]">
+              Atención operativa
             </div>
           )}
-        </section>
 
-        <section className="tarjeta p-5">
-          <h2 className="font-semibold text-white">Operación geográfica</h2>
-          <p className="mt-2 text-sm leading-relaxed text-gris-400">El mapa de Quito se habilitará con ubicaciones reales de los puestos. No se dibujan posiciones ficticias ni se expone GPS de personal sin consentimiento LOPDP.</p>
+          <ValorMetrica left="7.2%" valor={guardias} etiqueta="Personal activo" />
+          <ValorMetrica left="29.9%" valor={rondas} etiqueta="Rondas en las últimas 24 horas" />
+          <ValorMetrica left="52.8%" valor={alertas} etiqueta="Alertas operativas" />
+          <ValorMetrica left="75.7%" valor="—" etiqueta="Cámaras pendientes de integración" />
+
+          <div className="absolute left-[3.3%] top-[70.35%] h-[20.35%] w-[93.4%] overflow-hidden rounded-[1.05rem] border border-[#23425e] bg-[#061528]/[0.97] px-[4.2%] py-[2.1%] shadow-[inset_0_0_45px_rgba(0,119,219,0.06)]">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[clamp(0.95rem,3.1vw,1.35rem)] font-medium text-white">Actividad reciente</h2>
+              <span className="text-[clamp(0.7rem,2.7vw,1rem)] text-[#079cf4]">Ver todo ›</span>
+            </div>
+
+            {novedades.length === 0 ? (
+              <p className="grid h-[76%] place-items-center text-[clamp(0.75rem,2.7vw,1rem)] text-white/55">
+                Todavía no hay actividad registrada.
+              </p>
+            ) : (
+              <div className="mt-[2.8%] divide-y divide-[#183047]">
+                {novedades.map((novedad) => {
+                  const puesto = uno(novedad.puestos);
+                  const guardia = uno(novedad.guardias);
+                  return (
+                    <article key={novedad.id} className="grid min-h-[3.9rem] grid-cols-[2.4rem_1fr_auto] items-center gap-[3%] py-[1.8%]">
+                      <span
+                        className={`grid h-9 w-9 place-items-center rounded-full border-2 text-sm ${
+                          novedad.severidad === "emergencia"
+                            ? "border-red-400 text-red-300"
+                            : novedad.severidad === "novedad"
+                              ? "border-[#079cf4] text-[#079cf4]"
+                              : "border-green-400 text-green-300"
+                        }`}
+                        aria-hidden
+                      >
+                        {novedad.severidad === "emergencia" ? "!" : "✓"}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-[clamp(0.72rem,2.5vw,1rem)] text-white">{novedad.tipo}</p>
+                        <p className="truncate text-[clamp(0.62rem,2.1vw,0.82rem)] text-white/55">
+                          {puesto?.codigo ?? guardia?.nombre ?? "Central operativa"}
+                        </p>
+                      </div>
+                      <time className="text-[clamp(0.62rem,2.1vw,0.82rem)] text-white/55">
+                        {horaEcuador(novedad.hora_captura)}
+                      </time>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <button type="button" aria-label="Iniciar ronda" className="absolute left-[3.3%] top-[60.7%] h-[8.8%] w-[22.8%] rounded-xl bg-transparent" />
+          <button type="button" aria-label="Reportar incidente" className="absolute left-[27.2%] top-[60.7%] h-[8.8%] w-[22.2%] rounded-xl bg-transparent" />
+          <button type="button" aria-label="Ver cámaras" className="absolute left-[50.5%] top-[60.7%] h-[8.8%] w-[22.2%] rounded-xl bg-transparent" />
+          <button type="button" aria-label="Activar alerta" className="absolute left-[73.8%] top-[60.7%] h-[8.8%] w-[22.9%] rounded-xl bg-transparent" />
         </section>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
 
-function AccesoRapido({ icono, titulo, detalle }: { icono: ReactNode; titulo: string; detalle: string }) {
-  return <article className="tarjeta flex items-center gap-3 p-4"><span className="text-azul-400">{icono}</span><div><p className="font-medium text-white">{titulo}</p><p className="text-xs text-gris-500">{detalle}</p></div></article>;
+function ValorMetrica({ left, valor, etiqueta }: { left: string; valor: string | number; etiqueta: string }) {
+  return (
+    <div
+      aria-label={`${etiqueta}: ${valor}`}
+      className="absolute top-[30.2%] grid h-[3.3%] w-[15.9%] place-items-center bg-[#07172a] text-[clamp(1.2rem,5vw,2.25rem)] font-medium leading-none text-white"
+      style={{ left }}
+    >
+      {valor}
+    </div>
+  );
 }
