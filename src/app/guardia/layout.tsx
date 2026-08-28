@@ -11,7 +11,7 @@ import { NavInferior } from "@/app/componentes/nav-inferior";
 export default function LayoutGuardia({ children }: LayoutProps<"/guardia">) {
   return (
     <div className="flex min-h-dvh flex-col md:items-center md:justify-center md:py-8">
-      <div className="flex min-h-dvh w-full flex-1 flex-col md:min-h-0 md:h-[860px] md:max-h-[92vh] md:w-[400px] md:flex-none md:overflow-hidden md:rounded-[2.25rem] md:border md:border-azul-900/70 md:shadow-2xl md:shadow-black/60">
+      <div className="guardia-dispositivo flex min-h-dvh w-full flex-1 flex-col md:min-h-0 md:h-[900px] md:max-h-[94vh] md:w-[430px] md:flex-none md:overflow-hidden md:rounded-[2.25rem] md:border md:border-azul-900/70 md:shadow-2xl md:shadow-black/60">
         <div className="flex flex-1 flex-col overflow-y-auto">{children}</div>
         <NavInferior />
       </div>

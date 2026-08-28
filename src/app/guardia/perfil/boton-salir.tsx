@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import { crearClienteNavegador } from "@/lib/supabase/navegador";
 import { IconoSalir } from "@/app/componentes/iconos";
 
-export function BotonSalir() {
+export function BotonSalir({ destino = "/ingreso" }: { destino?: string }) {
   const router = useRouter();
   const [saliendo, setSaliendo] = useState(false);
 
   async function salir() {
     setSaliendo(true);
     await crearClienteNavegador().auth.signOut();
-    router.push("/ingreso");
+    router.push(destino);
     router.refresh();
   }
 
