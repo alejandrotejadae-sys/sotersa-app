@@ -16,11 +16,12 @@ import { createClient } from "@supabase/supabase-js";
  * Nunca para leer datos que una politica RLS ya sabe filtrar.
  */
 export function crearClienteAdministrador() {
-  const llave = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const llave =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
 
   if (!llave) {
     throw new Error(
-      "Falta SUPABASE_SERVICE_ROLE_KEY en .env.local. " +
+      "Falta SUPABASE_SERVICE_ROLE_KEY o SUPABASE_SECRET_KEY en el servidor. " +
         "Se toma de Supabase > Project Settings > API Keys > Secret keys.",
     );
   }
