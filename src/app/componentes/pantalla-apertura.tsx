@@ -30,11 +30,13 @@ export function PantallaApertura() {
   useEffect(() => {
     if (!imagenLista) return;
 
-    const inicioSalida = window.setTimeout(() => setSaliendo(true), 2400);
+    const forzar = new URLSearchParams(window.location.search).get("apertura") === "1";
+    const duracion = forzar ? 10000 : 2400;
+    const inicioSalida = window.setTimeout(() => setSaliendo(true), duracion);
     const ocultar = window.setTimeout(() => {
       sessionStorage.setItem(CLAVE_SESION, "vista");
       setVisible(false);
-    }, 2800);
+    }, duracion + 400);
 
     return () => {
       window.clearTimeout(inicioSalida);
