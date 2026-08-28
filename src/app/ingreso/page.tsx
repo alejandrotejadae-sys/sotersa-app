@@ -4,6 +4,7 @@ import { MARCA } from "@/lib/marca";
 import { Marca } from "@/app/componentes/marca";
 import { IconoEscudo } from "@/app/componentes/iconos";
 import FormularioIngreso from "./formulario-ingreso";
+import Link from "next/link";
 
 export const metadata = { title: "Ingreso — SOTERSA" };
 
@@ -13,7 +14,7 @@ export default async function PaginaIngreso() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (user) redirect("/guardia");
+  if (user) redirect("/");
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-8 px-6 py-10">
@@ -38,6 +39,7 @@ export default async function PaginaIngreso() {
           <p className="mt-2 text-sm leading-relaxed text-gris-400">Ingresa para acceder a tu centro de seguridad</p>
         </div>
         <FormularioIngreso />
+        <Link href="/acceso" className="mt-5 block text-center text-sm font-semibold text-azul-300 hover:text-azul-100">Acceso para clientes y operaciones</Link>
       </section>
 
       <footer className="text-center text-xs leading-relaxed text-gris-500">
