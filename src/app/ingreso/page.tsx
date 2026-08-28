@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { MARCA } from "@/lib/marca";
 import { Marca } from "@/app/componentes/marca";
@@ -13,7 +14,7 @@ export default async function PaginaIngreso() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (user) redirect("/guardia");
+  if (user) redirect("/");
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-8 px-6 py-10">
@@ -38,6 +39,15 @@ export default async function PaginaIngreso() {
           <p className="mt-2 text-sm leading-relaxed text-gris-400">Ingresa para acceder a tu centro de seguridad</p>
         </div>
         <FormularioIngreso />
+        <div className="mt-6 border-t border-borde/60 pt-5 text-center">
+          <p className="text-xs text-gris-500">¿No eres personal de guardia?</p>
+          <Link
+            href="/acceso"
+            className="mt-2 inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-medium text-azul-400 transition hover:bg-azul-500/10"
+          >
+            Acceso para clientes y operaciones
+          </Link>
+        </div>
       </section>
 
       <footer className="text-center text-xs leading-relaxed text-gris-500">
