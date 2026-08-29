@@ -389,26 +389,14 @@ export default async function PaginaGuardia() {
 
         {/* ---------------- Acciones ---------------- */}
         <div className="grid grid-cols-3 gap-3">
-          <TilePendiente
-            icono={<IconoAlerta className="h-7 w-7" />}
-            titulo={
-              <>
-                Reportar
-                <br />
-                incidente
-              </>
-            }
-          />
-          <TilePendiente
-            icono={<IconoLista className="h-7 w-7" />}
-            titulo={
-              <>
-                Enviar
-                <br />
-                novedad
-              </>
-            }
-          />
+          <Link href="/guardia/reportar?severidad=emergencia" className="tarjeta flex min-h-[104px] flex-col items-center justify-center gap-2 px-2 py-4 text-center transition active:scale-[0.99]">
+            <IconoAlerta className="h-7 w-7 text-red-300" />
+            <span className="text-xs font-medium leading-tight text-white">Reportar<br />incidente</span>
+          </Link>
+          <Link href="/guardia/reportar" className="tarjeta flex min-h-[104px] flex-col items-center justify-center gap-2 px-2 py-4 text-center transition active:scale-[0.99]">
+            <IconoLista className="h-7 w-7 text-azul-300" />
+            <span className="text-xs font-medium leading-tight text-white">Enviar<br />novedad</span>
+          </Link>
           <Link
             href="/guardia/emergencia"
             className="tarjeta flex min-h-[104px] flex-col items-center justify-center gap-2 px-2 py-4 text-center transition active:scale-[0.99]"
@@ -527,24 +515,6 @@ function BotonSOS() {
       </span>
       <IconoFlecha className="h-5 w-5 shrink-0 text-red-300" />
     </Link>
-  );
-}
-
-/** Destino aun no construido: se ve, pero no engaña con un enlace muerto. */
-function TilePendiente({
-  icono,
-  titulo,
-}: {
-  icono: React.ReactNode;
-  titulo: React.ReactNode;
-}) {
-  return (
-    <div className="tarjeta flex min-h-[96px] flex-col items-center justify-center gap-2 px-2 py-4 text-center">
-      <span className="text-azul-400">{icono}</span>
-      <span className="text-sm font-medium leading-tight text-gris-200">
-        {titulo}
-      </span>
-    </div>
   );
 }
 
