@@ -10,7 +10,8 @@
     "verificar:esquema": "node supabase/verificar-esquema.mjs",
     "verificar:nube": "node --env-file=.env.local supabase/verificar-nube.mjs",
     "sembrar:demo": "node --env-file=.env.local --experimental-strip-types supabase/sembrar-demo.mjs",
-    "escanear": "node --env-file=.env.local supabase/escanear.mjs"
+    "escanear": "node --env-file=.env.local supabase/escanear.mjs",
+    "cargar:reales": "node --env-file=.env.local supabase/cargar-reales.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",
