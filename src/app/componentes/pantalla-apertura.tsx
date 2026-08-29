@@ -1,75 +1,56 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
+import { Marca } from "@/app/componentes/marca";
+import { IconoEscudoOk } from "@/app/componentes/iconos";
 
 const CLAVE_SESION = "sotersa:pantalla-apertura-v1";
 
-/**
- * Apertura institucional aprobada en la hoja 2 del PDF de renders.
- *
- * Vive en el layout global para que también aparezca cuando una instalación
- * guardada abre directamente /guardia, /supervisor, /admin o /portal. Se
- * muestra una vez por sesión; `?apertura=1` permite revisarla nuevamente.
- */
 export function PantallaApertura() {
   const [visible, setVisible] = useState(true);
   const [saliendo, setSaliendo] = useState(false);
-  const [imagenLista, setImagenLista] = useState(false);
 
   useEffect(() => {
     const parametros = new URLSearchParams(window.location.search);
     const forzar = parametros.get("apertura") === "1";
-    const revisarIngreso = parametros.get("pantalla") === "ingreso";
-    const revisarPerfiles = window.location.pathname === "/perfiles";
+    const omitir = parametros.get("pantalla") === "ingreso" || window.location.pathname === "/perfiles";
 
-    if (revisarIngreso || revisarPerfiles || (!forzar && sessionStorage.getItem(CLAVE_SESION) === "vista")) {
-      const ocultarVisto = window.setTimeout(() => setVisible(false), 0);
-      return () => window.clearTimeout(ocultarVisto);
+    if (omitir || (!forzar && sessionStorage.getItem(CLAVE_SESION) === "vista")) {
+      const ocultar = window.setTimeout(() => setVisible(false), 0);
+      return () => window.clearTimeout(ocultar);
     }
 
-  }, []);
-
-  useEffect(() => {
-    if (!imagenLista) return;
-
-    const forzar = new URLSearchParams(window.location.search).get("apertura") === "1";
-    const duracion = forzar ? 10000 : 2400;
-    const inicioSalida = window.setTimeout(() => setSaliendo(true), duracion);
+    const duracion = forzar ? 8000 : 2200;
+    const iniciarSalida = window.setTimeout(() => setSaliendo(true), duracion);
     const ocultar = window.setTimeout(() => {
       sessionStorage.setItem(CLAVE_SESION, "vista");
       setVisible(false);
     }, duracion + 400);
 
     return () => {
-      window.clearTimeout(inicioSalida);
+      window.clearTimeout(iniciarSalida);
       window.clearTimeout(ocultar);
     };
-  }, [imagenLista]);
+  }, []);
 
   if (!visible) return null;
 
   return (
-    <div
-      role="img"
-      aria-label="SOTERSA Seguridad Estratégica. Tecnología que protege. Quito."
-      className={`fixed inset-0 z-[1000] bg-[#020b18] transition-opacity duration-400 ${
-        saliendo ? "pointer-events-none opacity-0" : "opacity-100"
-      }`}
-    >
-      <Image
-        src="/pantalla-apertura-sotersa.webp"
-        alt=""
-        fill
-        priority
-        sizes="100vw"
-        quality={100}
-        unoptimized
-        onLoad={() => setImagenLista(true)}
-        className={`object-cover object-center transition-opacity duration-200 ${
-          imagenLista ? "opacity-100" : "opacity-0"
-        }`}
-      />
-    </div>
+    <section aria-label="Apertura de SOTERSA" className={`fixed inset-0 z-[1000] overflow-hidden bg-[#020b18] transition-opacity duration-400 ${saliendo ? "pointer-events-none opacity-0" : "opacity-100"}`}>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_33%,rgba(0,160,255,0.22),transparent_30%),linear-gradient(180deg,#020b18,#03152b_58%,#020b18)]" />
+      <div className="absolute inset-x-0 bottom-0 h-[42%] opacity-35 [background-image:linear-gradient(rgba(12,92,149,0.35)_1px,transparent_1px),linear-gradient(90deg,rgba(12,92,149,0.35)_1px,transparent_1px)] [background-size:28px_28px] [transform:perspective(420px)_rotateX(58deg)_scale(1.45)] [transform-origin:bottom]" />
+      <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">
+        <div className="animate-[pulse_2.4s_ease-in-out_infinite] drop-shadow-[0_0_35px_rgba(0,174,255,0.28)]">
+          <Marca tamano="grande" />
+        </div>
+        <div className="mt-12 flex items-center gap-3 text-[#18bff0]">
+          <span className="h-px w-12 bg-gradient-to-r from-transparent to-[#18bff0]" />
+          <IconoEscudoOk className="h-6 w-6" />
+          <span className="h-px w-12 bg-gradient-to-l from-transparent to-[#18bff0]" />
+        </div>
+        <p className="mt-5 text-xl font-medium tracking-wide text-white">Tecnología que protege</p>
+        <p className="mt-2 text-sm tracking-[0.2em] text-slate-500">QUITO · ECUADOR</p>
+      </div>
+    </section>
   );
 }

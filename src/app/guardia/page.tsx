@@ -39,11 +39,18 @@ export default async function PaginaGuardia() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/ingreso");
 
-  const { data: guardia } = await supabase
+  const { data: perfilActual } = await supabase
+    .from("perfiles")
+    .select("rol")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const guardiaConsulta = supabase
     .from("guardias")
-    .select("id, nombre, cedula")
-    .eq("perfil_id", user.id)
-    .single();
+    .select("id, nombre, cedula");
+  const { data: guardia } = perfilActual?.rol === "admin"
+    ? await guardiaConsulta.eq("activo", true).order("nombre").limit(1).maybeSingle()
+    : await guardiaConsulta.eq("perfil_id", user.id).maybeSingle();
 
   if (!guardia) {
     return (

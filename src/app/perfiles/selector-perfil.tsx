@@ -2,23 +2,19 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { IconoEscudoOk, IconoPersona, IconoSalir, IconoTurno } from "@/app/componentes/iconos";
 import { crearClienteNavegador } from "@/lib/supabase/navegador";
 
 type Perfil = "cliente" | "guardia" | "supervisor" | "central";
 
-const perfiles: Array<{ id: Perfil; etiqueta: string; top: string }> = [
-  { id: "cliente", etiqueta: "Cliente", top: "28.95%" },
-  { id: "guardia", etiqueta: "Guardia", top: "40.91%" },
-  { id: "supervisor", etiqueta: "Supervisor", top: "52.87%" },
-  { id: "central", etiqueta: "Central operativa", top: "64.77%" },
+const perfiles: Array<{ id: Perfil; etiqueta: string; detalle: string; icono: React.ReactNode }> = [
+  { id: "cliente", etiqueta: "Cliente", detalle: "Estado del servicio y reportes", icono: <IconoPersona className="h-7 w-7" /> },
+  { id: "guardia", etiqueta: "Guardia", detalle: "Turno, asistencia y rondas", icono: <IconoTurno className="h-7 w-7" /> },
+  { id: "supervisor", etiqueta: "Supervisor", detalle: "Personal, puestos y novedades", icono: <IconoEscudoOk className="h-7 w-7" /> },
+  { id: "central", etiqueta: "Central operativa", detalle: "Control general de la operación", icono: <Central className="h-7 w-7" /> },
 ];
 
-const destinos: Record<Perfil, string> = {
-  cliente: "/portal",
-  guardia: "/guardia?desde=perfiles",
-  supervisor: "/supervisor",
-  central: "/admin",
-};
+const destinos: Record<Perfil, string> = { cliente: "/portal", guardia: "/guardia?desde=perfiles", supervisor: "/supervisor", central: "/admin" };
 
 export function SelectorPerfil() {
   const router = useRouter();
@@ -28,61 +24,31 @@ export function SelectorPerfil() {
   async function cerrarSesion() {
     setSaliendo(true);
     await crearClienteNavegador().auth.signOut();
-    router.push("/ingreso?pantalla=ingreso");
+    router.push("/acceso");
     router.refresh();
   }
 
   return (
-    <div className="absolute inset-0 z-10" role="radiogroup" aria-label="Selecciona tu perfil de acceso">
-      {perfiles.map((perfil) => {
-        const activo = seleccionado === perfil.id;
-        const esCentral = perfil.id === "central";
+    <div className="mt-8 flex flex-1 flex-col">
+      <div className="space-y-3" role="radiogroup" aria-label="Selecciona tu perfil de acceso">
+        {perfiles.map((perfil) => {
+          const activo = seleccionado === perfil.id;
+          return (
+            <button key={perfil.id} type="button" role="radio" aria-checked={activo} onClick={() => setSeleccionado(perfil.id)} className={`flex min-h-[92px] w-full items-center gap-4 rounded-2xl border-2 px-4 text-left transition ${activo ? "border-[#00cfff] bg-[#08213a] shadow-[0_0_24px_rgba(0,166,255,0.12)]" : "border-[#344659] bg-[#07172a]/80"}`}>
+              <span className={`grid h-14 w-14 shrink-0 place-items-center rounded-xl ${activo ? "bg-[#087ff0] text-white" : "bg-[#0b2137] text-[#0788ff]"}`}>{perfil.icono}</span>
+              <span className="min-w-0 flex-1"><span className="block text-lg font-semibold text-white">{perfil.etiqueta}</span><span className="mt-1 block text-sm text-slate-400">{perfil.detalle}</span></span>
+              <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border ${activo ? "border-[#087ff0] bg-[#087ff0] text-white" : "border-slate-600 text-transparent"}`}>✓</span>
+            </button>
+          );
+        })}
+      </div>
 
-        return (
-          <button
-            key={perfil.id}
-            type="button"
-            role="radio"
-            aria-checked={activo}
-            aria-label={`Seleccionar perfil ${perfil.etiqueta}`}
-            onClick={() => setSeleccionado(perfil.id)}
-            className={`absolute left-[8.7%] h-[11.3%] w-[82.5%] rounded-[1.35rem] border-2 bg-transparent transition-colors ${
-              activo
-                ? "border-[#00cfff] shadow-[0_0_18px_rgba(0,166,255,0.15)]"
-                : "border-[#3f4853]"
-            }`}
-            style={{ top: perfil.top }}
-          >
-            {esCentral && (
-              <span className="absolute right-[3.8%] top-1/2 h-[3.7rem] w-[3.7rem] -translate-y-1/2 rounded-full bg-[#071527]" />
-            )}
-            {activo ? (
-              <span className="absolute right-[4.6%] top-1/2 grid h-[3.15rem] w-[3.15rem] -translate-y-1/2 place-items-center rounded-full bg-[#087ff0] text-white shadow-[0_0_18px_rgba(0,142,255,0.35)]">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="h-[58%] w-[58%]" aria-hidden>
-                  <path d="m5 12 4.2 4.2L19 6.8" />
-                </svg>
-              </span>
-            ) : esCentral ? (
-              <span className="absolute right-[5.6%] top-1/2 -translate-y-1/2 text-[2.6rem] font-light leading-none text-white/75" aria-hidden>›</span>
-            ) : null}
-          </button>
-        );
-      })}
-
-      <button
-        type="button"
-        onClick={() => router.push(destinos[seleccionado])}
-        aria-label={`Continuar al panel de ${perfiles.find((perfil) => perfil.id === seleccionado)?.etiqueta}`}
-        className="absolute left-[8.7%] top-[78.45%] h-[7.45%] w-[82.5%] rounded-[1.25rem] bg-transparent"
-      />
-
-      <button
-        type="button"
-        disabled={saliendo}
-        onClick={cerrarSesion}
-        aria-label="Cerrar sesión"
-        className="absolute left-[31%] top-[88.5%] h-[6%] w-[45%] rounded-xl bg-transparent disabled:cursor-wait"
-      />
+      <button type="button" onClick={() => router.push(destinos[seleccionado])} className="boton-primario mt-7 min-h-14 w-full rounded-xl text-base font-semibold text-white">Continuar</button>
+      <button type="button" disabled={saliendo} onClick={cerrarSesion} className="mt-4 flex min-h-12 items-center justify-center gap-2 text-sm font-medium text-slate-400 disabled:opacity-50"><IconoSalir className="h-5 w-5" /> {saliendo ? "Cerrando sesión…" : "Cerrar sesión"}</button>
     </div>
   );
+}
+
+function Central({ className }: { className?: string }) {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden><path d="M4 20V8l8-4 8 4v12"/><path d="M8 20v-7h8v7M3 20h18"/><circle cx="12" cy="9" r="1.5"/></svg>;
 }

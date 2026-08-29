@@ -14,15 +14,18 @@ export const metadata = { title: "Portal del cliente — SOTERSA" };
 export const dynamic = "force-dynamic";
 
 export default async function PaginaPortal() {
-  const { supabase, perfil } = await exigirPerfil(["cliente"]);
+  const { supabase, perfil } = await exigirPerfil(["cliente", "admin"]);
   const desde = ahoraConDesfase(-30 * 24);
 
+  const empresaConsulta = supabase
+    .from("empresas_cliente")
+    .select("id, nombre, direccion, contacto_nombre, contacto_telefono");
+  const empresaPromesa = perfil.empresa_cliente_id
+    ? empresaConsulta.eq("id", perfil.empresa_cliente_id).single()
+    : empresaConsulta.order("nombre").limit(1).maybeSingle();
+
   const [empresaR, puestosR, novedadesR, slaR] = await Promise.all([
-    supabase
-      .from("empresas_cliente")
-      .select("id, nombre, direccion, contacto_nombre, contacto_telefono")
-      .eq("id", perfil.empresa_cliente_id)
-      .single(),
+    empresaPromesa,
     supabase.from("puestos").select("id, codigo, nombre, cobertura_horas, armado").eq("activo", true),
     supabase
       .from("novedades")
