@@ -13,13 +13,13 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#020b18",
     icons: [
       {
-        src: "/icono-sotersa-192.png",
+        src: "/icono-lobo-sotersa-192.png",
         sizes: "192x192",
         type: "image/png",
-        purpose: "maskable",
+        purpose: "any",
       },
       {
-        src: "/icono-sotersa-512.png",
+        src: "/icono-lobo-sotersa-512.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",

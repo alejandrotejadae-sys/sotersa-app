@@ -19,12 +19,18 @@ export const metadata: Metadata = {
   description:
     "Sistema de operaciones y bitácora digital de SOTERSA Seguridad Estratégica.",
   manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "SOTERSA",
+    statusBarStyle: "black-translucent",
+  },
   icons: {
     icon: [
-      { url: "/icono-sotersa-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icono-sotersa-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/icono-lobo-sotersa-48.png", sizes: "48x48", type: "image/png" },
+      { url: "/icono-lobo-sotersa-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icono-lobo-sotersa-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/icono-sotersa-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
 };
 
