@@ -32,5 +32,6 @@ export async function validarNovedad(formData: FormData) {
     .eq("id", novedad.id);
 
   revalidatePath("/supervisor");
+  revalidatePath("/operacion/novedades");
   revalidatePath("/portal");
 }
