@@ -24,7 +24,7 @@ const ENTRADAS = [
   { href: null, etiqueta: "Ronda", Icono: IconoCiclo },
   { href: null, etiqueta: "Reportar", Icono: IconoAlerta },
   { href: null, etiqueta: "Mensajes", Icono: IconoMensaje },
-  { href: "/guardia/perfil", etiqueta: "Perfil", Icono: IconoPersona },
+  { href: "/mi-perfil", etiqueta: "Perfil", Icono: IconoPersona },
 ] as const;
 
 export function NavInferior() {

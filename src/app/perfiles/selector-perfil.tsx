@@ -44,7 +44,7 @@ export function SelectorPerfil() {
       </div>
 
       <button type="button" onClick={() => router.push(destinos[seleccionado])} className="boton-primario mt-7 min-h-14 w-full rounded-xl text-base font-semibold text-white">Continuar</button>
-      <button type="button" onClick={() => router.push("/configuracion/dispositivo")} className="mt-3 min-h-12 w-full rounded-xl border border-[#27425e] bg-[#07172a]/80 text-sm font-medium text-[#8ddaff]">Configurar este dispositivo</button>
+      <div className="mt-3 grid grid-cols-2 gap-3"><button type="button" onClick={() => router.push("/mi-perfil")} className="min-h-12 rounded-xl border border-[#27425e] bg-[#07172a]/80 text-sm font-medium text-[#8ddaff]">Mi perfil</button><button type="button" onClick={() => router.push("/configuracion/dispositivo")} className="min-h-12 rounded-xl border border-[#27425e] bg-[#07172a]/80 text-sm font-medium text-[#8ddaff]">Dispositivo</button></div>
       <button type="button" disabled={saliendo} onClick={cerrarSesion} className="mt-4 flex min-h-12 items-center justify-center gap-2 text-sm font-medium text-slate-400 disabled:opacity-50"><IconoSalir className="h-5 w-5" /> {saliendo ? "Cerrando sesión…" : "Cerrar sesión"}</button>
     </div>
   );

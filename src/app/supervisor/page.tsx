@@ -46,10 +46,7 @@ export default async function PaginaSupervisor() {
         <header className="flex items-center justify-between gap-5 px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))] lg:px-8">
           <MarcaSupervisor />
           <nav className="hidden items-center gap-1 lg:flex"><EnlaceSuperior href="/supervisor" texto="Inicio" activo/><EnlaceSuperior href="/operacion/personal" texto="Personal"/><EnlaceSuperior href="/operacion/turnos" texto="Turnos"/><EnlaceSuperior href="/operacion/rondas" texto="Rondas"/><EnlaceSuperior href="/operacion/novedades" texto="Novedades"/><EnlaceSuperior href="/operacion/reportes" texto="Reportes"/><EnlaceSuperior href="/admin" texto="Central"/><EnlaceSuperior href="/portal" texto="Clientes"/></nav>
-          <Link href="/operacion/novedades" aria-label="Notificaciones" className="relative grid h-12 w-12 place-items-center rounded-full text-white transition hover:bg-white/5">
-            <Campana className="h-7 w-7" />
-            {novedades > 0 && <span className="absolute right-2 top-1.5 h-3 w-3 rounded-full border-2 border-[#020b18] bg-[#087ff0]" />}
-          </Link>
+          <div className="flex items-center"><Link href="/operacion/novedades" aria-label="Notificaciones" className="relative grid h-12 w-12 place-items-center rounded-full text-white transition hover:bg-white/5"><Campana className="h-7 w-7" />{novedades > 0 && <span className="absolute right-2 top-1.5 h-3 w-3 rounded-full border-2 border-[#020b18] bg-[#087ff0]" />}</Link><Link href="/mi-perfil" aria-label="Abrir mi perfil" className="grid h-11 w-11 place-items-center rounded-full border border-[#27425e] bg-[#07172a] text-[#49b6ff]"><IconoPersona className="h-5 w-5" /></Link></div>
         </header>
 
         <div className="grid grid-cols-1 gap-4 px-4 pb-28 lg:grid-cols-12 lg:px-8 lg:pb-10">
