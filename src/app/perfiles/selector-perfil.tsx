@@ -2,19 +2,20 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { IconoEscudoOk, IconoPersona, IconoSalir, IconoTurno } from "@/app/componentes/iconos";
+import { IconoCamion, IconoEscudoOk, IconoPersona, IconoSalir, IconoTurno } from "@/app/componentes/iconos";
 import { crearClienteNavegador } from "@/lib/supabase/navegador";
 
-type Perfil = "cliente" | "guardia" | "supervisor" | "central";
+type Perfil = "cliente" | "guardia" | "custodia" | "supervisor" | "central";
 
 const perfiles: Array<{ id: Perfil; etiqueta: string; detalle: string; icono: React.ReactNode }> = [
   { id: "cliente", etiqueta: "Cliente", detalle: "Estado del servicio y reportes", icono: <IconoPersona className="h-7 w-7" /> },
-  { id: "guardia", etiqueta: "Guardia", detalle: "Turno, asistencia y rondas", icono: <IconoTurno className="h-7 w-7" /> },
+  { id: "guardia", etiqueta: "Agente de seguridad", detalle: "Turno, asistencia y rondas", icono: <IconoTurno className="h-7 w-7" /> },
+  { id: "custodia", etiqueta: "Custodia armada", detalle: "Operación, ruta y comunicación segura", icono: <IconoCamion className="h-7 w-7" /> },
   { id: "supervisor", etiqueta: "Supervisor", detalle: "Personal, puestos y novedades", icono: <IconoEscudoOk className="h-7 w-7" /> },
   { id: "central", etiqueta: "Central operativa", detalle: "Control general de la operación", icono: <Central className="h-7 w-7" /> },
 ];
 
-const destinos: Record<Perfil, string> = { cliente: "/portal", guardia: "/guardia?desde=perfiles", supervisor: "/supervisor", central: "/admin" };
+const destinos: Record<Perfil, string> = { cliente: "/portal", guardia: "/guardia?desde=perfiles", custodia: "/guardia/custodia", supervisor: "/supervisor", central: "/admin" };
 
 export function SelectorPerfil() {
   const router = useRouter();
@@ -44,6 +45,7 @@ export function SelectorPerfil() {
       </div>
 
       <button type="button" onClick={() => router.push(destinos[seleccionado])} className="boton-primario mt-7 min-h-14 w-full rounded-xl text-base font-semibold text-white">Continuar</button>
+      <div className="mt-3 grid grid-cols-2 gap-3"><button type="button" onClick={() => router.push("/mi-perfil")} className="min-h-12 rounded-xl border border-[#27425e] bg-[#07172a]/80 text-sm font-medium text-[#8ddaff]">Mi perfil</button><button type="button" onClick={() => router.push("/configuracion/dispositivo")} className="min-h-12 rounded-xl border border-[#27425e] bg-[#07172a]/80 text-sm font-medium text-[#8ddaff]">Dispositivo</button></div>
       <button type="button" disabled={saliendo} onClick={cerrarSesion} className="mt-4 flex min-h-12 items-center justify-center gap-2 text-sm font-medium text-slate-400 disabled:opacity-50"><IconoSalir className="h-5 w-5" /> {saliendo ? "Cerrando sesión…" : "Cerrar sesión"}</button>
     </div>
   );

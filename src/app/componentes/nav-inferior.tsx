@@ -21,10 +21,10 @@ import {
  */
 const ENTRADAS = [
   { href: "/guardia", etiqueta: "Inicio", Icono: IconoCasa },
-  { href: null, etiqueta: "Ronda", Icono: IconoCiclo },
-  { href: null, etiqueta: "Reportar", Icono: IconoAlerta },
+  { href: "/guardia/ronda", etiqueta: "Ronda", Icono: IconoCiclo },
+  { href: "/guardia/reportar", etiqueta: "Reportar", Icono: IconoAlerta },
   { href: null, etiqueta: "Mensajes", Icono: IconoMensaje },
-  { href: "/guardia/perfil", etiqueta: "Perfil", Icono: IconoPersona },
+  { href: "/mi-perfil", etiqueta: "Perfil", Icono: IconoPersona },
 ] as const;
 
 export function NavInferior() {

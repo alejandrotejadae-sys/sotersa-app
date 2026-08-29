@@ -7,6 +7,7 @@ import { CronometroTurno } from "@/app/componentes/cronometro-turno";
 import {
   IconoAlerta,
   IconoCiclo,
+  IconoCamion,
   IconoEscudo,
   IconoEscudoOk,
   IconoFlecha,
@@ -37,7 +38,7 @@ export default async function PaginaGuardia() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/ingreso");
+  if (!user) redirect("/acceso");
 
   const { data: perfilActual } = await supabase
     .from("perfiles")
@@ -62,7 +63,7 @@ export default async function PaginaGuardia() {
               Cuenta sin puesto asignado
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-gris-400">
-              Tu usuario existe pero no está vinculado a una ficha de guardia.
+              Tu usuario existe pero no está vinculado a una ficha de agente de seguridad.
               Comunícate con operaciones.
             </p>
           </div>
@@ -344,9 +345,9 @@ export default async function PaginaGuardia() {
                     </p>
                   )}
                 </div>
-                <span aria-disabled="true" className="boton-primario shrink-0 rounded-xl border border-azul-400/60 px-4 py-3 text-sm font-semibold text-white opacity-75">
+                <Link href="/guardia/ronda" className="boton-primario shrink-0 rounded-xl border border-azul-400/60 px-4 py-3 text-sm font-semibold text-white transition active:scale-[0.99]">
                   Continuar ronda
-                </span>
+                </Link>
               </div>
             </div>
           )}
@@ -388,27 +389,38 @@ export default async function PaginaGuardia() {
         </section>
 
         {/* ---------------- Acciones ---------------- */}
+        {puesto?.armado && (
+          <Link
+            href="/guardia/custodia"
+            className="panel-operativo flex min-h-[96px] items-center gap-4 p-4 transition active:scale-[0.99]"
+          >
+            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-azul-400/60 bg-azul-500/10 text-azul-300">
+              <IconoCamion className="h-8 w-8" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-xs font-semibold uppercase tracking-[0.16em] text-azul-400">
+                Servicio asignado
+              </span>
+              <span className="mt-1 block text-xl font-bold text-white">
+                Custodia armada
+              </span>
+              <span className="mt-1 block text-sm text-gris-400">
+                Ver operación, ruta y comunicación segura
+              </span>
+            </span>
+            <IconoFlecha className="h-5 w-5 shrink-0 text-azul-300" />
+          </Link>
+        )}
+
         <div className="grid grid-cols-3 gap-3">
-          <TilePendiente
-            icono={<IconoAlerta className="h-7 w-7" />}
-            titulo={
-              <>
-                Reportar
-                <br />
-                incidente
-              </>
-            }
-          />
-          <TilePendiente
-            icono={<IconoLista className="h-7 w-7" />}
-            titulo={
-              <>
-                Enviar
-                <br />
-                novedad
-              </>
-            }
-          />
+          <Link href="/guardia/reportar?severidad=emergencia" className="tarjeta flex min-h-[104px] flex-col items-center justify-center gap-2 px-2 py-4 text-center transition active:scale-[0.99]">
+            <IconoAlerta className="h-7 w-7 text-red-300" />
+            <span className="text-xs font-medium leading-tight text-white">Reportar<br />incidente</span>
+          </Link>
+          <Link href="/guardia/reportar" className="tarjeta flex min-h-[104px] flex-col items-center justify-center gap-2 px-2 py-4 text-center transition active:scale-[0.99]">
+            <IconoLista className="h-7 w-7 text-azul-300" />
+            <span className="text-xs font-medium leading-tight text-white">Enviar<br />novedad</span>
+          </Link>
           <Link
             href="/guardia/emergencia"
             className="tarjeta flex min-h-[104px] flex-col items-center justify-center gap-2 px-2 py-4 text-center transition active:scale-[0.99]"
@@ -448,7 +460,7 @@ function Saludo({ nombre }: { nombre: string }) {
         <IconoTurno className="h-6 w-6" />
       </span>
       <div>
-        <p className="text-base font-semibold text-azul-400">Guardia</p>
+        <p className="text-base font-semibold text-azul-400">Agente de seguridad</p>
         <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-white">
           Hola, {nombre}
         </h1>
@@ -527,24 +539,6 @@ function BotonSOS() {
       </span>
       <IconoFlecha className="h-5 w-5 shrink-0 text-red-300" />
     </Link>
-  );
-}
-
-/** Destino aun no construido: se ve, pero no engaña con un enlace muerto. */
-function TilePendiente({
-  icono,
-  titulo,
-}: {
-  icono: React.ReactNode;
-  titulo: React.ReactNode;
-}) {
-  return (
-    <div className="tarjeta flex min-h-[96px] flex-col items-center justify-center gap-2 px-2 py-4 text-center">
-      <span className="text-azul-400">{icono}</span>
-      <span className="text-sm font-medium leading-tight text-gris-200">
-        {titulo}
-      </span>
-    </div>
   );
 }
 

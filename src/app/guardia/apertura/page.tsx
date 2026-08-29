@@ -11,7 +11,7 @@ export default async function PaginaApertura() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/ingreso");
+  if (!user) redirect("/acceso");
 
   const { data: guardia } = await supabase
     .from("guardias")

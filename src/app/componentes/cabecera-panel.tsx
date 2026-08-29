@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { Marca, Pulso } from "@/app/componentes/marca";
+import { IconoPersona } from "@/app/componentes/iconos";
 import { BotonSalir } from "@/app/guardia/perfil/boton-salir";
 
 const ROTULOS = {
@@ -30,6 +32,7 @@ export function CabeceraPanel({
           <span className="flex items-center gap-2 rounded-full border border-normal/30 bg-normal/10 px-3 py-2 text-xs font-medium text-green-300">
             <Pulso /> En línea
           </span>
+          <Link href="/mi-perfil" aria-label="Abrir mi perfil" className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#27425e] bg-[#07172a] text-[#49b6ff]"><IconoPersona className="h-5 w-5" /></Link>
           <div className="w-28 [&_button]:min-h-10 [&_button]:px-3 [&_button]:text-xs">
             <BotonSalir destino="/acceso" />
           </div>

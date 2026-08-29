@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { CabeceraPanel } from "@/app/componentes/cabecera-panel";
 import { TarjetaMetrica } from "@/app/componentes/tarjeta-metrica";
 import {
   IconoAlerta,
   IconoCiclo,
   IconoEscudoOk,
+  IconoFlecha,
   IconoLista,
   IconoRonda,
   IconoTurno,
@@ -13,33 +15,40 @@ import { ahoraConDesfase, exigirPerfil, fechaHoraEcuador, horaEcuador, uno } fro
 export const metadata = { title: "Portal del cliente — SOTERSA" };
 export const dynamic = "force-dynamic";
 
-export default async function PaginaPortal() {
+export default async function PaginaPortal({ searchParams }: { searchParams: Promise<{ empresa?: string }> }) {
   const { supabase, perfil } = await exigirPerfil(["cliente", "admin"]);
   const desde = ahoraConDesfase(-30 * 24);
+  const params = await searchParams;
+  const empresaSolicitada = perfil.rol === "admin" && /^[0-9a-f-]{36}$/i.test(params.empresa ?? "") ? params.empresa : null;
 
   const empresaConsulta = supabase
     .from("empresas_cliente")
     .select("id, nombre, direccion, contacto_nombre, contacto_telefono");
-  const empresaPromesa = perfil.empresa_cliente_id
+  const empresaR = perfil.empresa_cliente_id
     ? empresaConsulta.eq("id", perfil.empresa_cliente_id).single()
-    : empresaConsulta.order("nombre").limit(1).maybeSingle();
+    : empresaSolicitada
+      ? empresaConsulta.eq("id", empresaSolicitada).maybeSingle()
+      : empresaConsulta.order("nombre").limit(1).maybeSingle();
 
-  const [empresaR, puestosR, novedadesR, slaR] = await Promise.all([
-    empresaPromesa,
-    supabase.from("puestos").select("id, codigo, nombre, cobertura_horas, armado").eq("activo", true),
-    supabase
-      .from("novedades")
-      .select("id, tipo, severidad, descripcion, foto_url, hora_captura, estado, nota_supervisor, puestos(codigo, nombre)")
-      .order("hora_captura", { ascending: false })
-      .limit(12),
-    supabase
-      .from("v_sla_novedades")
-      .select("id, hora_captura, notificada_en, minutos_aviso, cumple_sla")
-      .gte("hora_captura", desde),
+  const empresa = (await empresaR).data;
+  const empresaId = perfil.empresa_cliente_id ?? empresa?.id;
+  const puestosConsulta = supabase.from("puestos").select("id, codigo, nombre, cobertura_horas, armado").eq("activo", true);
+  const puestosR = empresaId ? await puestosConsulta.eq("empresa_cliente_id", empresaId) : await puestosConsulta.limit(0);
+  const puestos = puestosR.data ?? [];
+  const idsPuestos = puestos.map((puesto) => puesto.id);
+
+  const novedadesConsulta = supabase
+    .from("novedades")
+    .select("id, tipo, severidad, descripcion, foto_url, hora_captura, estado, nota_supervisor, puestos(codigo, nombre)")
+    .order("hora_captura", { ascending: false })
+    .limit(12);
+  const slaConsulta = supabase.from("v_sla_novedades").select("id, hora_captura, notificada_en, minutos_aviso, cumple_sla").gte("hora_captura", desde);
+
+  const [novedadesR, slaR] = await Promise.all([
+    idsPuestos.length ? novedadesConsulta.in("puesto_id", idsPuestos) : novedadesConsulta.in("puesto_id", ["00000000-0000-0000-0000-000000000000"]),
+    empresaId ? slaConsulta.eq("empresa_cliente_id", empresaId) : slaConsulta.eq("empresa_cliente_id", "00000000-0000-0000-0000-000000000000"),
   ]);
 
-  const empresa = empresaR.data;
-  const puestos = puestosR.data ?? [];
   const novedades = novedadesR.data ?? [];
   const sla = slaR.data ?? [];
   const medidos = sla.filter((fila) => fila.cumple_sla !== null);
@@ -51,6 +60,7 @@ export default async function PaginaPortal() {
     <div className="min-h-dvh pb-12">
       <CabeceraPanel rol="cliente" nombre={perfil.nombre} />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-6">
+        {perfil.rol === "admin" && <Link href="/operacion/clientes" className="inline-flex items-center gap-1 self-start text-sm font-medium text-azul-400"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> Volver a clientes</Link>}
         <section>
           <p className="text-sm font-medium text-azul-400">Cliente</p>
           <h1 className="mt-1 text-3xl font-bold text-white">Buenos días, {perfil.nombre.split(" ")[0]}</h1>

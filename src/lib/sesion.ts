@@ -4,13 +4,14 @@ import { redirect } from "next/navigation";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import type { RolUsuario } from "@/lib/tipos";
 
-export async function exigirPerfil(roles: RolUsuario[]) {
+export async function exigirPerfil(roles: RolUsuario[], opciones?: { permitirClaveTemporal?: boolean }) {
   const supabase = await crearClienteServidor();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) redirect("/acceso");
+  if (user.user_metadata?.debe_cambiar_clave === true && !opciones?.permitirClaveTemporal) redirect("/cambiar-clave");
 
   const { data: perfil } = await supabase
     .from("perfiles")
