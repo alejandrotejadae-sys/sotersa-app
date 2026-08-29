@@ -45,7 +45,7 @@ export default async function PaginaSupervisor() {
       <div className="mx-auto min-h-dvh w-full max-w-[1440px] overflow-hidden border-x border-white/[0.04] bg-[radial-gradient(circle_at_50%_-5%,rgba(0,128,255,0.14),transparent_34%),linear-gradient(180deg,#020b18_0%,#031226_55%,#020b18_100%)] shadow-2xl shadow-black/40">
         <header className="flex items-center justify-between gap-5 px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))] lg:px-8">
           <MarcaSupervisor />
-          <nav className="hidden items-center gap-1 lg:flex"><EnlaceSuperior href="/supervisor" texto="Inicio" activo/><EnlaceSuperior href="/operacion/personal" texto="Personal"/><EnlaceSuperior href="/operacion/rondas" texto="Rondas"/><EnlaceSuperior href="/operacion/novedades" texto="Novedades"/><EnlaceSuperior href="/admin" texto="Central"/><EnlaceSuperior href="/portal" texto="Clientes"/></nav>
+          <nav className="hidden items-center gap-1 lg:flex"><EnlaceSuperior href="/supervisor" texto="Inicio" activo/><EnlaceSuperior href="/operacion/personal" texto="Personal"/><EnlaceSuperior href="/operacion/turnos" texto="Turnos"/><EnlaceSuperior href="/operacion/rondas" texto="Rondas"/><EnlaceSuperior href="/operacion/novedades" texto="Novedades"/><EnlaceSuperior href="/admin" texto="Central"/><EnlaceSuperior href="/portal" texto="Clientes"/></nav>
           <Link href="/operacion/novedades" aria-label="Notificaciones" className="relative grid h-12 w-12 place-items-center rounded-full text-white transition hover:bg-white/5">
             <Campana className="h-7 w-7" />
             {novedades > 0 && <span className="absolute right-2 top-1.5 h-3 w-3 rounded-full border-2 border-[#020b18] bg-[#087ff0]" />}
@@ -121,7 +121,7 @@ export default async function PaginaSupervisor() {
             <h2 className="text-lg font-semibold">Acciones rápidas</h2>
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <Accion href="/operacion/personal" icono={<IconoPersona className="h-7 w-7" />} texto="Ver personal" />
-              <Accion href="/operacion/personal" icono={<IconoTurno className="h-7 w-7" />} texto="Asignar puesto" />
+              <Accion href="/operacion/turnos" icono={<IconoTurno className="h-7 w-7" />} texto="Asignar puesto" />
               <Accion href="/operacion/rondas" icono={<IconoCiclo className="h-7 w-7" />} texto="Crear ronda" />
               <Accion href="/operacion/novedades" icono={<IconoAlerta className="h-7 w-7" />} texto="Ver novedades" />
             </div>
@@ -141,7 +141,7 @@ export default async function PaginaSupervisor() {
           <Navegacion href="/operacion/personal" icono={<IconoPersona className="h-6 w-6" />} texto="Personal" />
           <Navegacion href="/operacion/rondas" icono={<IconoCiclo className="h-6 w-6" />} texto="Rondas" />
           <Navegacion href="/operacion/novedades" icono={<IconoAlerta className="h-6 w-6" />} texto="Novedades" />
-          <Navegacion icono={<Puntos className="h-6 w-6" />} texto="Más" />
+          <Navegacion href="/operacion/turnos" icono={<IconoTurno className="h-6 w-6" />} texto="Turnos" />
         </nav>
       </div>
     </main>
@@ -219,10 +219,6 @@ function Navegacion({ icono, texto, activo = false, href }: { icono: React.React
 
 function Campana({ className }: { className?: string }) {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>;
-}
-
-function Puntos({ className }: { className?: string }) {
-  return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>;
 }
 
 function EnlaceSuperior({ href, texto, activo = false }: { href: string; texto: string; activo?: boolean }) {
