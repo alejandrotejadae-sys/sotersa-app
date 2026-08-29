@@ -37,7 +37,7 @@ export default async function PaginaGuardia() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/ingreso");
+  if (!user) redirect("/acceso");
 
   const { data: perfilActual } = await supabase
     .from("perfiles")

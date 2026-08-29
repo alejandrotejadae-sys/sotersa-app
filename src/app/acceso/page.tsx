@@ -1,11 +1,10 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Marca } from "@/app/componentes/marca";
 import { IconoEscudoOk } from "@/app/componentes/iconos";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { FormularioAcceso } from "./formulario-acceso";
 
-export const metadata = { title: "Acceso corporativo — SOTERSA" };
+export const metadata = { title: "Ingreso — SOTERSA" };
 
 export default async function PaginaAcceso() {
   const supabase = await crearClienteServidor();
@@ -20,20 +19,17 @@ export default async function PaginaAcceso() {
         <Marca tamano="grande" />
         <div>
           <p className="inline-flex items-center gap-2 text-sm font-medium text-azul-400">
-            <IconoEscudoOk className="h-5 w-5" /> Acceso corporativo
+            <IconoEscudoOk className="h-5 w-5" /> Acceso seguro
           </p>
           <h1 className="mt-3 text-3xl font-bold text-white">Centro de seguridad</h1>
           <p className="mt-2 text-sm leading-relaxed text-gris-400">
-            Supervisión, central operativa y portal del cliente.
+            Un solo ingreso para agentes de seguridad, supervisores, clientes y administración.
           </p>
         </div>
       </header>
       <section className="panel-operativo p-6 sm:p-7">
         <FormularioAcceso />
       </section>
-      <Link href="/ingreso" className="text-center text-sm font-medium text-azul-400">
-        Volver al ingreso del agente de seguridad
-      </Link>
     </main>
   );
 }

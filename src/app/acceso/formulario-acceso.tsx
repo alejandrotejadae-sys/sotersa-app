@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { crearClienteNavegador } from "@/lib/supabase/navegador";
 import { BotonAccesoBiometrico } from "@/app/componentes/boton-acceso-biometrico";
+import { cedulaACorreo, cedulaEsValida, normalizarCedula } from "@/lib/auth";
 
 export function FormularioAcceso() {
   const router = useRouter();
@@ -23,12 +24,18 @@ export function FormularioAcceso() {
       return;
     }
 
-    // Supabase autentica con correo. Para el personal SOTERSA se completa el
-    // dominio internamente, sin obligar a escribir ni conocer el signo @.
-    // Los clientes que ya usan un correo completo conservan compatibilidad.
-    const email = identificador.includes("@")
-      ? identificador
-      : `${identificador}@sotersa.com`;
+    // La misma pantalla admite los dos esquemas que ya existen: cédula + PIN
+    // para agentes y usuario/correo + contraseña para los demás perfiles.
+    const esCedula = /^\d+$/.test(identificador);
+    if (esCedula && !cedulaEsValida(normalizarCedula(identificador))) {
+      setError("La cédula ingresada no es válida.");
+      return;
+    }
+    const email = esCedula
+      ? cedulaACorreo(normalizarCedula(identificador))
+      : identificador.includes("@")
+        ? identificador
+        : `${identificador}@sotersa.com`;
 
     setCargando(true);
     const { data, error: fallo } = await crearClienteNavegador().auth.signInWithPassword({
@@ -62,13 +69,13 @@ export function FormularioAcceso() {
           value={usuario}
           onChange={(evento) => setUsuario(evento.target.value)}
           className="boton-campo rounded-xl border border-azul-900/80 bg-[#020b18]/80 px-4 text-base text-white outline-none transition focus:border-azul-400 focus:ring-4 focus:ring-azul-500/10"
-          placeholder="Ingresa tu usuario"
+          placeholder="Usuario o cédula"
         />
       </div>
       <Link href="/recuperar" className="-mt-2 self-end text-sm font-medium text-[#0788ff]">¿Olvidaste tu contraseña?</Link>
       <div className="flex flex-col gap-2">
         <label htmlFor="clave" className="text-sm font-medium text-gris-300">
-          Contraseña
+          Contraseña o PIN
         </label>
         <input
           id="clave"
@@ -80,6 +87,7 @@ export function FormularioAcceso() {
           placeholder="••••••••"
         />
       </div>
+      <p className="-mt-3 text-xs leading-5 text-slate-500">Los agentes de seguridad ingresan con su cédula y PIN. Los demás usuarios utilizan su contraseña.</p>
       {error && (
         <p role="alert" className="rounded-xl bg-emergencia/15 px-4 py-3 text-sm text-red-200">
           {error}

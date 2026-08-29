@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function PaginaRondaGuardia() {
   const supabase = await crearClienteServidor();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/ingreso");
+  if (!user) redirect("/acceso");
 
   const { data: perfil } = await supabase.from("perfiles").select("rol").eq("id", user.id).maybeSingle();
   const consultaGuardia = supabase.from("guardias").select("id,nombre");

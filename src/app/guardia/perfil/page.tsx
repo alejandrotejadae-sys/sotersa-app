@@ -14,7 +14,7 @@ export default async function PaginaPerfil() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/ingreso");
+  if (!user) redirect("/acceso");
 
   const { data: guardia } = await supabase
     .from("guardias")

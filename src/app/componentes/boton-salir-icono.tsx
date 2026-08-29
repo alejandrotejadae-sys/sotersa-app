@@ -21,7 +21,7 @@ export function BotonSalirIcono() {
   async function salir() {
     setSaliendo(true);
     await crearClienteNavegador().auth.signOut();
-    router.push("/ingreso");
+    router.push("/acceso");
     router.refresh();
   }
 

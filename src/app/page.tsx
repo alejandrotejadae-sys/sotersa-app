@@ -8,7 +8,7 @@ export default async function Inicio() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/ingreso");
+  if (!user) redirect("/acceso");
 
   redirect("/perfiles");
 }
