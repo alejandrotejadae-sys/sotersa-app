@@ -39,6 +39,7 @@ export async function registrarAgente(_: EstadoRegistroAgente, formData: FormDat
     email: correoInterno,
     password: pin,
     email_confirm: true,
+    app_metadata: { rol: "guardia" },
     user_metadata: { nombre, rol: "guardia", debe_cambiar_clave: true },
   });
 
@@ -49,13 +50,15 @@ export async function registrarAgente(_: EstadoRegistroAgente, formData: FormDat
   }
 
   const usuarioId = usuarioCreado.user.id;
-  const { error: errorPerfil } = await administrador.from("perfiles").insert({
+  // La base puede crear este perfil mediante su trigger de alta en Auth.
+  // Upsert hace que el flujo funcione tanto con ese trigger como sin él.
+  const { error: errorPerfil } = await administrador.from("perfiles").upsert({
     id: usuarioId,
     rol: "guardia",
     nombre,
     telefono,
     activo: true,
-  });
+  }, { onConflict: "id" });
 
   if (errorPerfil) {
     await administrador.auth.admin.deleteUser(usuarioId);

@@ -65,12 +65,15 @@ export async function crearCuenta(_: EstadoAlta, formData: FormData): Promise<Es
     email: correo,
     password: claveTemporal,
     email_confirm: true,
+    app_metadata: { rol, empresa_cliente_id: empresa, zona_id: zona },
     user_metadata: { nombre, rol, debe_cambiar_clave: true },
   });
   if (errorAuth || !usuarioCreado.user) return fallo(errorAuth?.message.toLowerCase().includes("registered") ? "Ya existe una cuenta con ese usuario o correo." : "No fue posible crear la cuenta en este momento.");
 
   const usuarioId = usuarioCreado.user.id;
-  const { error: errorPerfil } = await administrador.from("perfiles").insert({ id: usuarioId, rol, nombre, empresa_cliente_id: empresa, zona_id: zona, activo: true });
+  // Compatible con instalaciones que crean el perfil automáticamente al dar
+  // de alta la cuenta en Auth y con las que todavía no tienen ese trigger.
+  const { error: errorPerfil } = await administrador.from("perfiles").upsert({ id: usuarioId, rol, nombre, empresa_cliente_id: empresa, zona_id: zona, activo: true }, { onConflict: "id" });
   if (errorPerfil) {
     await administrador.auth.admin.deleteUser(usuarioId);
     return fallo("La cuenta no pudo vincularse con su perfil operativo.");
