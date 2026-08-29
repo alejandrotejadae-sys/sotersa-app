@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { IconoHuella, IconoPersona } from "@/app/componentes/iconos";
+import { IconoPersona } from "@/app/componentes/iconos";
+import { BotonAccesoBiometrico } from "@/app/componentes/boton-acceso-biometrico";
 import { crearClienteNavegador } from "@/lib/supabase/navegador";
 import { cedulaACorreo, cedulaEsValida, normalizarCedula, PIN_LARGO } from "@/lib/auth";
 
@@ -58,7 +59,7 @@ export default function FormularioIngreso() {
       {error && <p role="alert" className="rounded-xl border border-red-500/35 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</p>}
 
       <button type="submit" disabled={cargando} className="boton-primario min-h-14 w-full rounded-xl text-base font-semibold text-white disabled:opacity-50">{cargando ? "Ingresando…" : "Ingresar de forma segura"}</button>
-      <button type="button" onClick={() => setError("El ingreso con huella se habilitará después del primer acceso seguro.")} className="flex min-h-14 w-full items-center justify-center gap-3 rounded-xl border border-[#27425e] bg-[#061426] text-sm font-medium text-slate-200"><IconoHuella className="h-6 w-6 text-[#0788ff]" /> Ingresar con huella</button>
+      <BotonAccesoBiometrico />
     </form>
   );
 }

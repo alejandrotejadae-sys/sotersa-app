@@ -12,7 +12,7 @@ export function FormularioTurno({ guardias, puestos }: { guardias: { id: string;
 
   return (
     <form ref={formulario} action={accion} className="space-y-4">
-      <Campo etiqueta="Guardia"><select name="guardia_id" required defaultValue="" className={control}><option value="" disabled>Selecciona un guardia</option>{guardias.map((guardia) => <option key={guardia.id} value={guardia.id}>{guardia.nombre}</option>)}</select></Campo>
+      <Campo etiqueta="Agente de seguridad"><select name="guardia_id" required defaultValue="" className={control}><option value="" disabled>Selecciona un agente de seguridad</option>{guardias.map((guardia) => <option key={guardia.id} value={guardia.id}>{guardia.nombre}</option>)}</select></Campo>
       <Campo etiqueta="Puesto"><select name="puesto_id" required defaultValue="" className={control}><option value="" disabled>Selecciona un puesto</option>{puestos.map((puesto) => <option key={puesto.id} value={puesto.id}>{puesto.codigo} · {puesto.nombre}</option>)}</select></Campo>
       <Campo etiqueta="Tipo de turno"><select name="tipo" required defaultValue="fijo_dia" className={control}><option value="fijo_dia">Fijo día</option><option value="fijo_noche">Fijo noche</option><option value="saca_francos">Saca francos</option><option value="supervision">Supervisión</option></select></Campo>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><Campo etiqueta="Inicio"><input type="datetime-local" name="inicio" required className={control} /></Campo><Campo etiqueta="Finalización"><input type="datetime-local" name="fin" required className={control} /></Campo></div>

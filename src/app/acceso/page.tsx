@@ -32,7 +32,7 @@ export default async function PaginaAcceso() {
         <FormularioAcceso />
       </section>
       <Link href="/ingreso" className="text-center text-sm font-medium text-azul-400">
-        Volver al ingreso del guardia
+        Volver al ingreso del agente de seguridad
       </Link>
     </main>
   );

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { crearClienteNavegador } from "@/lib/supabase/navegador";
+import { BotonAccesoBiometrico } from "@/app/componentes/boton-acceso-biometrico";
 
 export function FormularioAcceso() {
   const router = useRouter();
@@ -91,6 +92,7 @@ export function FormularioAcceso() {
       >
         {cargando ? "Verificando…" : "Ingresar al panel"}
       </button>
+      <BotonAccesoBiometrico />
     </form>
   );
 }

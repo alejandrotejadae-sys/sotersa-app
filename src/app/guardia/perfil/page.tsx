@@ -4,6 +4,7 @@ import { MARCA } from "@/lib/marca";
 import { Marca } from "@/app/componentes/marca";
 import { IconoPersona } from "@/app/componentes/iconos";
 import { BotonSalir } from "./boton-salir";
+import Link from "next/link";
 
 export const metadata = { title: "Mi perfil — SOTERSA" };
 export const dynamic = "force-dynamic";
@@ -38,7 +39,7 @@ export default async function PaginaPerfil() {
             <h1 className="text-xl font-bold text-white">
               {guardia?.nombre ?? "Sin ficha"}
             </h1>
-            <p className="text-sm text-gris-400">Guardia de seguridad</p>
+            <p className="text-sm text-gris-400">Agente de seguridad</p>
           </div>
         </div>
 
@@ -47,6 +48,8 @@ export default async function PaginaPerfil() {
           <Fila rotulo="Credencial" valor={guardia?.credencial} mono />
           <Fila rotulo="Teléfono" valor={guardia?.telefono} />
         </dl>
+
+        <Link href="/configuracion/dispositivo" className="flex min-h-14 items-center justify-center rounded-xl border border-[#0788ff]/60 bg-[#0788ff]/10 px-4 text-sm font-semibold text-[#8ddaff]">Configurar permisos, avisos y biometría</Link>
 
         <BotonSalir />
 

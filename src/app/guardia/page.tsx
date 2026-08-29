@@ -62,7 +62,7 @@ export default async function PaginaGuardia() {
               Cuenta sin puesto asignado
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-gris-400">
-              Tu usuario existe pero no está vinculado a una ficha de guardia.
+              Tu usuario existe pero no está vinculado a una ficha de agente de seguridad.
               Comunícate con operaciones.
             </p>
           </div>
@@ -448,7 +448,7 @@ function Saludo({ nombre }: { nombre: string }) {
         <IconoTurno className="h-6 w-6" />
       </span>
       <div>
-        <p className="text-base font-semibold text-azul-400">Guardia</p>
+        <p className="text-base font-semibold text-azul-400">Agente de seguridad</p>
         <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-white">
           Hola, {nombre}
         </h1>

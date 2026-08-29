@@ -9,7 +9,7 @@ type Perfil = "cliente" | "guardia" | "supervisor" | "central";
 
 const perfiles: Array<{ id: Perfil; etiqueta: string; detalle: string; icono: React.ReactNode }> = [
   { id: "cliente", etiqueta: "Cliente", detalle: "Estado del servicio y reportes", icono: <IconoPersona className="h-7 w-7" /> },
-  { id: "guardia", etiqueta: "Guardia", detalle: "Turno, asistencia y rondas", icono: <IconoTurno className="h-7 w-7" /> },
+  { id: "guardia", etiqueta: "Agente de seguridad", detalle: "Turno, asistencia y rondas", icono: <IconoTurno className="h-7 w-7" /> },
   { id: "supervisor", etiqueta: "Supervisor", detalle: "Personal, puestos y novedades", icono: <IconoEscudoOk className="h-7 w-7" /> },
   { id: "central", etiqueta: "Central operativa", detalle: "Control general de la operación", icono: <Central className="h-7 w-7" /> },
 ];
@@ -44,6 +44,7 @@ export function SelectorPerfil() {
       </div>
 
       <button type="button" onClick={() => router.push(destinos[seleccionado])} className="boton-primario mt-7 min-h-14 w-full rounded-xl text-base font-semibold text-white">Continuar</button>
+      <button type="button" onClick={() => router.push("/configuracion/dispositivo")} className="mt-3 min-h-12 w-full rounded-xl border border-[#27425e] bg-[#07172a]/80 text-sm font-medium text-[#8ddaff]">Configurar este dispositivo</button>
       <button type="button" disabled={saliendo} onClick={cerrarSesion} className="mt-4 flex min-h-12 items-center justify-center gap-2 text-sm font-medium text-slate-400 disabled:opacity-50"><IconoSalir className="h-5 w-5" /> {saliendo ? "Cerrando sesión…" : "Cerrar sesión"}</button>
     </div>
   );

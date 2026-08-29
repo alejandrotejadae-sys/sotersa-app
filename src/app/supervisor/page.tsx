@@ -99,9 +99,9 @@ export default async function PaginaSupervisor() {
                   const abierto = (turno.aperturas_turno?.length ?? 0) > 0;
                   return (
                     <article key={turno.id} className="grid grid-cols-[2.75rem_1fr_auto] items-center gap-3 px-4 py-3">
-                      <Avatar nombre={guardia?.nombre ?? "Guardia"} />
+                      <Avatar nombre={guardia?.nombre ?? "Agente de seguridad"} />
                       <div className="min-w-0">
-                        <p className="truncate font-medium">{guardia?.nombre ?? "Guardia asignado"}</p>
+                        <p className="truncate font-medium">{guardia?.nombre ?? "Agente de seguridad asignado"}</p>
                         <p className="truncate text-sm text-slate-400">{puesto?.nombre ?? "Puesto pendiente"}</p>
                       </div>
                       <div className="flex items-center gap-2">

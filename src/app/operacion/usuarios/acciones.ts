@@ -36,10 +36,10 @@ export async function crearCuenta(_: EstadoAlta, formData: FormData): Promise<Es
   let guardiaVincular: string | null = null;
 
   if (rol === "guardia") {
-    if (!UUID.test(guardiaId)) return fallo("Selecciona un guardia disponible.");
+    if (!UUID.test(guardiaId)) return fallo("Selecciona un agente de seguridad disponible.");
     const { data: guardia } = await administrador.from("guardias").select("id,nombre,cedula,perfil_id,activo").eq("id", guardiaId).maybeSingle();
-    if (!guardia || !guardia.activo || guardia.perfil_id) return fallo("El guardia seleccionado ya no está disponible.");
-    if (!guardia.cedula || !cedulaEsValida(guardia.cedula)) return fallo("El guardia necesita una cédula ecuatoriana válida antes de crear su acceso.");
+    if (!guardia || !guardia.activo || guardia.perfil_id) return fallo("El agente de seguridad seleccionado ya no está disponible.");
+    if (!guardia.cedula || !cedulaEsValida(guardia.cedula)) return fallo("El agente de seguridad necesita una cédula ecuatoriana válida antes de crear su acceso.");
     nombre = guardia.nombre;
     correo = cedulaACorreo(guardia.cedula);
     claveTemporal = generarPin(guardia.cedula);
@@ -80,7 +80,7 @@ export async function crearCuenta(_: EstadoAlta, formData: FormData): Promise<Es
     const { error: errorGuardia } = await administrador.from("guardias").update({ perfil_id: usuarioId }).eq("id", guardiaVincular).is("perfil_id", null);
     if (errorGuardia) {
       await administrador.auth.admin.deleteUser(usuarioId);
-      return fallo("No fue posible vincular la cuenta con el guardia.");
+      return fallo("No fue posible vincular la cuenta con el agente de seguridad.");
     }
   }
 

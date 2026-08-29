@@ -36,7 +36,7 @@ export async function programarTurno(_: EstadoProgramacion, formData: FormData):
     supabase.from("puestos").select("id,codigo,nombre").eq("id", puestoId).eq("activo", true).maybeSingle(),
   ]);
 
-  if (!guardiaR.data || !puestoR.data) return { tipo: "error", mensaje: "El guardia o el puesto ya no están activos." };
+  if (!guardiaR.data || !puestoR.data) return { tipo: "error", mensaje: "El agente de seguridad o el puesto ya no están activos." };
 
   const { data: cruces, error: errorCruces } = await supabase
     .from("turnos")

@@ -12,7 +12,7 @@ export function FormularioRecuperar() {
   async function enviar(evento: React.FormEvent) {
     evento.preventDefault(); setError(null); setMensaje(null);
     const identificador = usuario.trim().toLowerCase();
-    if (/^\d{10}$/.test(identificador)) { setMensaje("Los guardias deben solicitar un nuevo PIN a su supervisor o al administrador."); return; }
+    if (/^\d{10}$/.test(identificador)) { setMensaje("Los agentes de seguridad deben solicitar un nuevo PIN a su supervisor o al administrador."); return; }
     const correo = identificador.includes("@") ? identificador : `${identificador}@sotersa.com`;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) { setError("Escribe un usuario o correo válido."); return; }
     setCargando(true);
