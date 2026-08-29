@@ -42,25 +42,26 @@ export default async function PaginaSupervisor() {
 
   return (
     <main className="min-h-dvh bg-[#020b18] text-white">
-      <div className="mx-auto min-h-dvh w-full max-w-[540px] overflow-hidden border-x border-white/[0.04] bg-[radial-gradient(circle_at_50%_-5%,rgba(0,128,255,0.14),transparent_34%),linear-gradient(180deg,#020b18_0%,#031226_55%,#020b18_100%)] shadow-2xl shadow-black/40">
-        <header className="flex items-center justify-between px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))]">
+      <div className="mx-auto min-h-dvh w-full max-w-[1440px] overflow-hidden border-x border-white/[0.04] bg-[radial-gradient(circle_at_50%_-5%,rgba(0,128,255,0.14),transparent_34%),linear-gradient(180deg,#020b18_0%,#031226_55%,#020b18_100%)] shadow-2xl shadow-black/40">
+        <header className="flex items-center justify-between gap-5 px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))] lg:px-8">
           <MarcaSupervisor />
+          <nav className="hidden items-center gap-1 lg:flex"><EnlaceSuperior href="/supervisor" texto="Inicio" activo/><EnlaceSuperior href="/operacion/personal" texto="Personal"/><EnlaceSuperior href="/operacion/rondas" texto="Rondas"/><EnlaceSuperior href="/admin" texto="Central"/><EnlaceSuperior href="/portal" texto="Clientes"/></nav>
           <button type="button" aria-label="Notificaciones" className="relative grid h-12 w-12 place-items-center rounded-full text-white transition hover:bg-white/5">
             <Campana className="h-7 w-7" />
             {novedades > 0 && <span className="absolute right-2 top-1.5 h-3 w-3 rounded-full border-2 border-[#020b18] bg-[#087ff0]" />}
           </button>
         </header>
 
-        <div className="space-y-4 px-4 pb-28">
-          <section className="px-1 pt-1">
+        <div className="grid grid-cols-1 gap-4 px-4 pb-28 lg:grid-cols-12 lg:px-8 lg:pb-10">
+          <section className="px-1 pt-1 lg:col-span-12">
             <p className="flex items-center gap-2 text-base font-medium text-[#0788ff]">
               <IconoEscudoOk className="h-6 w-6" /> Supervisor
             </p>
-            <h1 className="mt-2 text-[2rem] font-bold leading-tight tracking-tight">Buenos días, {nombre}</h1>
+            <h1 className="mt-2 text-[2rem] font-bold leading-tight tracking-tight lg:text-4xl">Buenos días, {nombre}</h1>
             <p className="mt-1 text-base text-slate-400">Resumen operativo de hoy</p>
           </section>
 
-          <section className="relative overflow-hidden rounded-2xl border border-[#27425e] bg-[radial-gradient(circle_at_78%_42%,rgba(0,125,255,0.13),transparent_40%),linear-gradient(135deg,#07182c,#061326)] p-5 shadow-xl shadow-black/20">
+          <section className="relative overflow-hidden rounded-2xl border border-[#27425e] bg-[radial-gradient(circle_at_78%_42%,rgba(0,125,255,0.13),transparent_40%),linear-gradient(135deg,#07182c,#061326)] p-5 shadow-xl shadow-black/20 lg:col-span-8 lg:min-h-52 lg:p-8">
             <div className="absolute -right-2 top-3 text-[#0c3d68]/45">
               <IconoEscudoOk className="h-36 w-36" />
             </div>
@@ -76,14 +77,14 @@ export default async function PaginaSupervisor() {
             </div>
           </section>
 
-          <section className="grid grid-cols-2 gap-3">
+          <section className="grid grid-cols-2 gap-3 lg:col-span-4">
             <Metrica icono={<IconoPersona className="h-7 w-7" />} titulo="Personal" valor={`${enPuesto.length}/${turnos.length}`} detalle="en servicio" />
             <Metrica icono={<IconoEscudoOk className="h-7 w-7" />} titulo="Puestos" valor={puestosR.count ?? 0} detalle="activos" />
             <Metrica icono={<IconoCiclo className="h-7 w-7" />} titulo="Rondas" valor={rondasR.count ?? 0} detalle="completadas" />
             <Metrica icono={<IconoAlerta className="h-7 w-7" />} titulo="Novedades" valor={novedades} detalle="sin resolver" emergencia={novedades > 0} />
           </section>
 
-          <section className="overflow-hidden rounded-2xl border border-[#27425e] bg-[#07172a]/95">
+          <section className="overflow-hidden rounded-2xl border border-[#27425e] bg-[#07172a]/95 lg:col-span-7">
             <div className="flex items-center justify-between border-b border-[#20374e] px-4 py-3.5">
               <h2 className="text-lg font-semibold">Personal y puestos</h2>
               <button type="button" className="flex items-center gap-1 text-sm font-medium text-[#0788ff]">Ver todo <IconoFlecha className="h-4 w-4" /></button>
@@ -116,7 +117,7 @@ export default async function PaginaSupervisor() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4">
+          <section className="rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4 lg:col-span-5">
             <h2 className="text-lg font-semibold">Acciones rápidas</h2>
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <Accion href="/operacion/personal" icono={<IconoPersona className="h-7 w-7" />} texto="Ver personal" />
@@ -126,7 +127,7 @@ export default async function PaginaSupervisor() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4">
+          <section className="rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4 lg:col-span-12">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">Supervisión en tiempo real</h2>
               <button type="button" className="flex shrink-0 items-center gap-1 text-sm font-medium text-[#0788ff]">Ver mapa <IconoFlecha className="h-4 w-4" /></button>
@@ -135,7 +136,7 @@ export default async function PaginaSupervisor() {
           </section>
         </div>
 
-        <nav aria-label="Navegación del supervisor" className="fixed inset-x-0 bottom-0 z-30 mx-auto grid w-full max-w-[540px] grid-cols-5 border-t border-[#27425e] bg-[#031023]/95 px-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl">
+        <nav aria-label="Navegación del supervisor" className="fixed inset-x-0 bottom-0 z-30 mx-auto grid w-full max-w-[540px] grid-cols-5 border-t border-[#27425e] bg-[#031023]/95 px-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl lg:hidden">
           <Navegacion icono={<IconoCasa className="h-6 w-6" />} texto="Inicio" activo />
           <Navegacion href="/operacion/personal" icono={<IconoPersona className="h-6 w-6" />} texto="Personal" />
           <Navegacion href="/operacion/rondas" icono={<IconoCiclo className="h-6 w-6" />} texto="Rondas" />
@@ -222,4 +223,8 @@ function Campana({ className }: { className?: string }) {
 
 function Puntos({ className }: { className?: string }) {
   return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>;
+}
+
+function EnlaceSuperior({ href, texto, activo = false }: { href: string; texto: string; activo?: boolean }) {
+  return <Link href={href} className={`rounded-lg px-4 py-2 text-sm font-medium transition ${activo ? "bg-[#087ff0]/15 text-[#4db6ff]" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}>{texto}</Link>;
 }
