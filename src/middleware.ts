@@ -47,7 +47,15 @@ export async function middleware(request: NextRequest) {
   );
 
   // No quitar: esta llamada es la que dispara el refresco del token.
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const rutasClave = new Set(["/cambiar-clave", "/restablecer-clave", "/recuperar", "/acceso", "/ingreso", "/auth/callback"]);
+  if (user?.user_metadata?.debe_cambiar_clave === true && !rutasClave.has(request.nextUrl.pathname)) {
+    const destino = request.nextUrl.clone();
+    destino.pathname = "/cambiar-clave";
+    destino.search = "";
+    return NextResponse.redirect(destino);
+  }
 
   return respuesta;
 }

@@ -30,13 +30,13 @@ export default function FormularioIngreso() {
     }
 
     setCargando(true);
-    const { error: fallo } = await crearClienteNavegador().auth.signInWithPassword({ email: cedulaACorreo(cedula), password: pin });
+    const { data, error: fallo } = await crearClienteNavegador().auth.signInWithPassword({ email: cedulaACorreo(cedula), password: pin });
     setCargando(false);
     if (fallo) {
       setError("Usuario o contraseña incorrectos.");
       return;
     }
-    router.push("/perfiles");
+    router.push(data.user?.user_metadata?.debe_cambiar_clave === true ? "/cambiar-clave" : "/perfiles");
     router.refresh();
   }
 

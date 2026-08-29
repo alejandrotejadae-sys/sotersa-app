@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { crearClienteNavegador } from "@/lib/supabase/navegador";
 
 export function FormularioAcceso() {
@@ -29,7 +30,7 @@ export function FormularioAcceso() {
       : `${identificador}@sotersa.com`;
 
     setCargando(true);
-    const { error: fallo } = await crearClienteNavegador().auth.signInWithPassword({
+    const { data, error: fallo } = await crearClienteNavegador().auth.signInWithPassword({
       email,
       password: clave,
     });
@@ -40,7 +41,7 @@ export function FormularioAcceso() {
       return;
     }
 
-    router.push("/perfiles");
+    router.push(data.user?.user_metadata?.debe_cambiar_clave === true ? "/cambiar-clave" : "/perfiles");
     router.refresh();
   }
 
@@ -63,6 +64,7 @@ export function FormularioAcceso() {
           placeholder="Ingresa tu usuario"
         />
       </div>
+      <Link href="/recuperar" className="-mt-2 self-end text-sm font-medium text-[#0788ff]">¿Olvidaste tu contraseña?</Link>
       <div className="flex flex-col gap-2">
         <label htmlFor="clave" className="text-sm font-medium text-gris-300">
           Contraseña
