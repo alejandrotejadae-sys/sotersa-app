@@ -25,13 +25,15 @@ export async function guardarPerfil(_: EstadoPerfil, formData: FormData): Promis
     const contenedor = "avatares-perfil";
     const { error: errorContenedor } = await administrador.storage.getBucket(contenedor);
     if (errorContenedor) {
-      const { error: errorCreacion } = await administrador.storage.createBucket(contenedor, { public: true, allowedMimeTypes: [...TIPOS_IMAGEN.keys()], fileSizeLimit: 3 * 1024 * 1024 });
+      const { error: errorCreacion } = await administrador.storage.createBucket(contenedor, { public: false, allowedMimeTypes: [...TIPOS_IMAGEN.keys()], fileSizeLimit: 3 * 1024 * 1024 });
       if (errorCreacion && !errorCreacion.message.toLowerCase().includes("already")) return { tipo: "error", mensaje: "No fue posible preparar el almacenamiento de fotografías." };
     }
     const ruta = `${user.id}/perfil-${Date.now()}.${extension}`;
     const { error: errorFoto } = await administrador.storage.from(contenedor).upload(ruta, await foto.arrayBuffer(), { contentType: foto.type, upsert: false, cacheControl: "3600" });
     if (errorFoto) return { tipo: "error", mensaje: "No fue posible subir la fotografía. Intenta nuevamente." };
-    avatarUrl = administrador.storage.from(contenedor).getPublicUrl(ruta).data.publicUrl;
+    // Contenedor privado: se guarda la ruta y el enlace se firma al mostrarlo.
+    // Ver src/lib/avatares.ts.
+    avatarUrl = ruta;
     const anterior = typeof user.user_metadata?.avatar_path === "string" ? user.user_metadata.avatar_path : null;
     if (anterior?.startsWith(`${user.id}/`)) await administrador.storage.from(contenedor).remove([anterior]);
     await administrador.auth.admin.updateUserById(user.id, { user_metadata: { ...user.user_metadata, avatar_url: avatarUrl, avatar_path: ruta, nombre } });
