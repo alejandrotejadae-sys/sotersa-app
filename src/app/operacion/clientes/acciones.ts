@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { exigirPerfil } from "@/lib/sesion";
+import { esTipoServicio, servicio } from "@/lib/servicios";
 
 export type EstadoCliente = {
   tipo: "inicial" | "error" | "exito";
@@ -150,16 +151,23 @@ async function insertarPuesto(
   const codigo = texto(formData, "puesto_codigo", 16).toUpperCase();
   const nombre = texto(formData, "puesto_nombre", 120);
   const direccion = texto(formData, "puesto_direccion", 200);
-  const cobertura = Number(formData.get("puesto_cobertura") ?? 24);
+  const tipo = String(formData.get("puesto_tipo_servicio") ?? "");
+  const origen = texto(formData, "puesto_origen", 200);
+  const destino = texto(formData, "puesto_destino", 200);
   const armado = formData.get("puesto_armado") === "on";
+
+  if (!esTipoServicio(tipo)) return "Selecciona el tipo de servicio.";
+  const modalidad = servicio(tipo);
+  // La base tambien lo exige; aqui el mensaje puede ser util en vez de cripto.
+  if (modalidad.requiereRuta && (!origen || !destino)) {
+    return "Una custodia armada necesita origen y destino.";
+  }
+  const cobertura = modalidad.horas;
 
   if (!/^[A-Z0-9-]{2,16}$/.test(codigo)) {
     return "El código del puesto usa letras, números y guiones (ej. P-01).";
   }
   if (nombre.length < 3) return "El nombre del puesto es obligatorio.";
-  if (!Number.isInteger(cobertura) || cobertura < 1 || cobertura > 24) {
-    return "La cobertura va de 1 a 24 horas.";
-  }
 
   const { error } = await supabase.from("puestos").insert({
     empresa_cliente_id: empresaId,
@@ -167,7 +175,11 @@ async function insertarPuesto(
     nombre,
     direccion: direccion || null,
     cobertura_horas: cobertura,
-    armado,
+    tipo_servicio: tipo,
+    // Una custodia armada siempre va armada, por definicion.
+    armado: armado || tipo === "custodia_armada",
+    origen: modalidad.requiereRuta ? origen : null,
+    destino: modalidad.requiereRuta ? destino : null,
     activo: true,
   });
 

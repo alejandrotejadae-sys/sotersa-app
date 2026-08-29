@@ -42,7 +42,7 @@ export default async function PaginaApertura() {
   return (
     <>
       <header className="sticky top-0 z-10 border-b border-borde/60 bg-gris-900/85 backdrop-blur-md">
-        <div className="mx-auto flex w-full max-w-md items-center justify-between px-5 py-3">
+        <div className="mx-auto flex w-full max-w-md items-center justify-between px-5 py-3 md:max-w-3xl md:px-6">
           <Link href="/guardia" className="text-sm text-azul-400">
             ← Volver
           </Link>
@@ -52,7 +52,7 @@ export default async function PaginaApertura() {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-5 py-6">
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-5 py-6 md:max-w-3xl md:px-6">
         <header>
           <h1 className="text-2xl font-bold tracking-tight text-white">
             Abrir turno

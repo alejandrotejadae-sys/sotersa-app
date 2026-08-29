@@ -33,7 +33,7 @@ export default async function PaginaCustodia() {
   return (
     <>
       <header className="sticky top-0 z-10 border-b border-azul-900/60 bg-[#020b18]/92 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-md items-center justify-between gap-2 px-4 pb-3 pt-4">
+        <div className="mx-auto flex w-full max-w-md items-center justify-between gap-2 md:max-w-4xl md:px-6 px-4 pb-3 pt-4">
           <Link
             href="/guardia"
             aria-label="Volver al inicio"
@@ -48,7 +48,7 @@ export default async function PaginaCustodia() {
         </div>
       </header>
 
-      <main className="guardia-render mx-auto flex w-full max-w-md flex-1 flex-col gap-3.5 px-4 pb-6 pt-4">
+      <main className="guardia-render mx-auto flex w-full max-w-md md:max-w-4xl md:px-6 flex-1 flex-col gap-3.5 px-4 pb-6 pt-4">
         <header>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-azul-400">
             Operaciones especiales

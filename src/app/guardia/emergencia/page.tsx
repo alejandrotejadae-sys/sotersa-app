@@ -18,7 +18,7 @@ export default function PaginaEmergencia() {
   return (
     <>
       <header className="sticky top-0 z-10 border-b border-emergencia/30 bg-gris-900/85 backdrop-blur-md">
-        <div className="mx-auto flex w-full max-w-md items-center justify-between px-5 py-3">
+        <div className="mx-auto flex w-full max-w-md items-center justify-between md:max-w-4xl md:px-6 px-5 py-3">
           <Link href="/guardia" className="text-sm text-azul-400">
             ← Volver
           </Link>
@@ -29,7 +29,7 @@ export default function PaginaEmergencia() {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 px-5 py-5">
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 px-5 py-5 md:max-w-4xl md:px-6">
         <a
           href={`tel:${ECU911}`}
           className="relative flex flex-col items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-b from-emergencia to-[#8f1a26] py-7 text-white shadow-xl shadow-emergencia/20 transition active:scale-[0.99]"

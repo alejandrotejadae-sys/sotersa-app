@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { agregarPuesto, crearCliente, type EstadoCliente } from "./acciones";
+import { SERVICIOS, servicio, type TipoServicio } from "@/lib/servicios";
 
 const INICIAL: EstadoCliente = { tipo: "inicial", mensaje: "" };
 
@@ -44,6 +45,9 @@ function Aviso({ estado }: { estado: EstadoCliente }) {
 
 /** Campos del puesto, compartidos por las dos pestañas. */
 function CamposPuesto({ requerido }: { requerido?: boolean }) {
+  const [tipo, setTipo] = useState<TipoServicio>("punto_24_l_d");
+  const modalidad = servicio(tipo);
+
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -56,15 +60,55 @@ function CamposPuesto({ requerido }: { requerido?: boolean }) {
             className={control}
           />
         </Campo>
-        <Campo etiqueta="Cobertura" ayuda="horas al día">
-          <select name="puesto_cobertura" defaultValue="24" className={control}>
-            <option value="24">24 horas</option>
-            <option value="12">12 horas</option>
-            <option value="15">15 horas</option>
-            <option value="8">8 horas</option>
+        <Campo etiqueta="Tipo de servicio">
+          <select
+            name="puesto_tipo_servicio"
+            value={tipo}
+            onChange={(e) => setTipo(e.target.value as TipoServicio)}
+            className={control}
+          >
+            {SERVICIOS.map((s) => (
+              <option key={s.valor} value={s.valor}>
+                {s.etiqueta}
+              </option>
+            ))}
           </select>
         </Campo>
       </div>
+
+      <p className="-mt-1 text-xs leading-relaxed text-slate-500">
+        {modalidad.detalle}{" "}
+        <span className="text-[#65c8ff]">
+          {modalidad.fijos} agente{modalidad.fijos === 1 ? "" : "s"} fijo
+          {modalidad.fijos === 1 ? "" : "s"}
+          {modalidad.requiereRelevo && " + relevo para el día libre"}.
+        </span>
+      </p>
+
+      {/* La ruta solo existe para la custodia armada. Mostrarla siempre
+          invitaría a llenarla en puestos donde no significa nada. */}
+      {modalidad.requiereRuta && (
+        <div className="grid gap-4 rounded-xl border border-[#0788ff]/25 bg-[#0788ff]/5 p-3 sm:grid-cols-2">
+          <Campo etiqueta="Origen">
+            <input
+              name="puesto_origen"
+              required
+              maxLength={200}
+              placeholder="Bodega Norte, Quito"
+              className={control}
+            />
+          </Campo>
+          <Campo etiqueta="Destino">
+            <input
+              name="puesto_destino"
+              required
+              maxLength={200}
+              placeholder="Sangolquí"
+              className={control}
+            />
+          </Campo>
+        </div>
+      )}
       <Campo etiqueta="Nombre del puesto">
         <input
           name="puesto_nombre"

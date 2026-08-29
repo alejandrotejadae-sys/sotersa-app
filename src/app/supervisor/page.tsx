@@ -134,7 +134,7 @@ export default async function PaginaSupervisor() {
           </section>
         </div>
 
-        <nav aria-label="Navegación del supervisor" className="fixed inset-x-0 bottom-0 z-30 mx-auto grid w-full max-w-[540px] grid-cols-5 border-t border-[#27425e] bg-[#031023]/95 px-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl lg:hidden">
+        <nav aria-label="Navegación del supervisor" className="fixed inset-x-0 bottom-0 z-30 lg:hidden mx-auto grid w-full max-w-[540px] grid-cols-5 border-t border-[#27425e] bg-[#031023]/95 px-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl lg:hidden">
           <Navegacion icono={<IconoCasa className="h-6 w-6" />} texto="Inicio" activo />
           <Navegacion href="/operacion/personal" icono={<IconoPersona className="h-6 w-6" />} texto="Personal" />
           <Navegacion href="/operacion/rondas" icono={<IconoCiclo className="h-6 w-6" />} texto="Rondas" />

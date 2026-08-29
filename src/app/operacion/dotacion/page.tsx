@@ -6,6 +6,7 @@ import {
   IconoPersona,
 } from "@/app/componentes/iconos";
 import { exigirPerfil } from "@/lib/sesion";
+import { servicio } from "@/lib/servicios";
 import { Asignador } from "./asignador";
 import { alternarRelevo, liberarAgente } from "./acciones";
 
@@ -13,12 +14,12 @@ export const metadata = { title: "Dotación por puesto — SOTERSA" };
 export const dynamic = "force-dynamic";
 
 /**
- * Un puesto de 24 h se cubre con dos agentes fijos de 12 h. Menos de 24 h se
- * cubre con uno. El saca francos no cuenta aquí: no tiene plaza, cubre los
- * días libres de varios puestos.
+ * Las plazas las define la modalidad contratada, no las horas sueltas: un
+ * punto de 24 h son dos fijos de 12 h; los de 12 h, uno. El saca francos no
+ * cuenta aquí — no tiene plaza, cubre los días libres de varios puestos.
  */
-function plazasDe(coberturaHoras: number) {
-  return coberturaHoras >= 24 ? 2 : 1;
+function plazasDe(tipoServicio: string | null) {
+  return servicio(tipoServicio).fijos;
 }
 
 export default async function PaginaDotacion() {
@@ -32,7 +33,7 @@ export default async function PaginaDotacion() {
       .order("nombre"),
     supabase
       .from("puestos")
-      .select("id,empresa_cliente_id,codigo,nombre,cobertura_horas,armado")
+      .select("id,empresa_cliente_id,codigo,nombre,cobertura_horas,armado,tipo_servicio,origen,destino")
       .eq("activo", true)
       .order("codigo"),
     supabase
@@ -51,7 +52,7 @@ export default async function PaginaDotacion() {
   const disponibles = [...sinPlaza, ...relevos];
 
   const plazasTotales = puestos.reduce(
-    (t, p) => t + plazasDe(p.cobertura_horas),
+    (t, p) => t + plazasDe(p.tipo_servicio),
     0,
   );
   const cubiertas = guardias.filter(
@@ -151,7 +152,8 @@ export default async function PaginaDotacion() {
 
                 <div className="divide-y divide-[#20374e]">
                   {suyos.map((puesto) => {
-                    const plazas = plazasDe(puesto.cobertura_horas);
+                    const plazas = plazasDe(puesto.tipo_servicio);
+                    const modalidad = servicio(puesto.tipo_servicio);
                     const asignados = guardias.filter(
                       (g) => g.puesto_habitual_id === puesto.id,
                     );
@@ -173,10 +175,16 @@ export default async function PaginaDotacion() {
                               {puesto.nombre}
                             </h3>
                             <p className="text-xs text-slate-500">
-                              {puesto.cobertura_horas} h · {plazas} plaza
+                              {modalidad.etiqueta} · {plazas} plaza
                               {plazas === 1 ? "" : "s"} fija
                               {plazas === 1 ? "" : "s"}
+                              {modalidad.requiereRelevo && " + relevo"}
                             </p>
+                            {puesto.origen && puesto.destino && (
+                              <p className="mt-1 text-xs text-[#65c8ff]">
+                                {puesto.origen} → {puesto.destino}
+                              </p>
+                            )}
                           </div>
                           <span
                             className={`rounded-full px-3 py-1.5 text-xs font-medium ${
