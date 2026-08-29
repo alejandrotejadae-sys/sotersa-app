@@ -344,9 +344,9 @@ export default async function PaginaGuardia() {
                     </p>
                   )}
                 </div>
-                <span aria-disabled="true" className="boton-primario shrink-0 rounded-xl border border-azul-400/60 px-4 py-3 text-sm font-semibold text-white opacity-75">
+                <Link href="/guardia/ronda" className="boton-primario shrink-0 rounded-xl border border-azul-400/60 px-4 py-3 text-sm font-semibold text-white transition active:scale-[0.99]">
                   Continuar ronda
-                </span>
+                </Link>
               </div>
             </div>
           )}

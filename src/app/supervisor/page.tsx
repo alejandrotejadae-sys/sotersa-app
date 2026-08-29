@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import {
   IconoAlerta,
   IconoCasa,
@@ -118,9 +119,9 @@ export default async function PaginaSupervisor() {
           <section className="rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4">
             <h2 className="text-lg font-semibold">Acciones rápidas</h2>
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Accion icono={<IconoPersona className="h-7 w-7" />} texto="Ver personal" />
-              <Accion icono={<IconoTurno className="h-7 w-7" />} texto="Asignar puesto" />
-              <Accion icono={<IconoCiclo className="h-7 w-7" />} texto="Crear ronda" />
+              <Accion href="/operacion/personal" icono={<IconoPersona className="h-7 w-7" />} texto="Ver personal" />
+              <Accion href="/operacion/personal" icono={<IconoTurno className="h-7 w-7" />} texto="Asignar puesto" />
+              <Accion href="/operacion/rondas" icono={<IconoCiclo className="h-7 w-7" />} texto="Crear ronda" />
               <Accion icono={<IconoAlerta className="h-7 w-7" />} texto="Reportar novedad" />
             </div>
           </section>
@@ -136,8 +137,8 @@ export default async function PaginaSupervisor() {
 
         <nav aria-label="Navegación del supervisor" className="fixed inset-x-0 bottom-0 z-30 mx-auto grid w-full max-w-[540px] grid-cols-5 border-t border-[#27425e] bg-[#031023]/95 px-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl">
           <Navegacion icono={<IconoCasa className="h-6 w-6" />} texto="Inicio" activo />
-          <Navegacion icono={<IconoPersona className="h-6 w-6" />} texto="Personal" />
-          <Navegacion icono={<IconoCiclo className="h-6 w-6" />} texto="Rondas" />
+          <Navegacion href="/operacion/personal" icono={<IconoPersona className="h-6 w-6" />} texto="Personal" />
+          <Navegacion href="/operacion/rondas" icono={<IconoCiclo className="h-6 w-6" />} texto="Rondas" />
           <Navegacion icono={<IconoAlerta className="h-6 w-6" />} texto="Novedades" />
           <Navegacion icono={<Puntos className="h-6 w-6" />} texto="Más" />
         </nav>
@@ -187,8 +188,10 @@ function Avatar({ nombre }: { nombre: string }) {
   return <span className="grid h-11 w-11 place-items-center rounded-full border border-[#38526b] bg-gradient-to-br from-[#244868] to-[#0a1e34] text-xs font-semibold text-[#8ddaff]">{iniciales}</span>;
 }
 
-function Accion({ icono, texto }: { icono: React.ReactNode; texto: string }) {
-  return <button type="button" className="flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border border-[#27425e] bg-[#061426] px-2 py-3 text-center text-sm text-slate-300 transition active:scale-[0.98]"><span className="text-[#0788ff]">{icono}</span>{texto}</button>;
+function Accion({ icono, texto, href }: { icono: React.ReactNode; texto: string; href?: string }) {
+  const contenido = <><span className="text-[#0788ff]">{icono}</span>{texto}</>;
+  const clase = "flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border border-[#27425e] bg-[#061426] px-2 py-3 text-center text-sm text-slate-300 transition active:scale-[0.98]";
+  return href ? <Link href={href} className={clase}>{contenido}</Link> : <button type="button" className={clase}>{contenido}</button>;
 }
 
 function MapaOperativo() {
@@ -207,8 +210,10 @@ function Pin({ className, activo = false }: { className: string; activo?: boolea
   return <span className={`absolute grid h-9 w-7 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[50%_50%_50%_0] border-2 border-white bg-[#087ff0] shadow-[0_0_18px_rgba(0,127,255,0.7)] [transform:rotate(-45deg)] ${className}`}><span className={`h-2.5 w-2.5 rounded-full bg-white [transform:rotate(45deg)] ${activo ? "ring-4 ring-cyan-300/40" : ""}`} /></span>;
 }
 
-function Navegacion({ icono, texto, activo = false }: { icono: React.ReactNode; texto: string; activo?: boolean }) {
-  return <button type="button" className={`flex min-h-14 flex-col items-center justify-center gap-1 text-[0.68rem] ${activo ? "text-[#0788ff]" : "text-slate-400"}`}>{icono}<span>{texto}</span></button>;
+function Navegacion({ icono, texto, activo = false, href }: { icono: React.ReactNode; texto: string; activo?: boolean; href?: string }) {
+  const contenido = <>{icono}<span>{texto}</span></>;
+  const clase = `flex min-h-14 flex-col items-center justify-center gap-1 text-[0.68rem] ${activo ? "text-[#0788ff]" : "text-slate-400"}`;
+  return href ? <Link href={href} className={clase}>{contenido}</Link> : <button type="button" className={clase}>{contenido}</button>;
 }
 
 function Campana({ className }: { className?: string }) {
