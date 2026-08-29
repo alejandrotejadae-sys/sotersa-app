@@ -31,7 +31,7 @@ export function SelectorPerfil() {
 
   return (
     <div className="mt-8 flex flex-1 flex-col">
-      <div className="space-y-3" role="radiogroup" aria-label="Selecciona tu perfil de acceso">
+      <div className="space-y-3 md:grid md:grid-cols-2 md:gap-3 md:space-y-0" role="radiogroup" aria-label="Selecciona tu perfil de acceso">
         {perfiles.map((perfil) => {
           const activo = seleccionado === perfil.id;
           return (

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Marca } from "@/app/componentes/marca";
 import { IconoEscudoOk } from "@/app/componentes/iconos";
+import { esWebEscritorio } from "@/lib/dispositivo";
 
 const CLAVE_SESION = "sotersa:pantalla-apertura-v1";
 
@@ -13,7 +14,11 @@ export function PantallaApertura() {
   useEffect(() => {
     const parametros = new URLSearchParams(window.location.search);
     const forzar = parametros.get("apertura") === "1";
-    const omitir = parametros.get("pantalla") === "ingreso" || window.location.pathname === "/perfiles";
+    // En la web de escritorio no hay splash: es lenguaje de app instalada.
+    const omitir =
+      esWebEscritorio() ||
+      parametros.get("pantalla") === "ingreso" ||
+      window.location.pathname === "/perfiles";
 
     if (omitir || (!forzar && sessionStorage.getItem(CLAVE_SESION) === "vista")) {
       const ocultar = window.setTimeout(() => setVisible(false), 0);

@@ -3,18 +3,15 @@ import { NavInferior } from "@/app/componentes/nav-inferior";
 /**
  * Marco de la app del guardia.
  *
- * En el telefono ocupa la pantalla completa, que es como se va a usar. En
- * escritorio, en vez de dejar una columna angosta flotando en un vacio negro,
- * se encuadra como un dispositivo: asi se entiende que es una app movil y no
- * una web rota.
+ * En el telefono ocupa la pantalla completa y la navegacion va abajo, al
+ * alcance del pulgar. En escritorio NO se finge un telefono: el contenido usa
+ * el ancho disponible y las secciones pasan a pestañas en la cabecera.
  */
 export default function LayoutGuardia({ children }: LayoutProps<"/guardia">) {
   return (
-    <div className="flex min-h-dvh flex-col md:items-center md:justify-center md:py-8">
-      <div className="guardia-dispositivo flex min-h-dvh w-full flex-1 flex-col md:min-h-0 md:h-[900px] md:max-h-[94vh] md:w-[430px] md:flex-none md:overflow-hidden md:rounded-[2.25rem] md:border md:border-azul-900/70 md:shadow-2xl md:shadow-black/60">
-        <div className="flex flex-1 flex-col overflow-y-auto">{children}</div>
-        <NavInferior />
-      </div>
+    <div className="flex min-h-dvh flex-col">
+      <div className="flex flex-1 flex-col">{children}</div>
+      <NavInferior />
     </div>
   );
 }

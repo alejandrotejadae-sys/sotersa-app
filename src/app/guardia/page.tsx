@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { Marca } from "@/app/componentes/marca";
 import { EstadoConexion } from "@/app/componentes/estado-conexion";
+import { NavEscritorio } from "@/app/componentes/nav-inferior";
 import { CronometroTurno } from "@/app/componentes/cronometro-turno";
 import {
   IconoAlerta,
@@ -171,8 +172,14 @@ export default async function PaginaGuardia() {
     <>
       <Cabecera />
 
-      <main className="guardia-render mx-auto flex w-full max-w-md flex-1 flex-col gap-3.5 px-4 pb-5 pt-2">
+      <main className="guardia-render mx-auto flex w-full max-w-md flex-1 flex-col gap-3.5 px-4 pb-5 pt-2 md:max-w-5xl md:px-6 md:pt-5">
         <Saludo nombre={primerNombre} />
+
+        {/* En pantalla grande el contenido se reparte en dos columnas en vez de
+            estirar una columna de telefono. En el movil sigue siendo una sola,
+            en el mismo orden. */}
+        <div className="grid gap-3.5 md:grid-cols-2 md:items-start md:gap-5">
+        <div className="flex flex-col gap-3.5">
 
         {/* ---------------- Turno ---------------- */}
         <section className="panel-operativo relative overflow-hidden p-4.5">
@@ -353,6 +360,9 @@ export default async function PaginaGuardia() {
           )}
         </section>
 
+        </div>
+        <div className="flex flex-col gap-3.5">
+
         {/* ---------------- Mi puesto asignado ---------------- */}
         <section className="tarjeta overflow-hidden">
           <h2 className="flex items-center gap-2.5 px-5 pb-2 pt-4 text-xl font-semibold text-white">
@@ -435,6 +445,9 @@ export default async function PaginaGuardia() {
         </div>
 
         <BotonSOS />
+
+        </div>
+        </div>
       </main>
     </>
   );
@@ -445,8 +458,11 @@ export default async function PaginaGuardia() {
 function Cabecera() {
   return (
     <header className="sticky top-0 z-10 border-b border-azul-900/60 bg-[#020b18]/90 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-md items-center justify-between gap-2 px-5 pb-3 pt-5">
+      <div className="mx-auto flex w-full max-w-md items-center justify-between gap-3 px-5 pb-3 pt-5 md:max-w-5xl md:px-6 md:pt-3">
         <Marca tamano="panel" />
+        {/* En escritorio las secciones viven aqui; en el telefono, en la barra
+            de abajo. Nunca las dos a la vez. */}
+        <NavEscritorio />
         <EstadoConexion />
       </div>
     </header>

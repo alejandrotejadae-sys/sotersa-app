@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { esWebEscritorio } from "@/lib/dispositivo";
 import { Marca } from "@/app/componentes/marca";
 import { IconoAlerta, IconoCiclo, IconoEscudoOk, IconoPersona } from "@/app/componentes/iconos";
 
@@ -12,7 +13,11 @@ export function PantallaBienvenida() {
   useEffect(() => {
     const parametros = new URLSearchParams(window.location.search);
     const forzar = parametros.get("bienvenida") === "1";
-    const omitir = parametros.get("pantalla") === "ingreso" || window.location.pathname === "/perfiles";
+    // El carrusel de bienvenida es de la app del telefono, no de la web.
+    const omitir =
+      esWebEscritorio() ||
+      parametros.get("pantalla") === "ingreso" ||
+      window.location.pathname === "/perfiles";
     if (omitir || (!forzar && localStorage.getItem(CLAVE_BIENVENIDA) === "completada")) {
       const ocultar = window.setTimeout(() => setVisible(false), 0);
       return () => window.clearTimeout(ocultar);

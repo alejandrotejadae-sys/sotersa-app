@@ -3,6 +3,7 @@ import { Marca, Pulso } from "@/app/componentes/marca";
 import { IconoAlerta, IconoEscudoOk, IconoFlecha, IconoLista } from "@/app/componentes/iconos";
 import { validarNovedad } from "@/app/supervisor/acciones";
 import { exigirPerfil, fechaHoraEcuador, uno } from "@/lib/sesion";
+import { firmarEvidencias } from "@/lib/evidencias";
 
 export const metadata = { title: "Novedades y alertas — SOTERSA" };
 export const dynamic = "force-dynamic";
@@ -27,6 +28,8 @@ export default async function PaginaNovedades({
     .limit(100);
 
   const novedades = data ?? [];
+  // El contenedor de evidencias es privado: el enlace se firma aqui y caduca.
+  const evidencias = await firmarEvidencias(novedades.map((n) => n.foto_url));
   const pendientes = novedades.filter((novedad) => novedad.estado === "registrada").length;
   const emergencias = novedades.filter((novedad) => novedad.severidad === "emergencia" && novedad.estado !== "cerrada").length;
   const publicadas = novedades.filter((novedad) => novedad.visible_cliente).length;
@@ -102,7 +105,7 @@ export default async function PaginaNovedades({
                     </div>
 
                     {novedad.nota_supervisor && <p className="mt-3 rounded-xl border border-[#0788ff]/20 bg-[#0788ff]/8 px-3 py-3 text-sm text-[#b9e6ff]"><strong>Nota de supervisión:</strong> {novedad.nota_supervisor}</p>}
-                    {novedad.foto_url && <a href={novedad.foto_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[#49b6ff]">Ver evidencia fotográfica <IconoFlecha className="h-4 w-4" /></a>}
+                    {novedad.foto_url && evidencias.get(novedad.foto_url) && <a href={evidencias.get(novedad.foto_url)} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[#49b6ff]">Ver evidencia fotográfica <IconoFlecha className="h-4 w-4" /></a>}
 
                     {pendiente && (
                       <form action={validarNovedad} className="mt-4 border-t border-[#20374e] pt-4">

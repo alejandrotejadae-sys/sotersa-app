@@ -37,13 +37,19 @@ export async function registrarNovedad(_: EstadoReporte, formData: FormData): Pr
     const contenedor = "evidencias-novedades";
     const { error: sinContenedor } = await administrador.storage.getBucket(contenedor);
     if (sinContenedor) {
-      const { error } = await administrador.storage.createBucket(contenedor, { public: true, allowedMimeTypes: [...IMAGENES.keys()], fileSizeLimit: 5 * 1024 * 1024 });
+      // PRIVADO a proposito: son fotos del interior de instalaciones de
+      // clientes. Publico dejaria cada evidencia accesible para siempre a
+      // cualquiera que tenga el enlace, sin pasar por la app.
+      const { error } = await administrador.storage.createBucket(contenedor, { public: false, allowedMimeTypes: [...IMAGENES.keys()], fileSizeLimit: 15 * 1024 * 1024 });
       if (error && !error.message.toLowerCase().includes("already")) return fallo("No fue posible preparar el almacenamiento de evidencias.");
     }
     rutaFoto = `${agente.id}/${ahora.getTime()}.${extension}`;
     const { error } = await administrador.storage.from(contenedor).upload(rutaFoto, await foto.arrayBuffer(), { contentType: foto.type, cacheControl: "3600" });
     if (error) return fallo("No fue posible subir la fotografía.");
-    fotoUrl = administrador.storage.from(contenedor).getPublicUrl(rutaFoto).data.publicUrl;
+    // Se guarda la RUTA dentro del contenedor, no una URL: el contenedor es
+    // privado y el enlace se firma al mostrarlo, con caducidad de una hora.
+    // Ver src/lib/evidencias.ts.
+    fotoUrl = rutaFoto;
   }
 
   const { error } = await administrador.from("novedades").insert({ puesto_id: turno.puesto_id, turno_id: turno.id, guardia_id: agente.id, tipo, severidad, descripcion, foto_url: fotoUrl, lat, lng, hora_captura: ahora.toISOString(), estado: "registrada", visible_cliente: false });

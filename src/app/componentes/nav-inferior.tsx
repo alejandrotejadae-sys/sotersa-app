@@ -31,7 +31,7 @@ export function NavInferior() {
   const ruta = usePathname();
 
   return (
-    <nav className="sticky bottom-0 z-20 border-t border-borde/70 bg-[#020b18]/92 backdrop-blur-xl">
+    <nav aria-label="Navegación móvil" className="sticky bottom-0 z-20 border-t border-borde/70 bg-[#020b18]/92 backdrop-blur-xl md:hidden">
       <ul className="mx-auto flex w-full max-w-md items-stretch justify-between px-2 pb-[env(safe-area-inset-bottom)]">
         {ENTRADAS.map(({ href, etiqueta, Icono }) => {
           const activo = href === ruta;
@@ -72,6 +72,41 @@ export function NavInferior() {
           );
         })}
       </ul>
+    </nav>
+  );
+}
+
+/**
+ * Las mismas secciones, como pestañas, para pantalla grande.
+ *
+ * En escritorio una barra pegada abajo se ve fuera de lugar: ahí la navegación
+ * va arriba, junto a la marca. En el teléfono es al revés — el pulgar llega
+ * abajo, no arriba. Por eso son dos formas del mismo menú y nunca se ven las
+ * dos a la vez.
+ */
+export function NavEscritorio() {
+  const ruta = usePathname();
+  return (
+    <nav aria-label="Navegación principal" className="hidden gap-1 md:flex">
+      {ENTRADAS.map(({ href, etiqueta }) => {
+        const activo = href === ruta;
+        const clases = `rounded-full px-3.5 py-2 text-sm font-semibold transition ${
+          activo
+            ? "bg-azul-500/15 text-azul-300"
+            : href
+              ? "text-gris-400 hover:bg-white/5 hover:text-white"
+              : "cursor-default text-gris-600 opacity-45"
+        }`;
+        return href ? (
+          <Link key={etiqueta} href={href} aria-current={activo ? "page" : undefined} className={clases}>
+            {etiqueta}
+          </Link>
+        ) : (
+          <span key={etiqueta} aria-disabled="true" title="En construcción" className={clases}>
+            {etiqueta}
+          </span>
+        );
+      })}
     </nav>
   );
 }
