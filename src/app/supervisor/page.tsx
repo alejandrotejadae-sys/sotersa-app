@@ -1,4 +1,13 @@
 import Image from "next/image";
+import {
+  IconoAlerta,
+  IconoCasa,
+  IconoCiclo,
+  IconoEscudoOk,
+  IconoFlecha,
+  IconoPersona,
+  IconoTurno,
+} from "@/app/componentes/iconos";
 import { ahoraConDesfase, exigirPerfil, uno } from "@/lib/sesion";
 
 export const metadata = { title: "Supervisión — SOTERSA" };
@@ -25,88 +34,187 @@ export default async function PaginaSupervisor() {
   ]);
 
   const turnos = turnosR.data ?? [];
-  const conApertura = turnos.filter((turno) => (turno.aperturas_turno?.length ?? 0) > 0);
-  const cobertura = turnos.length ? Math.round((conApertura.length / turnos.length) * 100) : 100;
-  const filas = Array.from({ length: 3 }, (_, indice) => turnos[indice] ?? null);
-  const nombre = perfil.nombre.split(" ")[0];
+  const enPuesto = turnos.filter((turno) => (turno.aperturas_turno?.length ?? 0) > 0);
+  const cobertura = turnos.length ? Math.round((enPuesto.length / turnos.length) * 100) : 100;
+  const novedades = novedadesR.count ?? 0;
+  const nombre = perfil.nombre.trim().split(" ")[0] || "Alejandro";
 
   return (
-    <main className="flex min-h-dvh w-full items-center justify-center overflow-hidden bg-[#020b18]">
-      <div className="relative h-dvh aspect-[941/1672] shrink-0 overflow-hidden">
-        <Image
-          src="/pantalla-supervisor-sotersa.webp"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          unoptimized
-          className="object-fill"
-        />
+    <main className="min-h-dvh bg-[#020b18] text-white">
+      <div className="mx-auto min-h-dvh w-full max-w-[540px] overflow-hidden border-x border-white/[0.04] bg-[radial-gradient(circle_at_50%_-5%,rgba(0,128,255,0.14),transparent_34%),linear-gradient(180deg,#020b18_0%,#031226_55%,#020b18_100%)] shadow-2xl shadow-black/40">
+        <header className="flex items-center justify-between px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))]">
+          <MarcaSupervisor />
+          <button type="button" aria-label="Notificaciones" className="relative grid h-12 w-12 place-items-center rounded-full text-white transition hover:bg-white/5">
+            <Campana className="h-7 w-7" />
+            {novedades > 0 && <span className="absolute right-2 top-1.5 h-3 w-3 rounded-full border-2 border-[#020b18] bg-[#087ff0]" />}
+          </button>
+        </header>
 
-        <section aria-label="Panel de Supervisor" className="absolute inset-0 z-10">
-          <div className="absolute left-[34.7%] top-[12.15%] flex h-[3.2%] min-w-[42%] items-center bg-[#020b18] px-[0.7%] text-[clamp(1.2rem,5vw,2rem)] font-bold text-white">
-            {nombre}
-          </div>
+        <div className="space-y-4 px-4 pb-28">
+          <section className="px-1 pt-1">
+            <p className="flex items-center gap-2 text-base font-medium text-[#0788ff]">
+              <IconoEscudoOk className="h-6 w-6" /> Supervisor
+            </p>
+            <h1 className="mt-2 text-[2rem] font-bold leading-tight tracking-tight">Buenos días, {nombre}</h1>
+            <p className="mt-1 text-base text-slate-400">Resumen operativo de hoy</p>
+          </section>
 
-          <div className="absolute left-[27.4%] top-[21.95%] grid h-[4.2%] w-[22%] place-items-center bg-[#07172a] text-[clamp(2rem,8vw,3.7rem)] font-bold leading-none text-white">
-            {cobertura}%
-          </div>
-          <div className={`absolute left-[27.4%] top-[26.8%] flex h-[2.2%] w-[37%] items-center bg-[#07172a] text-[clamp(0.75rem,3vw,1.05rem)] ${cobertura >= 90 ? "text-emerald-400" : "text-red-400"}`}>
-            {cobertura >= 90 ? "bajo control" : "requiere atención"}
-          </div>
-
-          <ValorMetrica left="8.1%" valor={`${conApertura.length}/${turnos.length}`} />
-          <ValorMetrica left="31.1%" valor={puestosR.count ?? 0} />
-          <ValorMetrica left="54.3%" valor={rondasR.count ?? 0} />
-          <ValorMetrica left="77.2%" valor={novedadesR.count ?? 0} emergencia={(novedadesR.count ?? 0) > 0} />
-
-          {filas.map((turno, indice) => {
-            const guardia = turno ? uno(turno.guardias) : null;
-            const puesto = turno ? uno(turno.puestos) : null;
-            const abierto = turno ? (turno.aperturas_turno?.length ?? 0) > 0 : false;
-            const top = `${46.35 + indice * 5.02}%`;
-
-            return (
-              <div
-                key={turno?.id ?? `vacio-${indice}`}
-                className="absolute left-[14.8%] grid h-[4.75%] w-[78.2%] grid-cols-[1.25fr_1fr_auto] items-center gap-[3%] bg-[#071426] pr-[1%]"
-                style={{ top }}
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-[clamp(0.72rem,2.65vw,1.02rem)] font-medium text-white">
-                    {guardia?.nombre ?? "Sin turno programado"}
-                  </p>
-                  <p className="truncate text-[clamp(0.61rem,2.25vw,0.87rem)] text-white/55">
-                    {puesto?.nombre ?? "Disponible"}
-                  </p>
-                </div>
-                <p className="truncate text-[clamp(0.62rem,2.3vw,0.9rem)] text-white/60">
-                  {puesto?.nombre ?? "—"}
-                </p>
-                <p className={`whitespace-nowrap text-[clamp(0.62rem,2.3vw,0.9rem)] ${abierto ? "text-emerald-400" : turno ? "text-red-400" : "text-white/40"}`}>
-                  {abierto ? "● En puesto" : turno ? "● Pendiente" : "—"} <span className="ml-2 text-white/55">›</span>
+          <section className="relative overflow-hidden rounded-2xl border border-[#27425e] bg-[radial-gradient(circle_at_78%_42%,rgba(0,125,255,0.13),transparent_40%),linear-gradient(135deg,#07182c,#061326)] p-5 shadow-xl shadow-black/20">
+            <div className="absolute -right-2 top-3 text-[#0c3d68]/45">
+              <IconoEscudoOk className="h-36 w-36" />
+            </div>
+            <div className="relative flex items-center gap-5">
+              <AnilloOperacion porcentaje={cobertura} />
+              <div>
+                <p className="text-base text-slate-300">Operación de hoy</p>
+                <p className="mt-1 text-5xl font-bold leading-none">{cobertura}%</p>
+                <p className={`mt-2 text-base font-medium ${cobertura >= 90 ? "text-emerald-400" : "text-red-400"}`}>
+                  {cobertura >= 90 ? "bajo control" : "requiere atención"}
                 </p>
               </div>
-            );
-          })}
+            </div>
+          </section>
 
-          <button type="button" aria-label="Ver personal" className="absolute left-[6.1%] top-[66.3%] h-[6.4%] w-[20.4%] rounded-xl bg-transparent" />
-          <button type="button" aria-label="Asignar puesto" className="absolute left-[28.3%] top-[66.3%] h-[6.4%] w-[20.4%] rounded-xl bg-transparent" />
-          <button type="button" aria-label="Crear ronda" className="absolute left-[50.5%] top-[66.3%] h-[6.4%] w-[20.4%] rounded-xl bg-transparent" />
-          <button type="button" aria-label="Reportar novedad" className="absolute left-[72.7%] top-[66.3%] h-[6.4%] w-[20.4%] rounded-xl bg-transparent" />
-        </section>
+          <section className="grid grid-cols-2 gap-3">
+            <Metrica icono={<IconoPersona className="h-7 w-7" />} titulo="Personal" valor={`${enPuesto.length}/${turnos.length}`} detalle="en servicio" />
+            <Metrica icono={<IconoEscudoOk className="h-7 w-7" />} titulo="Puestos" valor={puestosR.count ?? 0} detalle="activos" />
+            <Metrica icono={<IconoCiclo className="h-7 w-7" />} titulo="Rondas" valor={rondasR.count ?? 0} detalle="completadas" />
+            <Metrica icono={<IconoAlerta className="h-7 w-7" />} titulo="Novedades" valor={novedades} detalle="sin resolver" emergencia={novedades > 0} />
+          </section>
+
+          <section className="overflow-hidden rounded-2xl border border-[#27425e] bg-[#07172a]/95">
+            <div className="flex items-center justify-between border-b border-[#20374e] px-4 py-3.5">
+              <h2 className="text-lg font-semibold">Personal y puestos</h2>
+              <button type="button" className="flex items-center gap-1 text-sm font-medium text-[#0788ff]">Ver todo <IconoFlecha className="h-4 w-4" /></button>
+            </div>
+            <div className="divide-y divide-[#20374e]">
+              {turnos.length === 0 ? (
+                <p className="px-4 py-8 text-center text-sm text-slate-400">No hay turnos programados para hoy.</p>
+              ) : (
+                turnos.slice(0, 3).map((turno) => {
+                  const guardia = uno(turno.guardias);
+                  const puesto = uno(turno.puestos);
+                  const abierto = (turno.aperturas_turno?.length ?? 0) > 0;
+                  return (
+                    <article key={turno.id} className="grid grid-cols-[2.75rem_1fr_auto] items-center gap-3 px-4 py-3">
+                      <Avatar nombre={guardia?.nombre ?? "Guardia"} />
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{guardia?.nombre ?? "Guardia asignado"}</p>
+                        <p className="truncate text-sm text-slate-400">{puesto?.nombre ?? "Puesto pendiente"}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`whitespace-nowrap text-sm ${abierto ? "text-emerald-400" : "text-red-400"}`}>
+                          ● {abierto ? "En puesto" : "Pendiente"}
+                        </span>
+                        <IconoFlecha className="h-5 w-5 text-slate-500" />
+                      </div>
+                    </article>
+                  );
+                })
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4">
+            <h2 className="text-lg font-semibold">Acciones rápidas</h2>
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <Accion icono={<IconoPersona className="h-7 w-7" />} texto="Ver personal" />
+              <Accion icono={<IconoTurno className="h-7 w-7" />} texto="Asignar puesto" />
+              <Accion icono={<IconoCiclo className="h-7 w-7" />} texto="Crear ronda" />
+              <Accion icono={<IconoAlerta className="h-7 w-7" />} texto="Reportar novedad" />
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold">Supervisión en tiempo real</h2>
+              <button type="button" className="flex shrink-0 items-center gap-1 text-sm font-medium text-[#0788ff]">Ver mapa <IconoFlecha className="h-4 w-4" /></button>
+            </div>
+            <MapaOperativo />
+          </section>
+        </div>
+
+        <nav aria-label="Navegación del supervisor" className="fixed inset-x-0 bottom-0 z-30 mx-auto grid w-full max-w-[540px] grid-cols-5 border-t border-[#27425e] bg-[#031023]/95 px-2 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl">
+          <Navegacion icono={<IconoCasa className="h-6 w-6" />} texto="Inicio" activo />
+          <Navegacion icono={<IconoPersona className="h-6 w-6" />} texto="Personal" />
+          <Navegacion icono={<IconoCiclo className="h-6 w-6" />} texto="Rondas" />
+          <Navegacion icono={<IconoAlerta className="h-6 w-6" />} texto="Novedades" />
+          <Navegacion icono={<Puntos className="h-6 w-6" />} texto="Más" />
+        </nav>
       </div>
     </main>
   );
 }
 
-function ValorMetrica({ left, valor, emergencia = false }: { left: string; valor: string | number; emergencia?: boolean }) {
+function MarcaSupervisor() {
   return (
-    <div
-      className={`absolute top-[35.9%] grid h-[3.3%] w-[14.5%] place-items-center bg-[#071426] text-[clamp(1.15rem,4.7vw,2rem)] leading-none ${emergencia ? "text-red-400" : "text-white"}`}
-      style={{ left }}
-    >
-      {valor}
+    <div className="flex items-center gap-2.5">
+      <Image src="/logo-sotersa.png" alt="SOTERSA" width={42} height={50} className="h-12 w-auto object-contain" priority />
+      <div>
+        <p className="text-[1.15rem] font-semibold tracking-[0.16em] text-[#19b9f2]">SOTERSA</p>
+        <p className="mt-0.5 text-[0.55rem] tracking-[0.2em] text-slate-400">SEGURIDAD ESTRATÉGICA</p>
+      </div>
     </div>
   );
+}
+
+function AnilloOperacion({ porcentaje }: { porcentaje: number }) {
+  const progreso = Math.max(0, Math.min(100, porcentaje));
+  return (
+    <div className="relative grid h-28 w-28 shrink-0 place-items-center">
+      <svg viewBox="0 0 120 120" className="absolute inset-0 -rotate-90" aria-hidden>
+        <circle cx="60" cy="60" r="48" fill="none" stroke="#183957" strokeWidth="11" />
+        <circle cx="60" cy="60" r="48" fill="none" stroke="url(#supervisor-ring)" strokeWidth="11" strokeLinecap="round" pathLength="100" strokeDasharray={`${progreso} 100`} />
+        <defs><linearGradient id="supervisor-ring"><stop stopColor="#067cff" /><stop offset="1" stopColor="#1dd6ef" /></linearGradient></defs>
+      </svg>
+      <IconoEscudoOk className="h-11 w-11 text-[#087ff0]" />
+    </div>
+  );
+}
+
+function Metrica({ icono, titulo, valor, detalle, emergencia = false }: { icono: React.ReactNode; titulo: string; valor: string | number; detalle: string; emergencia?: boolean }) {
+  return (
+    <article className="rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4 shadow-lg shadow-black/10">
+      <div className={`flex items-center gap-2 ${emergencia ? "text-red-400" : "text-[#0788ff]"}`}>{icono}<span className="text-sm text-slate-300">{titulo}</span></div>
+      <p className={`mt-3 text-center text-3xl font-medium ${emergencia ? "text-red-400" : "text-white"}`}>{valor}</p>
+      <p className="mt-1 text-center text-sm text-slate-400">{detalle}</p>
+    </article>
+  );
+}
+
+function Avatar({ nombre }: { nombre: string }) {
+  const iniciales = nombre.split(" ").slice(0, 2).map((parte) => parte[0]).join("").toUpperCase();
+  return <span className="grid h-11 w-11 place-items-center rounded-full border border-[#38526b] bg-gradient-to-br from-[#244868] to-[#0a1e34] text-xs font-semibold text-[#8ddaff]">{iniciales}</span>;
+}
+
+function Accion({ icono, texto }: { icono: React.ReactNode; texto: string }) {
+  return <button type="button" className="flex min-h-24 flex-col items-center justify-center gap-2 rounded-xl border border-[#27425e] bg-[#061426] px-2 py-3 text-center text-sm text-slate-300 transition active:scale-[0.98]"><span className="text-[#0788ff]">{icono}</span>{texto}</button>;
+}
+
+function MapaOperativo() {
+  return (
+    <div className="relative mt-3 h-44 overflow-hidden rounded-xl border border-[#27425e] bg-[linear-gradient(32deg,transparent_46%,rgba(32,79,118,0.4)_47%,rgba(32,79,118,0.4)_49%,transparent_50%),linear-gradient(148deg,transparent_47%,rgba(32,79,118,0.32)_48%,rgba(32,79,118,0.32)_50%,transparent_51%),radial-gradient(circle_at_55%_55%,#123354,#07182b_62%)] bg-[size:90px_70px,120px_85px,auto]">
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(18,60,96,0.25)_1px,transparent_1px),linear-gradient(90deg,rgba(18,60,96,0.25)_1px,transparent_1px)] bg-[size:22px_22px]" />
+      <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl font-bold text-white">Quito</span>
+      <Pin className="left-[27%] top-[46%]" />
+      <Pin className="left-[63%] top-[58%]" activo />
+      <Pin className="left-[79%] top-[21%]" />
+    </div>
+  );
+}
+
+function Pin({ className, activo = false }: { className: string; activo?: boolean }) {
+  return <span className={`absolute grid h-9 w-7 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[50%_50%_50%_0] border-2 border-white bg-[#087ff0] shadow-[0_0_18px_rgba(0,127,255,0.7)] [transform:rotate(-45deg)] ${className}`}><span className={`h-2.5 w-2.5 rounded-full bg-white [transform:rotate(45deg)] ${activo ? "ring-4 ring-cyan-300/40" : ""}`} /></span>;
+}
+
+function Navegacion({ icono, texto, activo = false }: { icono: React.ReactNode; texto: string; activo?: boolean }) {
+  return <button type="button" className={`flex min-h-14 flex-col items-center justify-center gap-1 text-[0.68rem] ${activo ? "text-[#0788ff]" : "text-slate-400"}`}>{icono}<span>{texto}</span></button>;
+}
+
+function Campana({ className }: { className?: string }) {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>;
+}
+
+function Puntos({ className }: { className?: string }) {
+  return <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>;
 }
