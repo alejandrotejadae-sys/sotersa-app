@@ -11,7 +11,8 @@
     "verificar:nube": "node --env-file=.env.local supabase/verificar-nube.mjs",
     "sembrar:demo": "node --env-file=.env.local --experimental-strip-types supabase/sembrar-demo.mjs",
     "escanear": "node --env-file=.env.local supabase/escanear.mjs",
-    "cargar:reales": "node --env-file=.env.local supabase/cargar-reales.mjs"
+    "cargar:reales": "node --env-file=.env.local supabase/cargar-reales.mjs",
+    "corregir:agosto": "node --env-file=.env.local supabase/corregir-agosto.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.5",
