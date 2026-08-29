@@ -45,7 +45,7 @@ export default async function PaginaSupervisor() {
       <div className="mx-auto min-h-dvh w-full max-w-[1440px] overflow-hidden border-x border-white/[0.04] bg-[radial-gradient(circle_at_50%_-5%,rgba(0,128,255,0.14),transparent_34%),linear-gradient(180deg,#020b18_0%,#031226_55%,#020b18_100%)] shadow-2xl shadow-black/40">
         <header className="flex items-center justify-between gap-5 px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))] lg:px-8">
           <MarcaSupervisor />
-          <nav className="hidden items-center gap-1 lg:flex"><EnlaceSuperior href="/supervisor" texto="Inicio" activo/><EnlaceSuperior href="/operacion/personal" texto="Personal"/><EnlaceSuperior href="/operacion/turnos" texto="Turnos"/><EnlaceSuperior href="/operacion/rondas" texto="Rondas"/><EnlaceSuperior href="/operacion/novedades" texto="Novedades"/><EnlaceSuperior href="/admin" texto="Central"/><EnlaceSuperior href="/portal" texto="Clientes"/></nav>
+          <nav className="hidden items-center gap-1 lg:flex"><EnlaceSuperior href="/supervisor" texto="Inicio" activo/><EnlaceSuperior href="/operacion/personal" texto="Personal"/><EnlaceSuperior href="/operacion/turnos" texto="Turnos"/><EnlaceSuperior href="/operacion/rondas" texto="Rondas"/><EnlaceSuperior href="/operacion/novedades" texto="Novedades"/><EnlaceSuperior href="/operacion/reportes" texto="Reportes"/><EnlaceSuperior href="/admin" texto="Central"/><EnlaceSuperior href="/portal" texto="Clientes"/></nav>
           <Link href="/operacion/novedades" aria-label="Notificaciones" className="relative grid h-12 w-12 place-items-center rounded-full text-white transition hover:bg-white/5">
             <Campana className="h-7 w-7" />
             {novedades > 0 && <span className="absolute right-2 top-1.5 h-3 w-3 rounded-full border-2 border-[#020b18] bg-[#087ff0]" />}
@@ -119,11 +119,12 @@ export default async function PaginaSupervisor() {
 
           <section className="rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4 lg:col-span-5">
             <h2 className="text-lg font-semibold">Acciones rápidas</h2>
-            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
               <Accion href="/operacion/personal" icono={<IconoPersona className="h-7 w-7" />} texto="Ver personal" />
               <Accion href="/operacion/turnos" icono={<IconoTurno className="h-7 w-7" />} texto="Asignar puesto" />
               <Accion href="/operacion/rondas" icono={<IconoCiclo className="h-7 w-7" />} texto="Crear ronda" />
               <Accion href="/operacion/novedades" icono={<IconoAlerta className="h-7 w-7" />} texto="Ver novedades" />
+              <Accion href="/operacion/reportes" icono={<IconoCiclo className="h-7 w-7" />} texto="Ver reportes" />
             </div>
           </section>
 
