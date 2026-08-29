@@ -7,6 +7,7 @@ import { CronometroTurno } from "@/app/componentes/cronometro-turno";
 import {
   IconoAlerta,
   IconoCiclo,
+  IconoCamion,
   IconoEscudo,
   IconoEscudoOk,
   IconoFlecha,
@@ -388,6 +389,29 @@ export default async function PaginaGuardia() {
         </section>
 
         {/* ---------------- Acciones ---------------- */}
+        {puesto?.armado && (
+          <Link
+            href="/guardia/custodia"
+            className="panel-operativo flex min-h-[96px] items-center gap-4 p-4 transition active:scale-[0.99]"
+          >
+            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-azul-400/60 bg-azul-500/10 text-azul-300">
+              <IconoCamion className="h-8 w-8" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-xs font-semibold uppercase tracking-[0.16em] text-azul-400">
+                Servicio asignado
+              </span>
+              <span className="mt-1 block text-xl font-bold text-white">
+                Custodia armada
+              </span>
+              <span className="mt-1 block text-sm text-gris-400">
+                Ver operación, ruta y comunicación segura
+              </span>
+            </span>
+            <IconoFlecha className="h-5 w-5 shrink-0 text-azul-300" />
+          </Link>
+        )}
+
         <div className="grid grid-cols-3 gap-3">
           <Link href="/guardia/reportar?severidad=emergencia" className="tarjeta flex min-h-[104px] flex-col items-center justify-center gap-2 px-2 py-4 text-center transition active:scale-[0.99]">
             <IconoAlerta className="h-7 w-7 text-red-300" />

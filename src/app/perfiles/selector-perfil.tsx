@@ -2,19 +2,20 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { IconoEscudoOk, IconoPersona, IconoSalir, IconoTurno } from "@/app/componentes/iconos";
+import { IconoCamion, IconoEscudoOk, IconoPersona, IconoSalir, IconoTurno } from "@/app/componentes/iconos";
 import { crearClienteNavegador } from "@/lib/supabase/navegador";
 
-type Perfil = "cliente" | "guardia" | "supervisor" | "central";
+type Perfil = "cliente" | "guardia" | "custodia" | "supervisor" | "central";
 
 const perfiles: Array<{ id: Perfil; etiqueta: string; detalle: string; icono: React.ReactNode }> = [
   { id: "cliente", etiqueta: "Cliente", detalle: "Estado del servicio y reportes", icono: <IconoPersona className="h-7 w-7" /> },
   { id: "guardia", etiqueta: "Agente de seguridad", detalle: "Turno, asistencia y rondas", icono: <IconoTurno className="h-7 w-7" /> },
+  { id: "custodia", etiqueta: "Custodia armada", detalle: "Operación, ruta y comunicación segura", icono: <IconoCamion className="h-7 w-7" /> },
   { id: "supervisor", etiqueta: "Supervisor", detalle: "Personal, puestos y novedades", icono: <IconoEscudoOk className="h-7 w-7" /> },
   { id: "central", etiqueta: "Central operativa", detalle: "Control general de la operación", icono: <Central className="h-7 w-7" /> },
 ];
 
-const destinos: Record<Perfil, string> = { cliente: "/portal", guardia: "/guardia?desde=perfiles", supervisor: "/supervisor", central: "/admin" };
+const destinos: Record<Perfil, string> = { cliente: "/portal", guardia: "/guardia?desde=perfiles", custodia: "/guardia/custodia", supervisor: "/supervisor", central: "/admin" };
 
 export function SelectorPerfil() {
   const router = useRouter();

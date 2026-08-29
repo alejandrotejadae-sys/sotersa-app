@@ -174,3 +174,34 @@ export function IconoHuella({ className }: Props) {
     </svg>
   );
 }
+
+export function IconoCamion({ className }: Props) {
+  return (
+    <svg {...base} className={className} aria-hidden>
+      <path d="M3.5 6.5h10v10h-10z" />
+      <path d="M13.5 9h3.2l3.8 4v3.5h-7" />
+      <circle cx="7" cy="17.5" r="1.8" />
+      <circle cx="17.5" cy="17.5" r="1.8" />
+      <path d="M8.8 17.5h6.9" />
+    </svg>
+  );
+}
+
+export function IconoCandado({ className }: Props) {
+  return (
+    <svg {...base} className={className} aria-hidden>
+      <rect x="5" y="10" width="14" height="10" rx="2" />
+      <path d="M8 10V7.5a4 4 0 0 1 8 0V10" />
+      <path d="M12 14v2" />
+    </svg>
+  );
+}
+
+export function IconoMapa({ className }: Props) {
+  return (
+    <svg {...base} className={className} aria-hidden>
+      <path d="m3.5 6 5-2.5 7 2.5 5-2.5V18l-5 2.5-7-2.5-5 2.5Z" />
+      <path d="M8.5 3.5V18M15.5 6v14.5" />
+    </svg>
+  );
+}
