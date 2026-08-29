@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Marca, Pulso } from "@/app/componentes/marca";
 import { IconoEscudoOk, IconoFlecha, IconoPersona, IconoTurno } from "@/app/componentes/iconos";
 import { ahoraConDesfase, exigirPerfil } from "@/lib/sesion";
+import { FormularioCliente } from "./formulario-cliente";
 
 export const metadata = { title: "Clientes y servicios — SOTERSA" };
 export const dynamic = "force-dynamic";
@@ -48,6 +49,14 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
           <Resumen titulo="Activos" valor={empresasActivas} normal />
           <Resumen titulo="Puestos activos" valor={puestosActivos.length} />
           <Resumen titulo="Datos pendientes" valor={incompletas} alerta={incompletas > 0} />
+        </section>
+
+        <section className="mt-5 rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4">
+          <h2 className="font-semibold">Registrar cliente o puesto</h2>
+          <p className="mt-1 text-sm text-slate-400">El alta desde aquí evita cargar datos por fuera de la app.</p>
+          <div className="mt-4">
+            <FormularioCliente empresas={empresas.filter((empresa) => empresa.activo).map((empresa) => ({ id: empresa.id, nombre: empresa.nombre }))} />
+          </div>
         </section>
 
         <nav className="mt-5 flex gap-2 overflow-x-auto pb-1" aria-label="Filtros de clientes"><FiltroEnlace filtro="todos" actual={filtro} texto="Todos" /><FiltroEnlace filtro="activos" actual={filtro} texto="Activos" /><FiltroEnlace filtro="incompletos" actual={filtro} texto="Datos pendientes" /></nav>
