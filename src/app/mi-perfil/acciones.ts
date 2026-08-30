@@ -33,12 +33,17 @@ export async function guardarPerfil(_: EstadoPerfil, formData: FormData): Promis
     if (errorFoto) return { tipo: "error", mensaje: "No fue posible subir la fotografía. Intenta nuevamente." };
     // Contenedor privado: se guarda la ruta y el enlace se firma al mostrarlo.
     // Ver src/lib/avatares.ts.
-    avatarUrl = ruta;
     const anterior = typeof user.user_metadata?.avatar_path === "string" ? user.user_metadata.avatar_path : null;
-    if (anterior?.startsWith(`${user.id}/`)) await administrador.storage.from(contenedor).remove([anterior]);
-    await administrador.auth.admin.updateUserById(user.id, { user_metadata: { ...user.user_metadata, avatar_url: avatarUrl, avatar_path: ruta, nombre } });
+    const { error: errorCuenta } = await administrador.auth.admin.updateUserById(user.id, { user_metadata: { ...user.user_metadata, avatar_url: ruta, avatar_path: ruta, nombre } });
+    if (errorCuenta) {
+      await administrador.storage.from(contenedor).remove([ruta]);
+      return { tipo: "error", mensaje: "La foto se cargó, pero no pudo vincularse con tu cuenta. Intenta nuevamente." };
+    }
+    avatarUrl = ruta;
+    if (anterior?.startsWith(`${user.id}/`) && anterior !== ruta) await administrador.storage.from(contenedor).remove([anterior]);
   } else {
-    await administrador.auth.admin.updateUserById(user.id, { user_metadata: { ...user.user_metadata, nombre } });
+    const { error: errorCuenta } = await administrador.auth.admin.updateUserById(user.id, { user_metadata: { ...user.user_metadata, nombre } });
+    if (errorCuenta) return { tipo: "error", mensaje: "No fue posible actualizar la información de tu cuenta." };
   }
 
   const { error } = await administrador.from("perfiles").update({ nombre, telefono: telefono || null }).eq("id", user.id);
