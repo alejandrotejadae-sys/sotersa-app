@@ -143,7 +143,10 @@ export default async function PaginaCustodias() {
                     {!turnoActual && turnosRuta[0] && <p className="mt-3 rounded-xl border border-[#0788ff]/25 bg-[#0788ff]/8 px-3 py-2.5 text-xs leading-5 text-[#8ddaff]">Próxima salida: {fechaHoraEcuador(turnosRuta[0].inicio_programado)} · {uno(turnosRuta[0].guardias)?.nombre ?? "Agente asignado"}.</p>}
                     {!completa && <p className="mt-3 rounded-xl border border-amber-500/25 bg-amber-500/8 px-3 py-2.5 text-xs leading-5 text-amber-200">Faltan coordenadas de origen o destino. La ruta se mantiene visible para control administrativo, pero no se considera lista para seguimiento geográfico.</p>}
 
-                    {completa && <a href={`https://www.google.com/maps/dir/?api=1&origin=${custodia.origen_lat},${custodia.origen_lng}&destination=${custodia.destino_lat},${custodia.destino_lng}`} target="_blank" rel="noreferrer" className="mt-4 flex min-h-11 items-center justify-center rounded-xl border border-[#0788ff]/50 bg-[#0788ff]/10 px-4 text-sm font-semibold text-[#8ddaff]">Abrir ruta en Google Maps</a>}
+                    <div className={`mt-4 grid gap-2 ${completa ? "sm:grid-cols-2" : ""}`}>
+                      <Link href={`/operacion/custodias/${custodia.id}`} className="flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-[#087ff0] to-[#02b9e8] px-4 text-sm font-semibold text-white">Ver ficha operativa</Link>
+                      {completa && <a href={`https://www.google.com/maps/dir/?api=1&origin=${custodia.origen_lat},${custodia.origen_lng}&destination=${custodia.destino_lat},${custodia.destino_lng}`} target="_blank" rel="noreferrer" className="flex min-h-11 items-center justify-center rounded-xl border border-[#0788ff]/50 bg-[#0788ff]/10 px-4 text-sm font-semibold text-[#8ddaff]">Abrir ruta en Google Maps</a>}
+                    </div>
                   </div>
                 </article>
               );
