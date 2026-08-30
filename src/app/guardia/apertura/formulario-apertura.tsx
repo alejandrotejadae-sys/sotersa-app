@@ -41,6 +41,8 @@ export default function FormularioApertura({ turnoId }: { turnoId: string }) {
       observacion: observacion || null,
     });
 
+    if (!err) await supabase.from("turnos").update({ estado: "abierto" }).eq("id", turnoId);
+
     setGuardando(false);
 
     if (err) {
