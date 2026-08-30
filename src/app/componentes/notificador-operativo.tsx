@@ -22,7 +22,7 @@ export function NotificadorOperativo() {
       const nuevas = (data ?? []).filter((fila) => ultima && new Date(fila.hora_captura) > new Date(ultima));
       const masReciente = data?.[0]?.hora_captura;
       if (masReciente) localStorage.setItem(CLAVE, masReciente);
-      if (!inicial && Notification.permission === "granted") nuevas.reverse().forEach((alerta) => {
+      if (!inicial && "Notification" in window && Notification.permission === "granted") nuevas.reverse().forEach((alerta) => {
         const puesto = Array.isArray(alerta.puestos) ? alerta.puestos[0] : alerta.puestos;
         new Notification(`SOTERSA · ${alerta.tipo}`, { body: `${puesto?.codigo ?? "Operación"}: ${alerta.descripcion.slice(0, 120)}`, icon: "/icono-lobo-sotersa-192.png", tag: alerta.id });
       });
