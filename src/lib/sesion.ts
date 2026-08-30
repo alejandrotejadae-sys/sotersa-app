@@ -3,8 +3,12 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import type { RolUsuario } from "@/lib/tipos";
+import { AVISO_VERSION, ROLES_CON_CONSENTIMIENTO } from "@/lib/consentimiento";
 
-export async function exigirPerfil(roles: RolUsuario[], opciones?: { permitirClaveTemporal?: boolean }) {
+export async function exigirPerfil(
+  roles: RolUsuario[],
+  opciones?: { permitirClaveTemporal?: boolean; permitirSinConsentimiento?: boolean },
+) {
   const supabase = await crearClienteServidor();
   const {
     data: { user },
@@ -20,6 +24,26 @@ export async function exigirPerfil(roles: RolUsuario[], opciones?: { permitirCla
     .single();
 
   if (!perfil || !roles.includes(perfil.rol as RolUsuario)) redirect("/");
+
+  /**
+   * LOPDP: la base legal elegida es el consentimiento, así que no se puede
+   * tratar el dato antes de tenerlo. Se comprueba aquí, en el mismo lugar por
+   * el que pasan todas las pantallas, y no en cada una: una pantalla que
+   * alguien olvide proteger sería un tratamiento sin autorización.
+   */
+  if (
+    !opciones?.permitirSinConsentimiento &&
+    ROLES_CON_CONSENTIMIENTO.has(perfil.rol)
+  ) {
+    const { data: consentimiento } = await supabase
+      .from("consentimientos")
+      .select("retirado_en")
+      .eq("perfil_id", user.id)
+      .eq("version", AVISO_VERSION)
+      .maybeSingle();
+
+    if (!consentimiento || consentimiento.retirado_en) redirect("/consentimiento");
+  }
 
   return { supabase, user, perfil };
 }
