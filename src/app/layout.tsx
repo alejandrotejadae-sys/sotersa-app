@@ -4,6 +4,7 @@ import { PantallaApertura } from "@/app/componentes/pantalla-apertura";
 import { PantallaBienvenida } from "@/app/componentes/pantalla-bienvenida";
 import { SincronizadorOperativo } from "@/app/componentes/sincronizador-operativo";
 import { NotificadorOperativo } from "@/app/componentes/notificador-operativo";
+import { RegistroPwa } from "@/app/componentes/registro-pwa";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -55,6 +56,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <PantallaBienvenida />
         <SincronizadorOperativo />
         <NotificadorOperativo />
+        <RegistroPwa />
         {children}
       </body>
     </html>
