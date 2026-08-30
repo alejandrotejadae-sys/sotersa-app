@@ -22,6 +22,15 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/icono-lobo-sotersa-512.png",
         sizes: "512x512",
         type: "image/png",
+        purpose: "any",
+      },
+      // El enmascarable es otro archivo, con el emblema mas pequeño: el
+      // sistema recorta en circulo y solo respeta el 80% central. Usar el
+      // mismo que "any" le cortaria las orejas al lobo en Android.
+      {
+        src: "/icono-lobo-maskable-512.png",
+        sizes: "512x512",
+        type: "image/png",
         purpose: "maskable",
       },
     ],
