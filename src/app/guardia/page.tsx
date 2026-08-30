@@ -273,16 +273,10 @@ export default async function PaginaGuardia() {
             </Link>
           )}
 
-          <TilePendienteAncho
-            icono={<IconoQR className="h-6 w-6" />}
-            titulo={
-              <>
-                Escanear
-                <br />
-                QR
-              </>
-            }
-          />
+          <Link href="/guardia/ronda" className="tarjeta flex min-h-[88px] items-center gap-3 rounded-2xl px-4 py-4 transition active:scale-[0.99]">
+            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border border-azul-500/70 bg-azul-500/5 text-white"><IconoQR className="h-6 w-6" /></span>
+            <span className="text-lg font-bold leading-tight text-white">Escanear<br />QR</span>
+          </Link>
         </div>
 
         {faltantes.length > 0 && (
@@ -558,24 +552,5 @@ function BotonSOS() {
       </span>
       <IconoFlecha className="h-5 w-5 shrink-0 text-red-300" />
     </Link>
-  );
-}
-
-function TilePendienteAncho({
-  icono,
-  titulo,
-}: {
-  icono: React.ReactNode;
-  titulo: React.ReactNode;
-}) {
-  return (
-    <div className="tarjeta flex min-h-[88px] items-center gap-3 rounded-2xl px-4 py-4">
-      <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border border-azul-500/70 bg-azul-500/5 text-white">
-        {icono}
-      </span>
-      <span className="text-lg font-bold leading-tight text-white">
-        {titulo}
-      </span>
-    </div>
   );
 }
