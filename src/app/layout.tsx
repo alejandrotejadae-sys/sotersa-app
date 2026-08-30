@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
+import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PantallaApertura } from "@/app/componentes/pantalla-apertura";
 import { PantallaBienvenida } from "@/app/componentes/pantalla-bienvenida";
 import { SincronizadorOperativo } from "@/app/componentes/sincronizador-operativo";
 import { NotificadorOperativo } from "@/app/componentes/notificador-operativo";
 import { RegistroPwa } from "@/app/componentes/registro-pwa";
+import { crearClienteServidor } from "@/lib/supabase/servidor";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -45,7 +47,22 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const supabase = await crearClienteServidor();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let esAdmin = false;
+  if (user) {
+    const { data: perfil } = await supabase
+      .from("perfiles")
+      .select("rol")
+      .eq("id", user.id)
+      .maybeSingle();
+    esAdmin = perfil?.rol === "admin";
+  }
+
   return (
     <html
       lang="es"
@@ -58,6 +75,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <NotificadorOperativo />
         <RegistroPwa />
         {children}
+        {esAdmin && (
+          <Link
+            href="/perfiles"
+            aria-label="Volver al selector de perfiles"
+            className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] right-3 z-50 inline-flex min-h-11 items-center gap-2 rounded-full border border-[#0788ff]/45 bg-[#031226]/95 px-4 py-2 text-sm font-semibold text-[#8ddaff] shadow-xl shadow-black/35 backdrop-blur-xl transition hover:border-[#49b6ff] hover:bg-[#08203a] md:bottom-5 md:right-5"
+          >
+            <span aria-hidden="true">←</span>
+            Perfiles
+          </Link>
+        )}
       </body>
     </html>
   );
