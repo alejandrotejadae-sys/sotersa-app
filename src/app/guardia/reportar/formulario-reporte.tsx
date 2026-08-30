@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { IconoAlerta } from "@/app/componentes/iconos";
+import { encolarOperacion } from "@/lib/cola-operativa";
 import { registrarNovedad, type EstadoReporte } from "./acciones";
 
 const INICIAL: EstadoReporte = { tipo: "inicial", mensaje: "" };
@@ -13,6 +14,8 @@ export function FormularioReporte({ soloLectura, severidadInicial }: { soloLectu
   const [ubicacion, setUbicacion] = useState<{ lat: number; lng: number } | null>(null);
   const [buscando, setBuscando] = useState(false);
   const [archivo, setArchivo] = useState("");
+  const [guardadoLocal, setGuardadoLocal] = useState(false);
+  const [errorLocal, setErrorLocal] = useState<string | null>(null);
 
   function obtenerUbicacion() {
     setBuscando(true);
@@ -21,18 +24,36 @@ export function FormularioReporte({ soloLectura, severidadInicial }: { soloLectu
   }
 
   if (soloLectura) return <p className="mt-6 rounded-2xl border border-[#27425e] bg-[#07172a] p-5 text-sm leading-6 text-slate-400">Vista de administración: el reporte debe enviarlo el agente de seguridad desde su propia cuenta.</p>;
-  if (estado.tipo === "exito") return <section className="mt-6 rounded-2xl border border-emerald-500/35 bg-emerald-500/10 p-6 text-center"><span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-500/15 text-2xl text-emerald-300">✓</span><h2 className="mt-4 text-xl font-semibold text-emerald-200">Reporte enviado</h2><p className="mt-2 text-sm leading-6 text-slate-300">{estado.mensaje}</p><Link href="/guardia" className="boton-primario mt-5 grid min-h-13 place-items-center rounded-xl font-semibold text-white">Volver a mi puesto</Link></section>;
+  if (estado.tipo === "exito" || guardadoLocal) return <section className={`mt-6 rounded-2xl border p-6 text-center ${guardadoLocal ? "border-amber-400/35 bg-amber-400/10" : "border-emerald-500/35 bg-emerald-500/10"}`}><span className={`mx-auto grid h-14 w-14 place-items-center rounded-full text-2xl ${guardadoLocal ? "bg-amber-400/15 text-amber-200" : "bg-emerald-500/15 text-emerald-300"}`}>✓</span><h2 className={`mt-4 text-xl font-semibold ${guardadoLocal ? "text-amber-100" : "text-emerald-200"}`}>{guardadoLocal ? "Reporte guardado" : "Reporte enviado"}</h2><p className="mt-2 text-sm leading-6 text-slate-300">{guardadoLocal ? "No había señal. La app lo enviará automáticamente cuando vuelva la conexión." : estado.mensaje}</p><Link href="/guardia" className="boton-primario mt-5 grid min-h-13 place-items-center rounded-xl font-semibold text-white">Volver a mi puesto</Link></section>;
 
-  return <form action={accion} className="mt-6 space-y-5 rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-5">
+  return <form action={accion} onSubmit={guardarSinSenal} className="mt-6 space-y-5 rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-5">
     <Campo etiqueta="Tipo de novedad"><select name="tipo" defaultValue="Novedad general" className={control}><option>Novedad general</option><option>Acceso no autorizado</option><option>Daño o falla de equipos</option><option>Infraestructura</option><option>Incidente médico</option><option>Relevo de puesto</option><option>Otro</option></select></Campo>
     <Campo etiqueta="Prioridad"><select name="severidad" defaultValue={severidadInicial} className={control}><option value="informativa">Informativa</option><option value="novedad">Novedad</option><option value="emergencia">Emergencia</option></select></Campo>
     <Campo etiqueta="Descripción"><textarea name="descripcion" required minLength={10} maxLength={1200} rows={5} placeholder="Describe qué ocurrió, dónde y qué acciones realizaste…" className={`${control} resize-none py-3`} /></Campo>
     <div><label className="flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-[#0788ff]/65 bg-[#0788ff]/8 px-4 text-sm font-semibold text-[#8ddaff]"><Camara /> {archivo || "Adjuntar fotografía"}<input name="foto" type="file" accept="image/jpeg,image/png,image/webp" onChange={(evento) => setArchivo(evento.target.files?.[0]?.name ?? "")} className="sr-only" /></label><p className="mt-2 text-center text-xs text-slate-500">Opcional · máximo 5 MB</p></div>
     <input type="hidden" name="lat" value={ubicacion?.lat ?? ""} /><input type="hidden" name="lng" value={ubicacion?.lng ?? ""} />
     <button type="button" onClick={obtenerUbicacion} disabled={buscando} className={`min-h-13 w-full rounded-xl border px-4 text-sm font-semibold ${ubicacion ? "border-emerald-500/35 bg-emerald-500/10 text-emerald-300" : "border-[#27425e] bg-[#041225] text-slate-300"}`}>{buscando ? "Obteniendo ubicación…" : ubicacion ? "✓ Ubicación registrada" : "Registrar ubicación GPS"}</button>
-    {estado.tipo === "error" && <p role="alert" className="rounded-xl border border-red-500/35 bg-red-500/10 px-4 py-3 text-sm text-red-200">{estado.mensaje}</p>}
+    {(estado.tipo === "error" || errorLocal) && <p role="alert" className="rounded-xl border border-red-500/35 bg-red-500/10 px-4 py-3 text-sm text-red-200">{errorLocal ?? estado.mensaje}</p>}
     <button disabled={pendiente} className="boton-primario flex min-h-14 w-full items-center justify-center gap-2 rounded-xl font-semibold text-white disabled:opacity-50"><IconoAlerta className="h-5 w-5" /> {pendiente ? "Enviando reporte…" : "Enviar a supervisión"}</button>
   </form>;
+
+  async function guardarSinSenal(evento: React.FormEvent<HTMLFormElement>) {
+    if (navigator.onLine) return;
+    evento.preventDefault();
+    setErrorLocal(null);
+    const datos = new FormData(evento.currentTarget);
+    const descripcion = String(datos.get("descripcion") ?? "").trim();
+    if (descripcion.length < 10) { setErrorLocal("Describe la novedad con al menos 10 caracteres."); return; }
+    const foto = datos.get("foto");
+    if (foto instanceof File && foto.size > 5 * 1024 * 1024) { setErrorLocal("La fotografía no puede superar 5 MB."); return; }
+    const ahora = new Date().toISOString();
+    await encolarOperacion({
+      id: crypto.randomUUID(), tipo: "novedad", creadoEn: ahora,
+      datos: { tipo: String(datos.get("tipo")), severidad: String(datos.get("severidad")), descripcion, lat: ubicacion?.lat ?? null, lng: ubicacion?.lng ?? null },
+      foto: foto instanceof File && foto.size > 0 ? foto : null,
+    });
+    setGuardadoLocal(true);
+  }
 }
 
 function Campo({ etiqueta, children }: { etiqueta: string; children: React.ReactNode }) { return <label className="block text-sm font-medium text-slate-300">{etiqueta}{children}</label>; }

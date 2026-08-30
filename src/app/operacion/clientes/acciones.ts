@@ -140,6 +140,27 @@ export async function agregarPuesto(
   };
 }
 
+/** Crea o actualiza el contacto operativo de un puesto y tipo concreto. */
+export async function guardarContactoPuesto(_: EstadoCliente, formData: FormData): Promise<EstadoCliente> {
+  const puestoId = String(formData.get("puesto_id") ?? "");
+  const tipo = String(formData.get("tipo") ?? "");
+  const nombre = texto(formData, "contacto_nombre", 120);
+  const telefono = texto(formData, "contacto_telefono", 40);
+  const tipos = new Set(["central_monitoreo", "administracion_cliente", "supervisor_zona", "jefe_operaciones"]);
+  if (!UUID.test(puestoId)) return { tipo: "error", mensaje: "Selecciona el puesto." };
+  if (!tipos.has(tipo)) return { tipo: "error", mensaje: "Selecciona el tipo de contacto." };
+  if (telefono.replace(/\D/g, "").length < 7) return { tipo: "error", mensaje: "Escribe un teléfono válido." };
+  const { supabase } = await exigirPerfil(["admin"]);
+  const { data: puesto } = await supabase.from("puestos").select("id,codigo").eq("id", puestoId).eq("activo", true).maybeSingle();
+  if (!puesto) return { tipo: "error", mensaje: "El puesto seleccionado ya no está activo." };
+  const { error } = await supabase.from("contactos_puesto").upsert({ puesto_id: puestoId, tipo, nombre: nombre || null, telefono }, { onConflict: "puesto_id,tipo" });
+  if (error) return { tipo: "error", mensaje: "No fue posible guardar el contacto." };
+  revalidatePath("/operacion/clientes");
+  revalidatePath("/guardia");
+  revalidatePath("/guardia/custodia");
+  return { tipo: "exito", mensaje: `Contacto actualizado para ${puesto.codigo}.` };
+}
+
 type ClienteSupabase = Awaited<ReturnType<typeof exigirPerfil>>["supabase"];
 
 /** Devuelve null si todo fue bien, o el motivo del fallo. */

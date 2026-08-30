@@ -20,6 +20,7 @@ import {
   IconoRonda,
   IconoTelefono,
   IconoTurno,
+  IconoSalir,
 } from "@/app/componentes/iconos";
 
 export const metadata = { title: "Mi puesto — SOTERSA" };
@@ -272,16 +273,10 @@ export default async function PaginaGuardia() {
             </Link>
           )}
 
-          <TilePendienteAncho
-            icono={<IconoQR className="h-6 w-6" />}
-            titulo={
-              <>
-                Escanear
-                <br />
-                QR
-              </>
-            }
-          />
+          <Link href="/guardia/ronda" className="tarjeta flex min-h-[88px] items-center gap-3 rounded-2xl px-4 py-4 transition active:scale-[0.99]">
+            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border border-azul-500/70 bg-azul-500/5 text-white"><IconoQR className="h-6 w-6" /></span>
+            <span className="text-lg font-bold leading-tight text-white">Escanear<br />QR</span>
+          </Link>
         </div>
 
         {faltantes.length > 0 && (
@@ -444,6 +439,8 @@ export default async function PaginaGuardia() {
           </Link>
         </div>
 
+        {apertura && <Link href="/guardia/cierre" className="tarjeta flex min-h-16 items-center gap-3 border-azul-500/35 px-4 py-3 text-white transition active:scale-[0.99]"><span className="grid h-11 w-11 place-items-center rounded-xl bg-azul-500/12 text-azul-300"><IconoSalir className="h-6 w-6" /></span><span className="min-w-0 flex-1"><span className="block font-semibold">Cerrar y entregar turno</span><span className="mt-0.5 block text-xs text-gris-500">Estado final y firma de entrega</span></span><IconoFlecha className="h-5 w-5 text-azul-400" /></Link>}
+
         <BotonSOS />
 
         </div>
@@ -555,24 +552,5 @@ function BotonSOS() {
       </span>
       <IconoFlecha className="h-5 w-5 shrink-0 text-red-300" />
     </Link>
-  );
-}
-
-function TilePendienteAncho({
-  icono,
-  titulo,
-}: {
-  icono: React.ReactNode;
-  titulo: React.ReactNode;
-}) {
-  return (
-    <div className="tarjeta flex min-h-[88px] items-center gap-3 rounded-2xl px-4 py-4">
-      <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border border-azul-500/70 bg-azul-500/5 text-white">
-        {icono}
-      </span>
-      <span className="text-lg font-bold leading-tight text-white">
-        {titulo}
-      </span>
-    </div>
   );
 }

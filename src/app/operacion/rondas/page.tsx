@@ -1,7 +1,10 @@
 import Link from "next/link";
+import QRCode from "qrcode";
 import { Marca, Pulso } from "@/app/componentes/marca";
 import { IconoCiclo, IconoFlecha, IconoRonda } from "@/app/componentes/iconos";
 import { ahoraConDesfase, exigirPerfil, horaEcuador, uno } from "@/lib/sesion";
+import { BotonImprimirQr } from "./boton-imprimir";
+import { FormularioPunto } from "./formulario-punto";
 
 export const metadata = { title: "Rondas y puntos — SOTERSA" };
 export const dynamic = "force-dynamic";
@@ -11,13 +14,20 @@ export default async function PaginaRondas() {
   const desde = ahoraConDesfase(-24);
 
   const [puestosR, rondasR] = await Promise.all([
-    supabase.from("puestos").select("id, codigo, nombre, puntos_ronda(id,codigo,nombre,orden,activo)").eq("activo", true).order("codigo"),
+    supabase.from("puestos").select("id, codigo, nombre, puntos_ronda(id,codigo,nombre,token,orden,activo)").eq("activo", true).order("codigo"),
     supabase.from("rondas").select("id, hora_captura, punto_id, puntos_ronda(nombre,codigo), guardias(nombre), turnos(puestos(codigo,nombre))").gte("hora_captura", desde).order("hora_captura", { ascending: false }).limit(30),
   ]);
 
   const puestos = puestosR.data ?? [];
   const rondas = rondasR.data ?? [];
   const puntos = puestos.reduce((total, puesto) => total + (puesto.puntos_ronda?.filter((punto) => punto.activo).length ?? 0), 0);
+  const tarjetasQr = await Promise.all(puestos.flatMap((puesto) => (puesto.puntos_ronda ?? []).filter((punto) => punto.activo).map(async (punto) => ({
+    id: punto.id,
+    puesto: `${puesto.codigo} · ${puesto.nombre}`,
+    codigo: punto.codigo,
+    nombre: punto.nombre,
+    svg: await QRCode.toString(punto.token, { type: "svg", errorCorrectionLevel: "M", margin: 2, width: 260 }),
+  }))));
 
   return (
     <main className="min-h-dvh bg-[#020b18] text-white"><div className="mx-auto min-h-dvh w-full max-w-[1280px] bg-[radial-gradient(circle_at_50%_-5%,rgba(0,128,255,0.14),transparent_34%),linear-gradient(180deg,#020b18,#031226_55%,#020b18)] px-4 pb-10 pt-[max(1rem,env(safe-area-inset-top))] lg:px-8">
@@ -25,6 +35,8 @@ export default async function PaginaRondas() {
       <Link href={perfil.rol === "admin" ? "/admin" : "/supervisor"} className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-[#0788ff]"><span className="rotate-180"><IconoFlecha className="h-4 w-4"/></span> Volver al panel</Link>
       <section className="mt-5"><p className="flex items-center gap-2 text-base font-medium text-[#0788ff]"><IconoCiclo className="h-6 w-6"/> Control de recorridos</p><h1 className="mt-2 text-3xl font-bold">Rondas y puntos</h1><p className="mt-1 text-sm text-slate-400">Seguimiento de los controles registrados durante las últimas 24 horas.</p></section>
       <section className="mt-5 grid grid-cols-3 gap-3"><Resumen titulo="Puestos" valor={puestos.length}/><Resumen titulo="Puntos QR" valor={puntos}/><Resumen titulo="Registros 24h" valor={rondas.length} normal/></section>
+
+      {perfil.rol === "admin" && <section className="mt-5 rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4 lg:p-5"><div className="mb-4"><h2 className="text-lg font-semibold">Crear punto de control</h2><p className="mt-1 text-sm text-slate-400">Al guardar, la app genera automáticamente un QR único para colocar en el sitio.</p></div><FormularioPunto puestos={puestos.map(({ id, codigo, nombre }) => ({ id, codigo, nombre }))} /></section>}
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
       <section className="overflow-hidden rounded-2xl border border-[#27425e] bg-[#07172a]/95"><div className="border-b border-[#20374e] px-4 py-4"><h2 className="text-lg font-semibold">Configuración por puesto</h2></div><div className="divide-y divide-[#20374e]">{puestos.length === 0 ? <Vacio texto="No hay puestos configurados."/> : puestos.map((puesto) => {
@@ -37,6 +49,8 @@ export default async function PaginaRondas() {
         return <article key={ronda.id} className="grid grid-cols-[2.5rem_1fr_auto] items-center gap-3 px-4 py-3.5"><span className="grid h-10 w-10 place-items-center rounded-full border border-emerald-500/35 bg-emerald-500/10 text-emerald-300">✓</span><div className="min-w-0"><p className="truncate font-medium">{punto?.nombre ?? "Punto de control"}</p><p className="truncate text-sm text-slate-400">{puesto?.codigo ?? "Puesto"} · {guardia?.nombre ?? "Agente de seguridad"}</p></div><time className="text-sm text-slate-400">{horaEcuador(ronda.hora_captura)}</time></article>;
       })}</div></section>
       </div>
+
+      <section className="mt-5 rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4 lg:p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-lg font-semibold">Códigos para instalación</h2><p className="mt-1 text-sm text-slate-400">Imprime, recorta y coloca cada tarjeta en su punto físico.</p></div><BotonImprimirQr deshabilitado={tarjetasQr.length === 0} /></div>{tarjetasQr.length === 0 ? <Vacio texto="Crea el primer punto para generar su código QR."/> : <div className="zona-impresion-qr mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{tarjetasQr.map((tarjeta) => <article key={tarjeta.id} className="tarjeta-qr rounded-2xl bg-white p-4 text-center text-slate-950"><p className="text-xs font-bold tracking-[0.18em] text-[#075ecb]">SOTERSA · PUNTO DE CONTROL</p><div className="mx-auto mt-2 max-w-[230px]" dangerouslySetInnerHTML={{ __html: tarjeta.svg }} /><p className="mt-1 text-xl font-black">{tarjeta.codigo}</p><p className="mt-1 font-semibold">{tarjeta.nombre}</p><p className="mt-1 text-xs text-slate-600">{tarjeta.puesto}</p></article>)}</div>}</section>
     </div></main>
   );
 }

@@ -22,7 +22,7 @@ export function BotonExportar({ filas }: { filas: FilaExportacion[] }) {
     URL.revokeObjectURL(enlace.href);
   }
 
-  return <button type="button" onClick={descargar} disabled={filas.length === 0} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#0788ff]/40 bg-[#0788ff]/12 px-4 text-sm font-semibold text-[#65c8ff] transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"><Descarga className="h-5 w-5" /> Exportar CSV</button>;
+  return <div className="flex flex-wrap gap-2"><button type="button" onClick={() => window.print()} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[#38526b] bg-[#07172a] px-4 text-sm font-semibold text-slate-200">Imprimir / guardar PDF</button><button type="button" onClick={descargar} disabled={filas.length === 0} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#0788ff]/40 bg-[#0788ff]/12 px-4 text-sm font-semibold text-[#65c8ff] transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"><Descarga className="h-5 w-5" /> Exportar CSV</button></div>;
 }
 
 function celdaCsv(valor: string) {

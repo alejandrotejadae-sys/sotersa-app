@@ -3,6 +3,7 @@ import { Marca, Pulso } from "@/app/componentes/marca";
 import { IconoEscudoOk, IconoFlecha, IconoPersona, IconoTurno } from "@/app/componentes/iconos";
 import { ahoraConDesfase, exigirPerfil } from "@/lib/sesion";
 import { FormularioCliente } from "./formulario-cliente";
+import { FormularioContacto } from "./formulario-contacto";
 
 export const metadata = { title: "Clientes y servicios — SOTERSA" };
 export const dynamic = "force-dynamic";
@@ -29,7 +30,7 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
   const puestosActivos = puestos.filter((puesto) => puesto.activo);
   const empresasActivas = empresas.filter((empresa) => empresa.activo).length;
   const cuentasActivas = perfiles.filter((perfil) => perfil.activo).length;
-  const incompletas = empresas.filter((empresa) => faltantesEmpresa(empresa).length > 0).length;
+  const contactosPendientes = puestosActivos.filter((puesto) => (puesto.contactos_puesto?.length ?? 0) < 4).length;
   const visibles = empresas.filter((empresa) => {
     if (filtro === "activos") return empresa.activo;
     if (filtro === "incompletos") return faltantesEmpresa(empresa).length > 0;
@@ -48,8 +49,10 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
           <Resumen titulo="Clientes" valor={empresas.length} />
           <Resumen titulo="Activos" valor={empresasActivas} normal />
           <Resumen titulo="Puestos activos" valor={puestosActivos.length} />
-          <Resumen titulo="Datos pendientes" valor={incompletas} alerta={incompletas > 0} />
+          <Resumen titulo="Contactos pendientes" valor={contactosPendientes} alerta={contactosPendientes > 0} />
         </section>
+
+        <section className="mt-5 rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4"><h2 className="font-semibold">Contactos operativos por puesto</h2><p className="mt-1 text-sm text-slate-400">Completa Central, supervisor, jefe de operaciones y administración del cliente. Si vuelves a guardar el mismo tipo, se actualiza sin duplicarlo.</p><div className="mt-4"><FormularioContacto puestos={puestosActivos.map(({ id, codigo, nombre }) => ({ id, codigo, nombre }))}/></div></section>
 
         <section className="mt-5 rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4">
           <h2 className="font-semibold">Registrar cliente o puesto</h2>
@@ -90,7 +93,7 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
 
                     <details className="group mt-4 rounded-xl border border-[#27425e] bg-[#041225]">
                       <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-3 text-sm font-medium text-slate-200"><span className="flex items-center gap-2"><IconoTurno className="h-5 w-5 text-[#0788ff]" /> Servicios contratados</span><IconoFlecha className="h-4 w-4 rotate-90 text-slate-500 transition group-open:-rotate-90" /></summary>
-                      <div className="divide-y divide-[#20374e] border-t border-[#20374e]">{servicios.length === 0 ? <p className="px-3 py-4 text-sm text-slate-500">Sin puestos registrados.</p> : servicios.map((puesto) => <div key={puesto.id} className="flex items-start justify-between gap-3 px-3 py-3"><div><p className="text-sm font-medium">{puesto.codigo} · {puesto.nombre}</p><p className="mt-1 text-xs text-slate-500">{puesto.cobertura_horas} h · {puesto.armado ? "Armado" : "No armado"} · {puesto.contactos_puesto?.length ?? 0} contacto(s)</p></div><span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${puesto.activo ? "bg-emerald-400" : "bg-slate-500"}`} /></div>)}</div>
+                      <div className="divide-y divide-[#20374e] border-t border-[#20374e]">{servicios.length === 0 ? <p className="px-3 py-4 text-sm text-slate-500">Sin puestos registrados.</p> : servicios.map((puesto) => <div key={puesto.id} className="px-3 py-3"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-medium">{puesto.codigo} · {puesto.nombre}</p><p className="mt-1 text-xs text-slate-500">{puesto.cobertura_horas} h · {puesto.armado ? "Armado" : "No armado"} · {puesto.contactos_puesto?.length ?? 0}/4 contactos</p></div><span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${puesto.activo ? "bg-emerald-400" : "bg-slate-500"}`} /></div>{(puesto.contactos_puesto?.length ?? 0) > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{puesto.contactos_puesto.map((contacto) => <span key={contacto.id} className="rounded-md bg-[#0b2035] px-2 py-1 text-[0.65rem] text-slate-400">{etiquetaContacto(contacto.tipo)} · {contacto.telefono}</span>)}</div>}</div>)}</div>
                     </details>
 
                     <Link href={`/portal?empresa=${empresa.id}`} className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#087ff0] to-[#02b9e8] px-4 text-sm font-semibold text-white shadow-lg shadow-blue-950/30">Ver portal del cliente <IconoFlecha className="h-4 w-4" /></Link>
@@ -116,3 +119,4 @@ function FiltroEnlace({ filtro, actual, texto }: { filtro: Filtro; actual: Filtr
 function Avatar({ nombre }: { nombre: string }) { const iniciales = nombre.split(" ").slice(0, 2).map((parte) => parte[0]).join("").toUpperCase(); return <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-[#0788ff]/35 bg-gradient-to-br from-[#17456d] to-[#071a30] text-sm font-bold text-[#78d4ff]">{iniciales}</span>; }
 function DatoNumero({ valor, etiqueta, alerta = false }: { valor: number; etiqueta: string; alerta?: boolean }) { return <div className="px-2 py-3"><p className={`text-xl font-bold ${alerta ? "text-red-400" : "text-white"}`}>{valor}</p><p className="mt-0.5 text-[0.7rem] text-slate-500">{etiqueta}</p></div>; }
 function Dato({ icono, valor }: { icono: string; valor: string }) { return <p className="flex min-w-0 items-center gap-2"><span className="w-4 shrink-0 text-center text-[#0788ff]">{icono}</span><span className="truncate">{valor}</span></p>; }
+function etiquetaContacto(tipo: string) { return ({ central_monitoreo: "Central", supervisor_zona: "Supervisor", jefe_operaciones: "Operaciones", administracion_cliente: "Cliente" } as Record<string, string>)[tipo] ?? tipo; }

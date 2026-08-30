@@ -229,3 +229,23 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+@media print {
+  body { background: white !important; }
+  body * { visibility: hidden !important; }
+  .zona-impresion-qr, .zona-impresion-qr * { visibility: visible !important; }
+  .zona-impresion-qr {
+    position: absolute !important;
+    inset: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12mm !important;
+    padding: 10mm !important;
+    background: white !important;
+  }
+  .tarjeta-qr {
+    break-inside: avoid;
+    border: 1px dashed #64748b !important;
+    box-shadow: none !important;
+  }
+}
