@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { PantallaApertura } from "@/app/componentes/pantalla-apertura";
 import { PantallaBienvenida } from "@/app/componentes/pantalla-bienvenida";
 import { SincronizadorOperativo } from "@/app/componentes/sincronizador-operativo";
+import { NotificadorOperativo } from "@/app/componentes/notificador-operativo";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -53,6 +54,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <PantallaApertura />
         <PantallaBienvenida />
         <SincronizadorOperativo />
+        <NotificadorOperativo />
         {children}
       </body>
     </html>
