@@ -28,16 +28,22 @@ export function FormularioRonda({ turnoId, guardiaId, puntos, completados, soloL
 
     setGuardando(true);
     const ubicacion = await obtenerUbicacion();
+    if (!ubicacion) {
+      setGuardando(false);
+      setError("No se pudo obtener la ubicación GPS. Activa la ubicación del teléfono y autoriza a SOTERSA para registrar el punto.");
+      return;
+    }
+
     const id = crypto.randomUUID();
     const horaCaptura = new Date().toISOString();
     if (!navigator.onLine) {
       await guardarEnCola(id, horaCaptura, punto.id, ubicacion);
-      setGuardando(false); setCodigo(""); setLocales((actuales) => [...actuales, punto.id]); setAviso("Punto guardado sin señal. Se enviará automáticamente al recuperar conexión."); return;
+      setGuardando(false); setCodigo(""); setLocales((actuales) => [...actuales, punto.id]); setAviso("Punto guardado con GPS sin señal. Se enviará automáticamente al recuperar conexión."); return;
     }
-    const { error: fallo } = await crearClienteNavegador().from("rondas").insert({ id, turno_id: turnoId, punto_id: punto.id, guardia_id: guardiaId, hora_captura: horaCaptura, lat: ubicacion?.lat ?? null, lng: ubicacion?.lng ?? null });
+    const { error: fallo } = await crearClienteNavegador().from("rondas").insert({ id, turno_id: turnoId, punto_id: punto.id, guardia_id: guardiaId, hora_captura: horaCaptura, lat: ubicacion.lat, lng: ubicacion.lng });
     setGuardando(false);
     if (fallo) {
-      if (!navigator.onLine) { await guardarEnCola(id, horaCaptura, punto.id, ubicacion); setCodigo(""); setLocales((actuales) => [...actuales, punto.id]); setAviso("Punto guardado sin señal. Se enviará automáticamente."); return; }
+      if (!navigator.onLine) { await guardarEnCola(id, horaCaptura, punto.id, ubicacion); setCodigo(""); setLocales((actuales) => [...actuales, punto.id]); setAviso("Punto guardado con GPS sin señal. Se enviará automáticamente."); return; }
       setError(`No se pudo registrar: ${fallo.message}`); return;
     }
     setCodigo("");
@@ -47,12 +53,12 @@ export function FormularioRonda({ turnoId, guardiaId, puntos, completados, soloL
   return (
     <form onSubmit={registrar} className="mt-5 rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4">
       <h2 className="flex items-center gap-2 text-lg font-semibold"><IconoQR className="h-6 w-6 text-[#0788ff]"/> Registrar punto</h2>
-      {soloLectura ? <p className="mt-3 rounded-xl border border-[#27425e] bg-[#061426] px-4 py-3 text-sm text-slate-400">Vista de administración: el registro debe realizarlo el agente de seguridad desde su cuenta.</p> : <><LectorQr alDetectar={(valor) => { setCodigo(valor); setError(null); setAviso(null); }} /><label className="mt-4 block"><span className="text-sm text-slate-300">Código QR o código del punto</span><input value={codigo} onChange={(evento) => setCodigo(evento.target.value)} placeholder="Escanea o escribe el código" className="mt-2 min-h-14 w-full rounded-xl border border-[#087dd8] bg-[#020b18] px-4 text-white outline-none placeholder:text-slate-500"/></label>{codigo && <p className="mt-2 text-xs text-emerald-300">Código detectado. Confirma el punto para registrarlo.</p>}{aviso && <p role="status" className="mt-3 rounded-xl border border-amber-400/35 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">{aviso}</p>}{error && <p role="alert" className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</p>}<button type="submit" disabled={guardando || !codigo.trim()} className="boton-primario mt-4 min-h-14 w-full rounded-xl font-semibold text-white disabled:opacity-50">{guardando ? "Registrando…" : "Confirmar punto"}</button></>}
+      {soloLectura ? <p className="mt-3 rounded-xl border border-[#27425e] bg-[#061426] px-4 py-3 text-sm text-slate-400">Vista de administración: el registro debe realizarlo el agente de seguridad desde su cuenta.</p> : <><LectorQr alDetectar={(valor) => { setCodigo(valor); setError(null); setAviso(null); }} /><label className="mt-4 block"><span className="text-sm text-slate-300">Código QR o código del punto</span><input value={codigo} onChange={(evento) => setCodigo(evento.target.value)} placeholder="Escanea o escribe el código" className="mt-2 min-h-14 w-full rounded-xl border border-[#087dd8] bg-[#020b18] px-4 text-white outline-none placeholder:text-slate-500"/></label><p className="mt-2 text-xs text-slate-500">El registro exige ubicación GPS. Sin coordenadas no se podrá confirmar el punto.</p>{codigo && <p className="mt-2 text-xs text-emerald-300">Código detectado. Confirma el punto para registrarlo.</p>}{aviso && <p role="status" className="mt-3 rounded-xl border border-amber-400/35 bg-amber-400/10 px-4 py-3 text-sm text-amber-100">{aviso}</p>}{error && <p role="alert" className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">{error}</p>}<button type="submit" disabled={guardando || !codigo.trim()} className="boton-primario mt-4 min-h-14 w-full rounded-xl font-semibold text-white disabled:opacity-50">{guardando ? "Validando GPS…" : "Confirmar punto"}</button></>}
     </form>
   );
 
-  async function guardarEnCola(id: string, horaCaptura: string, puntoId: string, ubicacion: { lat: number; lng: number } | null) {
-    await encolarOperacion({ id, tipo: "ronda", creadoEn: horaCaptura, datos: { turno_id: turnoId, punto_id: puntoId, guardia_id: guardiaId, lat: ubicacion?.lat ?? null, lng: ubicacion?.lng ?? null } });
+  async function guardarEnCola(id: string, horaCaptura: string, puntoId: string, ubicacion: { lat: number; lng: number }) {
+    await encolarOperacion({ id, tipo: "ronda", creadoEn: horaCaptura, datos: { turno_id: turnoId, punto_id: puntoId, guardia_id: guardiaId, lat: ubicacion.lat, lng: ubicacion.lng } });
   }
 }
 
@@ -62,7 +68,7 @@ function obtenerUbicacion(): Promise<{ lat: number; lng: number } | null> {
     navigator.geolocation.getCurrentPosition(
       (posicion) => resolver({ lat: posicion.coords.latitude, lng: posicion.coords.longitude }),
       () => resolver(null),
-      { enableHighAccuracy: true, timeout: 7000, maximumAge: 30000 },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 15000 },
     );
   });
 }

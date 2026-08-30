@@ -7,7 +7,7 @@ import { crearClienteNavegador } from "@/lib/supabase/navegador";
 import { BotonAccesoBiometrico } from "@/app/componentes/boton-acceso-biometrico";
 import { cedulaACorreo, cedulaEsValida, normalizarCedula } from "@/lib/auth";
 
-export function FormularioAcceso() {
+export function FormularioAcceso({ destino = "/perfiles" }: { destino?: string }) {
   const router = useRouter();
   const [usuario, setUsuario] = useState("");
   const [clave, setClave] = useState("");
@@ -24,8 +24,6 @@ export function FormularioAcceso() {
       return;
     }
 
-    // La misma pantalla admite los dos esquemas que ya existen: cédula + PIN
-    // para agentes y usuario/correo + contraseña para los demás perfiles.
     const esCedula = /^\d+$/.test(identificador);
     if (esCedula && !cedulaEsValida(normalizarCedula(identificador))) {
       setError("La cédula ingresada no es válida.");
@@ -49,7 +47,7 @@ export function FormularioAcceso() {
       return;
     }
 
-    router.push(data.user?.user_metadata?.debe_cambiar_clave === true ? "/cambiar-clave" : "/perfiles");
+    router.push(data.user?.user_metadata?.debe_cambiar_clave === true ? "/cambiar-clave" : destino);
     router.refresh();
   }
 
@@ -100,7 +98,7 @@ export function FormularioAcceso() {
       >
         {cargando ? "Verificando…" : "Ingresar al panel"}
       </button>
-      <BotonAccesoBiometrico />
+      <BotonAccesoBiometrico destino={destino} />
     </form>
   );
 }
