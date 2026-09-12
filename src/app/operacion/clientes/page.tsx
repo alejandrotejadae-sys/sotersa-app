@@ -6,6 +6,7 @@ import { FormularioCliente } from "./formulario-cliente";
 import { FormularioContacto } from "./formulario-contacto";
 import { AccionesCliente } from "./acciones-cliente";
 import { ServiciosCliente } from "./servicios-cliente";
+import { MapaPuestos } from "@/app/componentes/mapa-puestos";
 
 export const metadata = { title: "Clientes y servicios — SOTERSA" };
 export const dynamic = "force-dynamic";
@@ -35,6 +36,11 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
   const empresasActivas = empresas.filter((empresa) => empresa.activo).length;
   const cuentasActivas = perfiles.filter((perfil) => perfil.activo).length;
   const contactosPendientes = puestosActivos.filter((puesto) => (puesto.contactos_puesto?.length ?? 0) < 4).length;
+  const nombreEmpresa = new Map(empresas.map((empresa) => [empresa.id, empresa.nombre]));
+  const puntosMapa = puestos
+    .filter((puesto) => puesto.lat != null && puesto.lng != null)
+    .map((puesto) => ({ id: puesto.id, lat: puesto.lat as number, lng: puesto.lng as number, cliente: nombreEmpresa.get(puesto.empresa_cliente_id) ?? "Cliente", codigo: puesto.codigo, puesto: puesto.nombre, activo: puesto.activo }));
+  const sinUbicar = puestosActivos.filter((puesto) => puesto.lat == null || puesto.lng == null).length;
   const visibles = empresas.filter((empresa) => {
     if (filtro === "activos") return empresa.activo;
     if (filtro === "incompletos") return faltantesEmpresa(empresa).length > 0;
@@ -56,15 +62,21 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
           <Resumen titulo="Contactos pendientes" valor={contactosPendientes} alerta={contactosPendientes > 0} />
         </section>
 
-        <section className="mt-5 rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4"><h2 className="font-semibold">Contactos operativos por puesto</h2><p className="mt-1 text-sm text-slate-400">Completa Central, supervisor, jefe de operaciones y administración del cliente. Si vuelves a guardar el mismo tipo, se actualiza sin duplicarlo.</p><div className="mt-4"><FormularioContacto puestos={puestosActivos.map(({ id, codigo, nombre }) => ({ id, codigo, nombre }))}/></div></section>
-
         <section className="mt-5 rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4">
-          <h2 className="font-semibold">Registrar cliente o puesto</h2>
-          <p className="mt-1 text-sm text-slate-400">El alta desde aquí evita cargar datos por fuera de la app.</p>
-          <div className="mt-4">
-            <FormularioCliente empresas={empresas.filter((empresa) => empresa.activo).map((empresa) => ({ id: empresa.id, nombre: empresa.nombre }))} />
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div><h2 className="font-semibold">Ubicación de los puestos</h2><p className="mt-1 text-sm text-slate-400">{puntosMapa.length === 0 ? "Aún no hay puestos con coordenadas. Pega el enlace de Google Maps al editar cada puesto y aparecerá aquí." : `${puntosMapa.length} puesto${puntosMapa.length === 1 ? "" : "s"} en el mapa${sinUbicar > 0 ? ` · ${sinUbicar} activo${sinUbicar === 1 ? "" : "s"} sin ubicar` : ""}.`}</p></div>
+            <p className="flex items-center gap-3 text-xs text-slate-500"><span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full border border-white bg-[#0788ff]" /> activo</span><span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full border border-white bg-slate-500" /> cerrado</span></p>
           </div>
+          <div className="mt-4 overflow-hidden rounded-xl border border-[#27425e]"><MapaPuestos puntos={puntosMapa} alto="h-72 lg:h-96" /></div>
         </section>
+
+        <Desplegable titulo="Contactos operativos por puesto" detalle="Central, supervisor, jefe de operaciones y administración del cliente. Guardar el mismo tipo lo actualiza sin duplicar." pendiente={contactosPendientes > 0 ? `${contactosPendientes} puesto${contactosPendientes === 1 ? "" : "s"} incompleto${contactosPendientes === 1 ? "" : "s"}` : undefined}>
+          <FormularioContacto puestos={puestosActivos.map(({ id, codigo, nombre }) => ({ id, codigo, nombre }))}/>
+        </Desplegable>
+
+        <Desplegable titulo="Registrar cliente o puesto" detalle="Alta de un cliente nuevo con su primer puesto, o de un puesto para un cliente existente.">
+          <FormularioCliente empresas={empresas.filter((empresa) => empresa.activo).map((empresa) => ({ id: empresa.id, nombre: empresa.nombre }))} />
+        </Desplegable>
 
         <nav className="mt-5 flex gap-2 overflow-x-auto pb-1" aria-label="Filtros de clientes"><FiltroEnlace filtro="todos" actual={filtro} texto="Todos" /><FiltroEnlace filtro="activos" actual={filtro} texto="Activos" /><FiltroEnlace filtro="incompletos" actual={filtro} texto="Datos pendientes" /></nav>
 
@@ -119,6 +131,19 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
 
 function faltantesEmpresa(empresa: { ruc: string | null; direccion: string | null; contacto_nombre: string | null; contacto_correo: string | null; contacto_telefono: string | null }) {
   return [[empresa.ruc, "RUC"], [empresa.direccion, "dirección"], [empresa.contacto_nombre, "contacto"], [empresa.contacto_correo, "correo"], [empresa.contacto_telefono, "teléfono"]].filter(([valor]) => !valor).map(([, etiqueta]) => etiqueta as string);
+}
+
+/** Seccion plegada por defecto: los formularios de alta se usan poco y ocupaban media pantalla. */
+function Desplegable({ titulo, detalle, pendiente, children }: { titulo: string; detalle: string; pendiente?: string; children: React.ReactNode }) {
+  return (
+    <details className="group mt-5 rounded-2xl border border-[#27425e] bg-[#07172a]/95">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-4 [&::-webkit-details-marker]:hidden">
+        <div className="min-w-0"><h2 className="font-semibold">{titulo}{pendiente && <span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-normal text-amber-300">{pendiente}</span>}</h2><p className="mt-1 text-sm text-slate-400">{detalle}</p></div>
+        <IconoFlecha className="h-5 w-5 shrink-0 rotate-90 text-[#0788ff] transition group-open:-rotate-90" />
+      </summary>
+      <div className="border-t border-[#20374e] p-4">{children}</div>
+    </details>
+  );
 }
 
 function Resumen({ titulo, valor, normal = false, alerta = false }: { titulo: string; valor: number; normal?: boolean; alerta?: boolean }) { return <article className="rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4 text-center"><p className={`text-3xl font-bold ${alerta ? "text-amber-300" : normal ? "text-emerald-400" : "text-white"}`}>{valor}</p><p className="mt-1 text-xs text-slate-400">{titulo}</p></article>; }
