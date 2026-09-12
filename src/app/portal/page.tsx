@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CabeceraPanel } from "@/app/componentes/cabecera-panel";
+import { MapaPuestos } from "@/app/componentes/mapa-puestos";
 import { TarjetaMetrica } from "@/app/componentes/tarjeta-metrica";
 import {
   IconoAlerta,
@@ -32,7 +33,7 @@ export default async function PaginaPortal({ searchParams }: { searchParams: Pro
 
   const empresa = (await empresaR).data;
   const empresaId = perfil.empresa_cliente_id ?? empresa?.id;
-  const puestosConsulta = supabase.from("puestos").select("id, codigo, nombre, cobertura_horas, armado").eq("activo", true);
+  const puestosConsulta = supabase.from("puestos").select("id, codigo, nombre, cobertura_horas, armado, direccion, lat, lng").eq("activo", true);
   const puestosR = empresaId ? await puestosConsulta.eq("empresa_cliente_id", empresaId) : await puestosConsulta.limit(0);
   const puestos = puestosR.data ?? [];
   const idsPuestos = puestos.map((puesto) => puesto.id);
@@ -67,6 +68,7 @@ export default async function PaginaPortal({ searchParams }: { searchParams: Pro
           <p className="mt-1 text-sm text-gris-400">Gracias por confiar en SOTERSA.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Link href={`/portal/agentes${perfil.rol === "admin" && empresaId ? `?empresa=${empresaId}` : ""}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-azul-500/40 bg-azul-500/10 px-4 text-sm font-semibold text-azul-300">Agentes de seguridad <IconoFlecha className="h-4 w-4" /></Link>
+            <Link href={`/portal/documentos${perfil.rol === "admin" && empresaId ? `?empresa=${empresaId}` : ""}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-borde/60 bg-white/[0.03] px-4 text-sm font-medium text-gris-300">Documentación habilitante</Link>
             <Link href="/escuela" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-borde/60 bg-white/[0.03] px-4 text-sm font-medium text-gris-300">Escuela de Formación</Link>
           </div>
         </section>
@@ -89,6 +91,13 @@ export default async function PaginaPortal({ searchParams }: { searchParams: Pro
         <section className="tarjeta overflow-hidden">
           <div className="flex items-center justify-between border-b border-borde/60 px-5 py-4"><h2 className="font-semibold text-white">Puestos protegidos</h2><span className="text-xs text-gris-500">Cobertura contratada</span></div>
           {puestos.length === 0 ? <Vacio texto="No hay puestos activos asociados a esta cuenta." /> : <div className="divide-y divide-borde/50">{puestos.map((puesto) => <article key={puesto.id} className="flex items-center justify-between gap-4 px-5 py-4"><div><p className="font-medium text-white">{puesto.codigo} · {puesto.nombre}</p><p className="mt-1 text-sm text-gris-500">Cobertura {puesto.cobertura_horas} h · {puesto.armado ? "servicio armado" : "servicio no armado"}</p></div><span className="rounded-full bg-normal/15 px-3 py-1 text-xs font-medium text-green-300">Protegido</span></article>)}</div>}
+        </section>
+
+        <section className="tarjeta overflow-hidden">
+          <div className="flex items-center justify-between border-b border-borde/60 px-5 py-4"><h2 className="font-semibold text-white">Ubicación de tus puestos</h2><span className="text-xs text-gris-500">{puestos.filter((p) => p.lat != null && p.lng != null).length} de {puestos.length} ubicado{puestos.length === 1 ? "" : "s"}</span></div>
+          {puestos.some((p) => p.lat != null && p.lng != null) ? (
+            <MapaPuestos alto="h-64 sm:h-80" puntos={puestos.filter((p) => p.lat != null && p.lng != null).map((p) => ({ id: p.id, lat: p.lat as number, lng: p.lng as number, cliente: empresa?.nombre ?? "Tu empresa", codigo: p.codigo, puesto: p.nombre, activo: true }))} />
+          ) : <Vacio texto="SOTERSA aún no ha registrado las coordenadas de tus puestos. Aparecerán aquí en cuanto estén cargadas." />}
         </section>
 
         <section className="tarjeta overflow-hidden">

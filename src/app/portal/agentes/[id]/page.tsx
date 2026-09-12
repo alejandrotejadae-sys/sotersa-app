@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CabeceraPanel } from "@/app/componentes/cabecera-panel";
 import { IconoFlecha, IconoPersona } from "@/app/componentes/iconos";
 import { exigirPerfil, fechaHoraEcuador, uno } from "@/lib/sesion";
+import { servicio } from "@/lib/servicios";
 import { agentesDeEmpresa, turnosDeAgenteEnEmpresa } from "../datos";
 import { Estado, Resumen, iniciales } from "../ui";
 
@@ -58,6 +59,34 @@ export default async function PaginaFichaServicio({ params, searchParams }: { pa
           <Resumen titulo="Próximos" valor={proximos.length} />
         </section>
 
+        <section className="grid gap-5 lg:grid-cols-2">
+          <div className="panel-operativo p-5">
+            <h2 className="font-semibold text-white">Ficha de servicio</h2>
+            <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+              <Dato etiqueta="Credencial SOTERSA" valor={agente.credencial ?? "Pendiente"} />
+              <Dato etiqueta="En SOTERSA desde" valor={fechaEcuador(agente.desde)} />
+              <Dato etiqueta="Puesto que cubre" valor={agente.puesto ? `${agente.puesto.codigo} · ${agente.puesto.nombre}` : "Por asignar"} />
+              <Dato etiqueta="Modalidad" valor={agente.puesto ? servicio(agente.puesto.tipo_servicio).etiqueta : "—"} />
+              <Dato etiqueta="Función" valor={agente.esRelevo ? "Relevo · cubre días libres del puesto" : "Agente fijo del puesto"} />
+              <Dato etiqueta="Formación" valor="Constancias disponibles próximamente en la Escuela de Formación" />
+            </dl>
+          </div>
+          <div className="panel-operativo p-5">
+            <h2 className="font-semibold text-white">Cómo comunicarte</h2>
+            <p className="mt-1 text-sm text-gris-400">Cualquier gestión sobre el agente o el puesto se canaliza por SOTERSA, no directamente con el agente.</p>
+            {agente.puesto && agente.puesto.contactos.length > 0 ? (
+              <ul className="mt-3 space-y-2">
+                {agente.puesto.contactos.filter((c) => c.tipo !== "administracion_cliente").map((c) => (
+                  <li key={c.tipo} className="flex items-center justify-between gap-3 rounded-xl border border-borde/60 bg-white/[0.03] px-3 py-2.5 text-sm">
+                    <div className="min-w-0"><p className="text-white">{etiquetaContacto(c.tipo)}</p>{c.nombre && <p className="truncate text-xs text-gris-500">{c.nombre}</p>}</div>
+                    <a href={`tel:${c.telefono.replace(/[^\d+]/g, "")}`} className="shrink-0 rounded-full border border-azul-500/40 bg-azul-500/10 px-3 py-1.5 text-xs font-semibold text-azul-300">{c.telefono}</a>
+                  </li>
+                ))}
+              </ul>
+            ) : <p className="mt-3 text-sm text-gris-500">SOTERSA está completando los contactos operativos de este puesto.</p>}
+          </div>
+        </section>
+
         <section className="panel-operativo p-5">
           <h2 className="font-semibold text-white">Próximos turnos en tus puestos</h2>
           <div className="mt-3"><ListaTurnos turnos={proximos.slice(0, 6)} /></div>
@@ -72,6 +101,16 @@ export default async function PaginaFichaServicio({ params, searchParams }: { pa
       </main>
     </div>
   );
+}
+
+function Dato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
+  return <div className="rounded-xl border border-borde/60 bg-white/[0.03] px-3 py-2"><dt className="text-xs text-gris-500">{etiqueta}</dt><dd className="mt-0.5 text-sm text-white">{valor}</dd></div>;
+}
+function etiquetaContacto(tipo: string) {
+  return ({ central_monitoreo: "Central de monitoreo 24/7", supervisor_zona: "Supervisor de zona", jefe_operaciones: "Jefe de operaciones" } as Record<string, string>)[tipo] ?? tipo;
+}
+function fechaEcuador(iso: string) {
+  return new Intl.DateTimeFormat("es-EC", { day: "2-digit", month: "long", year: "numeric", timeZone: "America/Guayaquil" }).format(new Date(iso));
 }
 
 function ListaTurnos({ turnos }: { turnos: { id: string; inicio_programado: string; fin_programado: string; estado: string; puestos: unknown; aperturas_turno: { hora_captura: string }[] | null }[] }) {

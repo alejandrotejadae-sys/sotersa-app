@@ -7,6 +7,9 @@ import { FormularioContacto } from "./formulario-contacto";
 import { AccionesCliente } from "./acciones-cliente";
 import { ServiciosCliente } from "./servicios-cliente";
 import { MapaPuestos } from "@/app/componentes/mapa-puestos";
+import { DocumentosAdmin } from "./documentos-admin";
+import { documentosParaAdmin, tamanoLegible } from "@/lib/documentos";
+import { fechaHoraEcuador } from "@/lib/sesion";
 
 export const metadata = { title: "Clientes y servicios — SOTERSA" };
 export const dynamic = "force-dynamic";
@@ -41,6 +44,8 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
     .filter((puesto) => puesto.lat != null && puesto.lng != null)
     .map((puesto) => ({ id: puesto.id, lat: puesto.lat as number, lng: puesto.lng as number, cliente: nombreEmpresa.get(puesto.empresa_cliente_id) ?? "Cliente", codigo: puesto.codigo, puesto: puesto.nombre, activo: puesto.activo }));
   const sinUbicar = puestosActivos.filter((puesto) => puesto.lat == null || puesto.lng == null).length;
+  const documentos = await documentosParaAdmin(empresas.map((e) => ({ id: e.id, nombre: e.nombre })));
+  const aDocAdmin = (d: { ruta: string; titulo: string; extension: string; tamano: number; actualizado: string | null }) => ({ ruta: d.ruta, titulo: d.titulo, extension: d.extension, tamano: tamanoLegible(d.tamano), actualizado: d.actualizado ? fechaHoraEcuador(d.actualizado) : null });
   const visibles = empresas.filter((empresa) => {
     if (filtro === "activos") return empresa.activo;
     if (filtro === "incompletos") return faltantesEmpresa(empresa).length > 0;
@@ -72,6 +77,10 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
 
         <Desplegable titulo="Contactos operativos por puesto" detalle="Central, supervisor, jefe de operaciones y administración del cliente. Guardar el mismo tipo lo actualiza sin duplicar." pendiente={contactosPendientes > 0 ? `${contactosPendientes} puesto${contactosPendientes === 1 ? "" : "s"} incompleto${contactosPendientes === 1 ? "" : "s"}` : undefined}>
           <FormularioContacto puestos={puestosActivos.map(({ id, codigo, nombre }) => ({ id, codigo, nombre }))}/>
+        </Desplegable>
+
+        <Desplegable titulo="Documentación habilitante" detalle="Permisos, RUC, BASC, pólizas. Lo general lo ven todos los clientes en su portal; lo específico, solo ese cliente." pendiente={documentos.generales.length === 0 ? "sin documentos" : undefined}>
+          <DocumentosAdmin empresas={empresas.filter((e) => e.activo).map((e) => ({ id: e.id, nombre: e.nombre }))} generales={documentos.generales.map(aDocAdmin)} porCliente={documentos.porCliente.map((c) => ({ empresa: c.empresa, documentos: c.documentos.map(aDocAdmin) }))} />
         </Desplegable>
 
         <Desplegable titulo="Registrar cliente o puesto" detalle="Alta de un cliente nuevo con su primer puesto, o de un puesto para un cliente existente.">
