@@ -69,7 +69,7 @@ export default async function PaginaDetalleCustodia({ params }: Props) {
     : { data: [] as { turno_id: string; hora_captura: string; firma_saliente_url: string | null }[] };
   const aperturas = new Map((aperturasData ?? []).map((apertura) => [apertura.turno_id, apertura]));
 
-  const ahora = Date.now();
+  const ahora = new Date().getTime();
   const turnoVigente = turnos.find((turno) => {
     const inicio = new Date(turno.inicio_programado).getTime();
     const fin = new Date(turno.fin_programado).getTime();
