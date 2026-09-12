@@ -250,6 +250,27 @@ body {
   }
 }
 
+/* Reporte mensual del cliente: se imprime en blanco y negro, sin cabecera ni
+   botones, con la misma jerarquia que en pantalla. */
+@media print {
+  .zona-impresion, .zona-impresion * { visibility: visible !important; }
+  .zona-impresion {
+    position: absolute !important;
+    inset: 0 !important;
+    margin: 0 !important;
+    padding: 12mm !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: white !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+  }
+  .zona-impresion * { color: #0f172a !important; background: transparent !important; border-color: #cbd5e1 !important; }
+  .zona-impresion table { page-break-inside: auto; }
+  .zona-impresion tr { page-break-inside: avoid; }
+  .no-imprimir { display: none !important; }
+}
+
 /* Mapa de puestos: las teselas de OpenStreetMap son claras; invertirlas las
    deja en la paleta oscura del panel sin tocar pines ni controles. */
 .mapa-oscuro .leaflet-tile-pane {
