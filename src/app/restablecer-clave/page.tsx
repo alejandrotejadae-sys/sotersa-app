@@ -5,6 +5,6 @@ export const metadata = { title: "Restablecer contraseña — SOTERSA" };
 export const dynamic = "force-dynamic";
 
 export default async function PaginaRestablecerClave() {
-  const { perfil } = await exigirPerfil(["admin", "supervisor", "cliente", "guardia"], { permitirClaveTemporal: true });
+  const { perfil } = await exigirPerfil(["admin", "supervisor", "cliente", "guardia"], { permitirClaveTemporal: true, permitirSinConsentimiento: true });
   return <PantallaClave esGuardia={perfil.rol === "guardia"} nombre={perfil.nombre} recuperacion />;
 }

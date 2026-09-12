@@ -11,7 +11,7 @@ export async function cambiarClave(_: EstadoClave, formData: FormData): Promise<
   const confirmacion = String(formData.get("confirmacion") ?? "");
   if (clave !== confirmacion) return { tipo: "error", mensaje: "Las contraseñas no coinciden." };
 
-  const { supabase, user, perfil } = await exigirPerfil(["admin", "supervisor", "cliente", "guardia"], { permitirClaveTemporal: true });
+  const { supabase, user, perfil } = await exigirPerfil(["admin", "supervisor", "cliente", "guardia"], { permitirClaveTemporal: true, permitirSinConsentimiento: true });
   if (perfil.rol === "guardia") {
     const { data: guardia } = await supabase.from("guardias").select("cedula").eq("perfil_id", user.id).maybeSingle();
     const resultado = validarPin(clave, guardia?.cedula ?? undefined);
