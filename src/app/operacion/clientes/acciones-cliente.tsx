@@ -89,7 +89,7 @@ function FormularioAcceso({ empresa }: { empresa: Empresa }) {
   // Con la cuenta creada, el formulario ya no sirve: lo que importa ahora es
   // que las credenciales se vean grandes y se puedan copiar de un toque.
   if (estado.tipo === "exito" && estado.usuario && estado.claveTemporal) {
-    const texto = `Acceso al portal SOTERSA\nUsuario: ${estado.usuario}\nClave temporal: ${estado.claveTemporal}\nIngresa en ${typeof window === "undefined" ? "" : window.location.origin}/acceso?perfil=cliente y cambia la clave al entrar.`;
+    const texto = `Acceso al portal SOTERSA\nUsuario: ${estado.usuario}\nClave temporal: ${estado.claveTemporal}\nIngresa en ${typeof window === "undefined" ? "" : window.location.origin}/acceso y cambia la clave al entrar.`;
     return (
       <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
         <p className="text-sm text-emerald-200">{estado.mensaje}</p>
@@ -161,7 +161,7 @@ function Credenciales({ mensaje, usuario, clave }: { mensaje: string; usuario: s
   const texto = `Acceso al portal SOTERSA
 Usuario: ${usuario}
 Clave temporal: ${clave}
-Ingresa en ${typeof window === "undefined" ? "" : window.location.origin}/acceso?perfil=cliente y cambia la clave al entrar.`;
+Ingresa en ${typeof window === "undefined" ? "" : window.location.origin}/acceso y cambia la clave al entrar.`;
   return (
     <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
       <p className="text-sm text-emerald-200">{mensaje}</p>
