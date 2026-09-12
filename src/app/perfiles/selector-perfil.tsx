@@ -6,10 +6,11 @@ import { IconoCamion, IconoEscudoOk, IconoLibro, IconoPersona, IconoSalir, Icono
 import type { RolUsuario } from "@/lib/tipos";
 import { crearClienteNavegador } from "@/lib/supabase/navegador";
 
-type Perfil = "cliente" | "guardia" | "custodia" | "supervisor" | "central" | "escuela";
+type Perfil = "cliente" | "cliente_agentes" | "guardia" | "custodia" | "supervisor" | "central" | "escuela";
 
 const perfiles: Array<{ id: Perfil; etiqueta: string; detalle: string; icono: React.ReactNode }> = [
   { id: "cliente", etiqueta: "Cliente", detalle: "Estado del servicio y reportes", icono: <IconoPersona className="h-7 w-7" /> },
+  { id: "cliente_agentes", etiqueta: "Agentes de seguridad", detalle: "Quién cubre tus puestos", icono: <IconoTurno className="h-7 w-7" /> },
   { id: "guardia", etiqueta: "Agente de seguridad", detalle: "Turno, asistencia y rondas", icono: <IconoTurno className="h-7 w-7" /> },
   { id: "custodia", etiqueta: "Custodia armada", detalle: "Operación, ruta y comunicación segura", icono: <IconoCamion className="h-7 w-7" /> },
   { id: "supervisor", etiqueta: "Supervisor", detalle: "Personal, puestos y novedades", icono: <IconoEscudoOk className="h-7 w-7" /> },
@@ -25,11 +26,11 @@ const perfiles: Array<{ id: Perfil; etiqueta: string; detalle: string; icono: Re
 const visibles: Record<RolUsuario, Perfil[]> = {
   guardia: ["guardia", "custodia", "escuela"],
   supervisor: ["supervisor", "escuela"],
-  cliente: ["cliente"],
+  cliente: ["cliente", "cliente_agentes", "escuela"],
   admin: ["central", "supervisor", "guardia", "custodia", "cliente", "escuela"],
 };
 
-const destinos: Record<Perfil, string> = { cliente: "/portal", guardia: "/guardia?desde=perfiles", custodia: "/guardia/custodia", supervisor: "/supervisor", central: "/admin", escuela: "/escuela" };
+const destinos: Record<Perfil, string> = { cliente: "/portal", cliente_agentes: "/portal/agentes", guardia: "/guardia?desde=perfiles", custodia: "/guardia/custodia", supervisor: "/supervisor", central: "/admin", escuela: "/escuela" };
 
 export function SelectorPerfil({ rol }: { rol: RolUsuario }) {
   const router = useRouter();

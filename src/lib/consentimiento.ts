@@ -23,7 +23,7 @@ import { crearClienteServidor } from "@/lib/supabase/servidor";
  * texto, no este.
  * ─────────────────────────────────────────────────────────────────────────
  */
-export const AVISO_VERSION = "2026-08-30-borrador";
+export const AVISO_VERSION = "2026-09-11-borrador";
 
 export const AVISO_TITULO =
   "Tratamiento de tus datos personales";
@@ -57,7 +57,7 @@ export const AVISO_PUNTOS: { titulo: string; detalle: string }[] = [
   {
     titulo: "Quién lo ve",
     detalle:
-      "Tu supervisor de zona y la central operativa de SOTERSA. El cliente ve solo las novedades de su propio puesto que supervisión haya autorizado, nunca tus datos personales.",
+      "Tu supervisor de zona y la central operativa de SOTERSA. El cliente del puesto donde trabajas ve tu nombre, tu número de credencial, el puesto asignado y si estás en turno, además de las novedades de su propio puesto que supervisión haya autorizado. No ve tu cédula, tu teléfono, tus fotografías ni tu historial.",
   },
   {
     titulo: "Dónde se guarda",

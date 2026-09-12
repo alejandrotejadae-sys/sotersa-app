@@ -65,6 +65,10 @@ export default async function PaginaPortal({ searchParams }: { searchParams: Pro
           <p className="text-sm font-medium text-azul-400">Cliente</p>
           <h1 className="mt-1 text-3xl font-bold text-white">Buenos días, {perfil.nombre.split(" ")[0]}</h1>
           <p className="mt-1 text-sm text-gris-400">Gracias por confiar en SOTERSA.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link href={`/portal/agentes${perfil.rol === "admin" && empresaId ? `?empresa=${empresaId}` : ""}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-azul-500/40 bg-azul-500/10 px-4 text-sm font-semibold text-azul-300">Agentes de seguridad <IconoFlecha className="h-4 w-4" /></Link>
+            <Link href="/escuela" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-borde/60 bg-white/[0.03] px-4 text-sm font-medium text-gris-300">Escuela de Formación</Link>
+          </div>
         </section>
 
         <section className="panel-operativo grid gap-6 p-6 sm:grid-cols-[1fr_auto] sm:items-center sm:p-8">

@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
  * (modulos, evaluaciones, constancias) se define con la empresa.
  */
 export default async function PaginaEscuela() {
-  const { perfil } = await exigirPerfil(["guardia", "supervisor", "admin"]);
+  const { perfil } = await exigirPerfil(["guardia", "supervisor", "admin", "cliente"]);
 
   return (
     <main className="min-h-dvh bg-[#020b18] text-white">
@@ -23,7 +23,7 @@ export default async function PaginaEscuela() {
           <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-[#087ff0]/15 text-[#49b6ff]"><IconoLibro className="h-8 w-8" /></span>
           <p className="mt-5 text-sm font-semibold uppercase tracking-[0.2em] text-[#0788ff]">Capacitación</p>
           <h1 className="mt-2 text-3xl font-bold">Escuela de Formación Sotersa</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-400">Hola, {perfil.nombre.split(" ")[0]}. Aquí vas a encontrar los módulos de formación, los procedimientos del servicio y tus constancias de capacitación.</p>
+          <p className="mt-3 text-sm leading-6 text-slate-400">Hola, {perfil.nombre.split(" ")[0]}. {perfil.rol === "cliente" ? "Aquí vas a encontrar cómo formamos a los agentes que cuidan tus instalaciones: módulos, procedimientos y constancias de capacitación." : "Aquí vas a encontrar los módulos de formación, los procedimientos del servicio y tus constancias de capacitación."}</p>
         </header>
 
         <section className="mt-8 rounded-2xl border border-dashed border-[#27425e] bg-[#07172a]/70 p-6 text-center">
@@ -31,7 +31,7 @@ export default async function PaginaEscuela() {
           <p className="mt-2 text-sm leading-6 text-slate-400">Cuando estén disponibles aparecerán en esta pantalla y recibirás el aviso en la app.</p>
         </section>
 
-        <Link href="/guardia/emergencia" className="mt-5 block rounded-2xl border border-[#27425e] bg-[#07172a]/80 p-4 text-center text-sm text-slate-300">Mientras tanto, repasa los <span className="font-semibold text-[#8ddaff]">protocolos de emergencia</span> →</Link>
+        {perfil.rol !== "cliente" && <Link href="/guardia/emergencia" className="mt-5 block rounded-2xl border border-[#27425e] bg-[#07172a]/80 p-4 text-center text-sm text-slate-300">Mientras tanto, repasa los <span className="font-semibold text-[#8ddaff]">protocolos de emergencia</span> →</Link>}
       </div>
     </main>
   );
