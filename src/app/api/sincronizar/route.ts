@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import { crearClienteAdministrador } from "@/lib/supabase/administrador";
+import { tieneConsentimientoVigente } from "@/lib/consentimiento";
 
 const TIPOS = new Set(["Novedad general", "Acceso no autorizado", "Daño o falla de equipos", "Infraestructura", "Incidente médico", "Relevo de puesto", "Otro"]);
 const SEVERIDADES = new Set(["informativa", "novedad", "emergencia"]);
@@ -10,6 +11,9 @@ export async function POST(peticion: Request) {
   const supabase = await crearClienteServidor();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Sesión vencida" }, { status: 401 });
+  // Misma regla que exigirPerfil en las pantallas: rondas y novedades son
+  // datos del agente, y sin consentimiento LOPDP vigente no se tratan.
+  if (!(await tieneConsentimientoVigente(user.id))) return NextResponse.json({ error: "Consentimiento pendiente" }, { status: 403 });
   const formulario = await peticion.formData();
   let operacion: Peticion;
   try { operacion = JSON.parse(String(formulario.get("operacion") ?? "")) as Peticion; } catch { return invalida("Operación inválida"); }

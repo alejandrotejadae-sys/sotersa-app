@@ -3,18 +3,14 @@ import { redirect } from "next/navigation";
 import { Marca, Pulso } from "@/app/componentes/marca";
 import { EstadoConexion } from "@/app/componentes/estado-conexion";
 import { IconoCamion, IconoEscudoOk, IconoFlecha, IconoMapa, IconoMensaje, IconoPersona, IconoRonda, IconoTelefono } from "@/app/componentes/iconos";
-import { crearClienteServidor } from "@/lib/supabase/servidor";
+import { exigirPerfil } from "@/lib/sesion";
 import { uno } from "@/lib/sesion";
 
 export const metadata = { title: "Custodia armada — SOTERSA" };
 export const dynamic = "force-dynamic";
 
 export default async function PaginaCustodia() {
-  const supabase = await crearClienteServidor();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/acceso");
-  const { data: perfil } = await supabase.from("perfiles").select("nombre,rol").eq("id", user.id).maybeSingle();
-  if (!perfil || !["guardia", "admin"].includes(perfil.rol)) redirect("/perfiles");
+  const { supabase, user, perfil } = await exigirPerfil(["guardia", "admin"]);
   const { data: agente } = perfil.rol === "admin"
     ? await supabase.from("guardias").select("id,nombre").eq("activo", true).order("nombre").limit(1).maybeSingle()
     : await supabase.from("guardias").select("id,nombre").eq("perfil_id", user.id).maybeSingle();

@@ -1,20 +1,15 @@
 import { firmarAvatar } from "@/lib/avatares";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { Marca } from "@/app/componentes/marca";
 import { IconoEscudoOk, IconoHuella } from "@/app/componentes/iconos";
-import { crearClienteServidor } from "@/lib/supabase/servidor";
+import { exigirPerfil } from "@/lib/sesion";
 import { FormularioPerfil } from "./formulario-perfil";
 
 export const metadata = { title: "Mi perfil — SOTERSA" };
 export const dynamic = "force-dynamic";
 
 export default async function PaginaMiPerfil() {
-  const supabase = await crearClienteServidor();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/acceso");
-  const { data: perfil } = await supabase.from("perfiles").select("nombre,telefono,rol").eq("id", user.id).single();
-  if (!perfil) redirect("/perfiles");
+  const { user, perfil } = await exigirPerfil(["admin", "supervisor", "cliente", "guardia"]);
   const rutaAvatar = typeof user.user_metadata?.avatar_path === "string"
     ? user.user_metadata.avatar_path
     : typeof user.user_metadata?.avatar_url === "string"

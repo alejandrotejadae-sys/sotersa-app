@@ -19,7 +19,7 @@ export async function exigirPerfil(
 
   const { data: perfil } = await supabase
     .from("perfiles")
-    .select("id, rol, nombre, empresa_cliente_id, zona_id")
+    .select("id, rol, nombre, telefono, empresa_cliente_id, zona_id")
     .eq("id", user.id)
     .single();
 

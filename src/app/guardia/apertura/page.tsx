@@ -1,17 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { crearClienteServidor } from "@/lib/supabase/servidor";
+import { exigirPerfil } from "@/lib/sesion";
 import FormularioApertura from "./formulario-apertura";
 
 export const metadata = { title: "Abrir turno — SOTERSA" };
 export const dynamic = "force-dynamic";
 
 export default async function PaginaApertura() {
-  const supabase = await crearClienteServidor();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/acceso");
+  const { supabase, user } = await exigirPerfil(["guardia", "admin"]);
 
   const { data: guardia } = await supabase
     .from("guardias")
