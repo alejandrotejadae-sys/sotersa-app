@@ -9,7 +9,7 @@ import { crearClienteNavegador } from "@/lib/supabase/navegador";
 type Perfil = "cliente" | "cliente_agentes" | "cliente_custodia" | "cliente_documentos" | "guardia" | "custodia" | "supervisor" | "central" | "escuela";
 
 const perfiles: Array<{ id: Perfil; etiqueta: string; detalle: string; icono: React.ReactNode }> = [
-  { id: "cliente", etiqueta: "Estado del servicio", detalle: "Puestos, mapa, novedades y SLA", icono: <IconoEscudoOk className="h-7 w-7" /> },
+  { id: "cliente", etiqueta: "Mi servicio", detalle: "Puestos, bitácora y cumplimiento SLA", icono: <IconoEscudoOk className="h-7 w-7" /> },
   { id: "cliente_agentes", etiqueta: "Agentes de seguridad", detalle: "Quién cubre tus puestos", icono: <IconoPersona className="h-7 w-7" /> },
   { id: "cliente_custodia", etiqueta: "Custodia armada", detalle: "Rutas, agentes y traslados", icono: <IconoCamion className="h-7 w-7" /> },
   { id: "cliente_documentos", etiqueta: "Documentación habilitante", detalle: "Permisos, certificaciones y contrato", icono: <IconoLibro className="h-7 w-7" /> },
@@ -28,7 +28,7 @@ const perfiles: Array<{ id: Perfil; etiqueta: string; detalle: string; icono: Re
 const visibles: Record<RolUsuario, Perfil[]> = {
   guardia: ["guardia", "custodia", "escuela"],
   supervisor: ["supervisor", "escuela"],
-  cliente: ["cliente_agentes", "escuela", "cliente_custodia", "cliente_documentos", "cliente"],
+  cliente: ["cliente", "cliente_agentes", "cliente_custodia", "cliente_documentos", "escuela"],
   admin: ["central", "supervisor", "guardia", "custodia", "cliente", "escuela"],
   operativo: ["central", "supervisor", "guardia", "custodia", "cliente", "escuela"],
 };
@@ -37,7 +37,7 @@ const destinos: Record<Perfil, string> = { cliente: "/portal", cliente_agentes: 
 
 export function SelectorPerfil({ rol }: { rol: RolUsuario }) {
   const router = useRouter();
-  const opciones = perfiles.filter((perfil) => visibles[rol].includes(perfil.id));
+  const opciones = perfiles.filter((perfil) => visibles[rol].includes(perfil.id)).map((perfil) => perfil.id === "cliente" && rol !== "cliente" ? { ...perfil, etiqueta: "Portal del cliente", detalle: "Ver el servicio como lo ve cada cliente" } : perfil);
   const [seleccionado, setSeleccionado] = useState<Perfil>(opciones[0]?.id ?? "guardia");
   const [saliendo, setSaliendo] = useState(false);
 

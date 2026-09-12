@@ -16,7 +16,7 @@ export default async function PaginaCustodiaCliente({ searchParams }: { searchPa
   const empresaId = perfil.empresa_cliente_id ?? (esLector(perfil.rol) && /^[0-9a-f-]{36}$/i.test(params.empresa ?? "") ? params.empresa! : null);
   const custodias = empresaId ? await custodiasDeEmpresa(empresaId) : [];
   const enCurso = custodias.reduce((n, c) => n + c.traslados.filter((t) => t.estado === "abierto").length, 0);
-  const volver = esLector(perfil.rol) ? { href: "/operacion/clientes", texto: "Volver a clientes" } : { href: "/perfiles", texto: "Menú principal" };
+  const volver = esLector(perfil.rol) ? { href: `/portal${empresaId ? `?empresa=${empresaId}` : ""}`, texto: "Volver al portal" } : { href: "/perfiles", texto: "Menú principal" };
 
   return (
     <div className="min-h-dvh pb-12">

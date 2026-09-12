@@ -13,6 +13,7 @@ import {
 } from "@/app/componentes/iconos";
 import { ahoraConDesfase, exigirPerfil, fechaHoraEcuador, horaEcuador, uno } from "@/lib/sesion";
 import { esLector } from "@/lib/roles";
+import { SelectorEmpresa } from "./selector-empresa";
 
 export const metadata = { title: "Portal del cliente — SOTERSA" };
 export const dynamic = "force-dynamic";
@@ -32,7 +33,10 @@ export default async function PaginaPortal({ searchParams }: { searchParams: Pro
       ? empresaConsulta.eq("id", empresaSolicitada).maybeSingle()
       : empresaConsulta.order("nombre").limit(1).maybeSingle();
 
-  const empresa = (await empresaR).data;
+  const [empresa, todas] = await Promise.all([
+    empresaR.then((r) => r.data),
+    esLector(perfil.rol) ? supabase.from("empresas_cliente").select("id, nombre").eq("activo", true).order("nombre").then((r) => r.data ?? []) : Promise.resolve([]),
+  ]);
   const empresaId = perfil.empresa_cliente_id ?? empresa?.id;
   const puestosConsulta = supabase.from("puestos").select("id, codigo, nombre, cobertura_horas, armado, direccion, lat, lng").eq("activo", true);
   const puestosR = empresaId ? await puestosConsulta.eq("empresa_cliente_id", empresaId) : await puestosConsulta.limit(0);
@@ -63,15 +67,16 @@ export default async function PaginaPortal({ searchParams }: { searchParams: Pro
       <CabeceraPanel rol="cliente" nombre={perfil.nombre} />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-6">
         <Link href={esLector(perfil.rol) ? "/operacion/clientes" : "/perfiles"} className="inline-flex items-center gap-1 self-start text-sm font-medium text-azul-400"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> {esLector(perfil.rol) ? "Volver a clientes" : "Menú principal"}</Link>
+        {esLector(perfil.rol) && <SelectorEmpresa empresas={todas} actual={empresaId ?? null} />}
         <section>
           <p className="text-sm font-medium text-azul-400">Cliente</p>
           <h1 className="mt-1 text-3xl font-bold text-white">Buenos días, {perfil.nombre.split(" ")[0]}</h1>
           <p className="mt-1 text-sm text-gris-400">Gracias por confiar en SOTERSA.</p>
-          <div className="mt-3 flex flex-wrap gap-2">
+          {esLector(perfil.rol) && <div className="mt-3 flex flex-wrap gap-2">
             <Link href={`/portal/agentes${esLector(perfil.rol) && empresaId ? `?empresa=${empresaId}` : ""}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-azul-500/40 bg-azul-500/10 px-4 text-sm font-semibold text-azul-300">Agentes de seguridad <IconoFlecha className="h-4 w-4" /></Link>
             <Link href={`/portal/documentos${esLector(perfil.rol) && empresaId ? `?empresa=${empresaId}` : ""}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-borde/60 bg-white/[0.03] px-4 text-sm font-medium text-gris-300">Documentación habilitante</Link>
-            <Link href="/escuela" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-borde/60 bg-white/[0.03] px-4 text-sm font-medium text-gris-300">Escuela de Formación</Link>
-          </div>
+            <Link href={`/portal/custodia${empresaId ? `?empresa=${empresaId}` : ""}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-borde/60 bg-white/[0.03] px-4 text-sm font-medium text-gris-300">Custodia armada</Link>
+          </div>}
         </section>
 
         <section className="panel-operativo grid gap-6 p-6 sm:grid-cols-[1fr_auto] sm:items-center sm:p-8">
