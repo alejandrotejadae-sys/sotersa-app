@@ -7,7 +7,8 @@ import { esLector } from "@/lib/roles";
 import { ES_ALARMA, type EstadoPuesto } from "@/lib/estado-puestos";
 import { resumenDeZona, type FiltroZona, type NovedadZona, type PuestoZona, type TurnoHoy } from "./datos";
 import { SelectorZona } from "./selector-zona";
-import { cerrarNovedad, notificarNovedad, validarNovedad } from "./acciones";
+import { asignarPuestosSinZona, cerrarNovedad, notificarNovedad, validarNovedad } from "./acciones";
+import { puedeEditar } from "@/lib/roles";
 
 export const metadata = { title: "Supervisión — SOTERSA" };
 export const dynamic = "force-dynamic";
@@ -36,6 +37,8 @@ export default async function PaginaSupervisor({ searchParams }: { searchParams:
   }
 
   const r = await resumenDeZona(filtro);
+  // Solo para el admin mirando una zona concreta: cuantos puestos quedan sin zona.
+  const sinZona = lector && filtro.tipo === "zona" ? (await supabase.from("puestos").select("id", { count: "exact", head: true }).is("zona_id", null).eq("activo", true)).count ?? 0 : 0;
   const ahoraIso = new Date().toISOString();
   const nombre = perfil.nombre.trim().split(" ")[0] || "Supervisor";
   const enApp = r.puestos.filter((p) => p.estado !== "sin_programar" && p.estado !== "sin_turno_hoy");
@@ -69,7 +72,13 @@ export default async function PaginaSupervisor({ searchParams }: { searchParams:
         </header>
 
         <div className="grid grid-cols-1 gap-4 px-4 pb-28 lg:grid-cols-12 lg:px-8 lg:pb-10">
-          {lector && <div className="lg:col-span-12"><Link href="/admin" className="inline-flex items-center gap-1 text-sm font-medium text-[#0788ff]"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> Panel administrativo</Link><div className="mt-3"><SelectorZona zonas={zonas} actual={zonaActual} /></div></div>}
+          {lector && <div className="lg:col-span-12"><Link href="/admin" className="inline-flex items-center gap-1 text-sm font-medium text-[#0788ff]"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> Panel administrativo</Link><div className="mt-3"><SelectorZona zonas={zonas} actual={zonaActual} /></div>{filtro.tipo === "zona" && sinZona > 0 && puedeEditar(perfil.rol) && (
+            <form action={asignarPuestosSinZona} className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#0788ff]/35 bg-[#0788ff]/8 px-4 py-3 text-sm">
+              <input type="hidden" name="zona_id" value={filtro.id} />
+              <p className="text-slate-200">Hay <strong>{sinZona}</strong> puesto{sinZona === 1 ? "" : "s"} activo{sinZona === 1 ? "" : "s"} sin zona. Puedes asignar{sinZona === 1 ? "lo" : "los todos"} a <strong>{zonaNombre}</strong> de una vez; después cada puesto se puede mover desde Clientes.</p>
+              <button className="min-h-10 rounded-xl bg-gradient-to-r from-[#087ff0] to-[#02b9e8] px-4 text-sm font-semibold text-white transition active:scale-[0.98]">Asignar {sinZona === 1 ? "el puesto" : `los ${sinZona} puestos`} a esta zona</button>
+            </form>
+          )}</div>}
 
           <section className="px-1 pt-1 lg:col-span-12">
             <p className="flex items-center gap-2 text-base font-medium text-[#0788ff]"><IconoEscudoOk className="h-6 w-6" /> Supervisor · {zonaNombre}</p>

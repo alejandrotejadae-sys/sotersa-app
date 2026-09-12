@@ -13,6 +13,25 @@ function refrescar() {
 }
 
 /**
+ * Atajo del admin: todos los puestos activos que aun no tienen zona pasan a
+ * la zona elegida. Con un solo supervisor es la forma rapida de que vea la
+ * operacion completa; despues cada puesto se puede mover desde Clientes.
+ */
+export async function asignarPuestosSinZona(formData: FormData) {
+  const zonaId = String(formData.get("zona_id") ?? "");
+  if (!UUID.test(zonaId)) return;
+
+  const { supabase } = await exigirPerfil(["admin"]);
+  const { data: zona } = await supabase.from("zonas").select("id").eq("id", zonaId).maybeSingle();
+  if (!zona) return;
+
+  await supabase.from("puestos").update({ zona_id: zona.id }).is("zona_id", null).eq("activo", true);
+  revalidatePath("/supervisor");
+  revalidatePath("/operacion/clientes");
+  revalidatePath("/operacion/personal");
+}
+
+/**
  * Ciclo de una novedad: registrada -> validada -> notificada -> cerrada.
  * El guardia la registra; supervision decide si se publica al cliente
  * (validar), deja constancia de la hora en que se le aviso (notificar: es lo
