@@ -12,15 +12,16 @@ import {
   IconoTurno,
 } from "@/app/componentes/iconos";
 import { ahoraConDesfase, exigirPerfil, fechaHoraEcuador, horaEcuador, uno } from "@/lib/sesion";
+import { esLector } from "@/lib/roles";
 
 export const metadata = { title: "Portal del cliente — SOTERSA" };
 export const dynamic = "force-dynamic";
 
 export default async function PaginaPortal({ searchParams }: { searchParams: Promise<{ empresa?: string }> }) {
-  const { supabase, perfil } = await exigirPerfil(["cliente", "admin"]);
+  const { supabase, perfil } = await exigirPerfil(["cliente", "admin", "operativo"]);
   const desde = ahoraConDesfase(-30 * 24);
   const params = await searchParams;
-  const empresaSolicitada = perfil.rol === "admin" && /^[0-9a-f-]{36}$/i.test(params.empresa ?? "") ? params.empresa : null;
+  const empresaSolicitada = esLector(perfil.rol) && /^[0-9a-f-]{36}$/i.test(params.empresa ?? "") ? params.empresa : null;
 
   const empresaConsulta = supabase
     .from("empresas_cliente")
@@ -61,14 +62,14 @@ export default async function PaginaPortal({ searchParams }: { searchParams: Pro
     <div className="min-h-dvh pb-12">
       <CabeceraPanel rol="cliente" nombre={perfil.nombre} />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-6">
-        <Link href={perfil.rol === "admin" ? "/operacion/clientes" : "/perfiles"} className="inline-flex items-center gap-1 self-start text-sm font-medium text-azul-400"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> {perfil.rol === "admin" ? "Volver a clientes" : "Menú principal"}</Link>
+        <Link href={esLector(perfil.rol) ? "/operacion/clientes" : "/perfiles"} className="inline-flex items-center gap-1 self-start text-sm font-medium text-azul-400"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> {esLector(perfil.rol) ? "Volver a clientes" : "Menú principal"}</Link>
         <section>
           <p className="text-sm font-medium text-azul-400">Cliente</p>
           <h1 className="mt-1 text-3xl font-bold text-white">Buenos días, {perfil.nombre.split(" ")[0]}</h1>
           <p className="mt-1 text-sm text-gris-400">Gracias por confiar en SOTERSA.</p>
           <div className="mt-3 flex flex-wrap gap-2">
-            <Link href={`/portal/agentes${perfil.rol === "admin" && empresaId ? `?empresa=${empresaId}` : ""}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-azul-500/40 bg-azul-500/10 px-4 text-sm font-semibold text-azul-300">Agentes de seguridad <IconoFlecha className="h-4 w-4" /></Link>
-            <Link href={`/portal/documentos${perfil.rol === "admin" && empresaId ? `?empresa=${empresaId}` : ""}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-borde/60 bg-white/[0.03] px-4 text-sm font-medium text-gris-300">Documentación habilitante</Link>
+            <Link href={`/portal/agentes${esLector(perfil.rol) && empresaId ? `?empresa=${empresaId}` : ""}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-azul-500/40 bg-azul-500/10 px-4 text-sm font-semibold text-azul-300">Agentes de seguridad <IconoFlecha className="h-4 w-4" /></Link>
+            <Link href={`/portal/documentos${esLector(perfil.rol) && empresaId ? `?empresa=${empresaId}` : ""}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-borde/60 bg-white/[0.03] px-4 text-sm font-medium text-gris-300">Documentación habilitante</Link>
             <Link href="/escuela" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-borde/60 bg-white/[0.03] px-4 text-sm font-medium text-gris-300">Escuela de Formación</Link>
           </div>
         </section>

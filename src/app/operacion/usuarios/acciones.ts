@@ -5,7 +5,7 @@ import { cedulaACorreo, cedulaEsValida, validarPin } from "@/lib/auth";
 import { exigirPerfil } from "@/lib/sesion";
 import { crearClienteAdministrador } from "@/lib/supabase/administrador";
 
-type RolCreable = "guardia" | "supervisor" | "cliente" | "admin";
+type RolCreable = "guardia" | "supervisor" | "cliente" | "admin" | "operativo";
 
 export type EstadoAlta = {
   tipo: "inicial" | "error" | "exito";
@@ -25,7 +25,7 @@ export async function crearCuenta(_: EstadoAlta, formData: FormData): Promise<Es
   const empresaId = String(formData.get("empresa_id") ?? "");
   const zonaId = String(formData.get("zona_id") ?? "");
   const guardiaId = String(formData.get("guardia_id") ?? "");
-  if (!(["guardia", "supervisor", "cliente", "admin"] as string[]).includes(rol)) return fallo("Selecciona un rol válido.");
+  if (!(["guardia", "supervisor", "cliente", "admin", "operativo"] as string[]).includes(rol)) return fallo("Selecciona un rol válido.");
   // Clave temporal elegida por el admin (para dictarla), o generada.
   const claveElegida = String(formData.get("clave_temporal") ?? "").trim();
   if (claveElegida && rol !== "guardia" && claveElegida.length < 8) return fallo("La clave temporal necesita al menos 8 caracteres.");

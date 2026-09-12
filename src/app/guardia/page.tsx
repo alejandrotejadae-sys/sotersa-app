@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { exigirPerfil } from "@/lib/sesion";
+import { esLector } from "@/lib/roles";
 import { Marca } from "@/app/componentes/marca";
 import { EstadoConexion } from "@/app/componentes/estado-conexion";
 import { NavEscritorio } from "@/app/componentes/nav-inferior";
@@ -37,12 +38,12 @@ function soloHora(iso: string) {
 export default async function PaginaGuardia() {
   // Pasa por exigirPerfil como el resto de la app: es lo que exige el
   // consentimiento LOPDP antes de mostrar o registrar nada del agente.
-  const { supabase, user, perfil: perfilActual } = await exigirPerfil(["guardia", "admin"]);
+  const { supabase, user, perfil: perfilActual } = await exigirPerfil(["guardia", "admin", "operativo"]);
 
   const guardiaConsulta = supabase
     .from("guardias")
     .select("id, nombre, cedula");
-  const { data: guardia } = perfilActual.rol === "admin"
+  const { data: guardia } = esLector(perfilActual.rol)
     ? await guardiaConsulta.eq("activo", true).order("nombre").limit(1).maybeSingle()
     : await guardiaConsulta.eq("perfil_id", user.id).maybeSingle();
 

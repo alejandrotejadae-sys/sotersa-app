@@ -20,7 +20,7 @@ export default async function PaginaFichaAgente({ params }: { params: Promise<{ 
   const { id } = await params;
   if (!UUID.test(id)) notFound();
 
-  const { supabase, perfil } = await exigirPerfil(["admin", "supervisor"]);
+  const { supabase, perfil } = await exigirPerfil(["admin", "supervisor", "operativo"]);
   const esAdmin = perfil.rol === "admin";
   const hace30d = ahoraConDesfase(-30 * 24);
   const en7d = ahoraConDesfase(7 * 24);

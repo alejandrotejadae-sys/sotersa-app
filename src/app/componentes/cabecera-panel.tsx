@@ -6,6 +6,7 @@ import { BotonSalir } from "@/app/guardia/perfil/boton-salir";
 const ROTULOS = {
   supervisor: "Supervisor",
   admin: "Central operativa",
+  operativo: "Operativo",
   cliente: "Cliente",
 } as const;
 

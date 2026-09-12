@@ -33,7 +33,7 @@ type TurnoCustodia = {
 };
 
 export default async function PaginaCustodias() {
-  const { supabase, perfil } = await exigirPerfil(["admin", "supervisor"]);
+  const { supabase, perfil } = await exigirPerfil(["admin", "supervisor", "operativo"]);
   const { data, error } = await supabase
     .from("puestos")
     .select("id,codigo,nombre,activo,armado,origen,destino,origen_lat,origen_lng,destino_lat,destino_lng,empresas_cliente(nombre)")

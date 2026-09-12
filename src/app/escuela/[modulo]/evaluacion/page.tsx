@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ modulo: s
 export default async function PaginaEvaluacion({ params }: { params: Promise<{ modulo: string }> }) {
   const m = modulo((await params).modulo);
   if (!m) notFound();
-  await exigirPerfil(["guardia", "supervisor", "admin", "cliente"]);
+  await exigirPerfil(["guardia", "supervisor", "admin", "cliente", "operativo"]);
   const t = TONO[m.color];
 
   // Al navegador solo van pregunta y opciones. La clave queda en el servidor.

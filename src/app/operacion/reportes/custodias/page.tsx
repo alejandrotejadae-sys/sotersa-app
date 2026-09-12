@@ -41,7 +41,7 @@ type AperturaReporte = {
 };
 
 export default async function PaginaReporteCustodias() {
-  const { supabase } = await exigirPerfil(["admin", "supervisor"]);
+  const { supabase } = await exigirPerfil(["admin", "supervisor", "operativo"]);
   const desde = ahoraConDesfase(-30 * 24);
   const hasta = new Date().toISOString();
 

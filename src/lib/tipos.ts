@@ -3,7 +3,7 @@
  * Si cambia el esquema, cambia este archivo en el mismo commit.
  */
 
-export type RolUsuario = "guardia" | "supervisor" | "admin" | "cliente";
+export type RolUsuario = "guardia" | "supervisor" | "admin" | "operativo" | "cliente";
 export type TipoTurno = "fijo_dia" | "fijo_noche" | "saca_francos" | "supervision";
 export type EstadoTurno = "programado" | "abierto" | "cerrado" | "ausente";
 export type SeveridadNovedad = "informativa" | "novedad" | "emergencia";

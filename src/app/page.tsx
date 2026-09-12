@@ -11,6 +11,7 @@ import { crearClienteServidor } from "@/lib/supabase/servidor";
  */
 const DESTINO_POR_ROL: Record<string, string> = {
   admin: "/admin",
+  operativo: "/admin",
   supervisor: "/supervisor",
   // Agente y cliente tienen varias puertas: eligen en el menu.
   cliente: "/perfiles",

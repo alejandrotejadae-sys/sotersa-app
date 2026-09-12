@@ -21,7 +21,7 @@ export default async function PaginaLeccion({ params }: { params: Promise<{ modu
   if (!datos) notFound();
   const { modulo: m, leccion: l, indice, siguiente, anterior } = datos;
 
-  const { supabase, user, perfil } = await exigirPerfil(["guardia", "supervisor", "admin", "cliente"]);
+  const { supabase, user, perfil } = await exigirPerfil(["guardia", "supervisor", "admin", "cliente", "operativo"]);
   const avance = await avanceDe(supabase, user.id);
   const hecha = avance.completadas.has(claveLeccion(m.id, l.id));
   const t = TONO[m.color];

@@ -7,7 +7,7 @@ export const metadata = { title: "Central operativa — SOTERSA" };
 export const dynamic = "force-dynamic";
 
 export default async function PaginaCentral() {
-  const { supabase } = await exigirPerfil(["admin"]);
+  const { supabase } = await exigirPerfil(["admin", "operativo"]);
   const desde = ahoraConDesfase(-24);
   const ahora = new Date().toISOString();
 

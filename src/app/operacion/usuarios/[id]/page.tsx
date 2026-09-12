@@ -5,19 +5,20 @@ import { IconoFlecha, IconoPersona } from "@/app/componentes/iconos";
 import { exigirPerfil, fechaHoraEcuador, uno } from "@/lib/sesion";
 import { crearClienteAdministrador } from "@/lib/supabase/administrador";
 import { AVISO_VERSION, ROLES_CON_CONSENTIMIENTO } from "@/lib/consentimiento";
+import { ETIQUETA_ROL, puedeEditar } from "@/lib/roles";
 import { ClaveUsuario, EditorUsuario, EstadoCuenta, type Cuenta } from "./ficha-usuario";
 
 export const metadata = { title: "Ficha de usuario — SOTERSA" };
 export const dynamic = "force-dynamic";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const ROLES: Record<string, string> = { admin: "Administrador", supervisor: "Supervisor", guardia: "Agente de seguridad", cliente: "Cliente" };
 
 /** Ficha de una cuenta: quien es, como entra, que ha hecho, y las tres acciones de control. */
 export default async function PaginaUsuario({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!UUID.test(id)) notFound();
-  const { supabase, user } = await exigirPerfil(["admin"]);
+  const { supabase, user, perfil: quienMira } = await exigirPerfil(["admin", "operativo"]);
+  const editable = puedeEditar(quienMira.rol);
 
   const { data: perfil } = await supabase.from("perfiles").select("id,rol,nombre,telefono,activo,empresa_cliente_id,zona_id,creado_en,empresas_cliente(nombre),zonas(nombre),guardias(id,cedula,credencial,activo,puesto_habitual_id)").eq("id", id).maybeSingle();
   if (!perfil) notFound();
@@ -49,7 +50,7 @@ export default async function PaginaUsuario({ params }: { params: Promise<{ id: 
         <section className="mt-5 flex flex-wrap items-center gap-4">
           <span className={`grid h-16 w-16 shrink-0 place-items-center rounded-2xl border text-lg font-semibold ${perfil.rol === "admin" ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-300" : "border-[#38526b] bg-gradient-to-br from-[#244868] to-[#0a1e34] text-[#8ddaff]"}`}>{iniciales(perfil.nombre)}</span>
           <div className="min-w-0 flex-1">
-            <p className="flex items-center gap-2 text-sm font-medium text-[#0788ff]"><IconoPersona className="h-5 w-5" /> {ROLES[perfil.rol] ?? perfil.rol}{cuenta.esPropia ? " · tu cuenta" : ""}</p>
+            <p className="flex items-center gap-2 text-sm font-medium text-[#0788ff]"><IconoPersona className="h-5 w-5" /> {ETIQUETA_ROL[perfil.rol] ?? perfil.rol}{cuenta.esPropia ? " · tu cuenta" : ""}</p>
             <h1 className="mt-1 text-3xl font-bold lg:text-4xl">{perfil.nombre}</h1>
             <p className="mt-1 font-mono text-sm text-slate-400">{usuarioIngreso}</p>
           </div>
@@ -69,9 +70,12 @@ export default async function PaginaUsuario({ params }: { params: Promise<{ id: 
           {perfil.rol === "guardia" && <Dato etiqueta="Ficha operativa" valor={guardia ? (guardia.activo ? "Activo en nómina" : "Dado de baja") : "Sin ficha"} enlace={guardia ? `/operacion/personal/${guardia.id}` : undefined} />}
           {perfil.rol === "cliente" && perfil.empresa_cliente_id && <Dato etiqueta="Portal" valor="Ver como el cliente" enlace={`/portal?empresa=${perfil.empresa_cliente_id}`} />}
           {perfil.rol === "admin" && <Dato etiqueta="Alcance" valor="Acceso completo" />}
+          {perfil.rol === "operativo" && <Dato etiqueta="Alcance" valor="Ve todo; no edita ni restablece claves" />}
+          {perfil.rol === "operativo" && <Dato etiqueta="Alcance" valor="Ve todo; no edita ni restablece claves" />}
         </section>
 
-        <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        {!editable && <p className="mt-5 rounded-xl border border-[#27425e] bg-[#041225] px-4 py-3 text-sm text-slate-400">Vista de consulta. Editar datos, restablecer claves y bloquear cuentas es exclusivo del administrador.</p>}
+        {editable && <div className="mt-5 grid gap-5 lg:grid-cols-2">
           <Panel titulo="Datos de la cuenta" detalle="Nombre, teléfono y vínculo. El rol no se cambia: para otro rol se crea otra cuenta.">
             <EditorUsuario cuenta={cuenta} empresas={empresasR.data ?? []} zonas={zonasR.data ?? []} />
           </Panel>
@@ -83,7 +87,7 @@ export default async function PaginaUsuario({ params }: { params: Promise<{ id: 
               <EstadoCuenta cuenta={cuenta} />
             </Panel>
           </div>
-        </div>
+        </div>}
       </div>
     </main>
   );

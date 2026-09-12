@@ -7,7 +7,7 @@ export const metadata = { title: "Panel administrativo — SOTERSA" };
 export const dynamic = "force-dynamic";
 
 export default async function PaginaAdmin() {
-  const { supabase, perfil } = await exigirPerfil(["admin"]);
+  const { supabase, perfil } = await exigirPerfil(["admin", "operativo"]);
 
   const [clientesR, guardiasR, custodiasR, supervisoresR, usuariosR, alertasR] = await Promise.all([
     supabase.from("empresas_cliente").select("id", { count: "exact", head: true }).eq("activo", true),

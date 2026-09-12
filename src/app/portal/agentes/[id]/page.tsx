@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CabeceraPanel } from "@/app/componentes/cabecera-panel";
 import { IconoFlecha, IconoPersona } from "@/app/componentes/iconos";
 import { exigirPerfil, fechaHoraEcuador, uno } from "@/lib/sesion";
+import { esLector } from "@/lib/roles";
 import { servicio } from "@/lib/servicios";
 import { agentesDeEmpresa, turnosDeAgenteEnEmpresa } from "../datos";
 import { Estado, Resumen, iniciales } from "../ui";
@@ -21,9 +22,9 @@ export default async function PaginaFichaServicio({ params, searchParams }: { pa
   const { id } = await params;
   if (!UUID.test(id)) notFound();
 
-  const { perfil } = await exigirPerfil(["cliente", "admin"]);
+  const { perfil } = await exigirPerfil(["cliente", "admin", "operativo"]);
   const query = await searchParams;
-  const empresaId = perfil.empresa_cliente_id ?? (perfil.rol === "admin" && /^[0-9a-f-]{36}$/i.test(query.empresa ?? "") ? query.empresa! : null);
+  const empresaId = perfil.empresa_cliente_id ?? (esLector(perfil.rol) && /^[0-9a-f-]{36}$/i.test(query.empresa ?? "") ? query.empresa! : null);
   if (!empresaId) notFound();
 
   const { agentes } = await agentesDeEmpresa(empresaId);
@@ -35,7 +36,7 @@ export default async function PaginaFichaServicio({ params, searchParams }: { pa
   const pasados = turnos.filter((t) => t.fin_programado <= ahora);
   const proximos = turnos.filter((t) => t.fin_programado > ahora).sort((a, b) => a.inicio_programado.localeCompare(b.inicio_programado));
   const abiertos = pasados.filter((t) => (t.aperturas_turno?.length ?? 0) > 0).length;
-  const sufijo = perfil.rol === "admin" ? `?empresa=${empresaId}` : "";
+  const sufijo = esLector(perfil.rol) ? `?empresa=${empresaId}` : "";
 
   return (
     <div className="min-h-dvh pb-12">
@@ -43,7 +44,7 @@ export default async function PaginaFichaServicio({ params, searchParams }: { pa
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-6">
         <div className="flex flex-wrap items-center gap-4">
           <Link href={`/portal/agentes${sufijo}`} className="inline-flex items-center gap-1 text-sm font-medium text-azul-400"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> Volver a los agentes</Link>
-          {perfil.rol !== "admin" && <Link href="/perfiles" className="inline-flex items-center gap-1 text-sm font-medium text-gris-400"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> Menú principal</Link>}
+          {!esLector(perfil.rol) && <Link href="/perfiles" className="inline-flex items-center gap-1 text-sm font-medium text-gris-400"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> Menú principal</Link>}
         </div>
 
         <section className="flex flex-wrap items-center gap-4">

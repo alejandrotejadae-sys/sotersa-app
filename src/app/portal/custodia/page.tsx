@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CabeceraPanel } from "@/app/componentes/cabecera-panel";
 import { IconoCamion, IconoFlecha } from "@/app/componentes/iconos";
 import { exigirPerfil, fechaHoraEcuador } from "@/lib/sesion";
+import { esLector } from "@/lib/roles";
 import { custodiasDeEmpresa } from "../agentes/datos";
 import { iniciales } from "../agentes/ui";
 
@@ -10,12 +11,12 @@ export const dynamic = "force-dynamic";
 
 /** Custodias armadas del cliente: ruta, agentes asignados y traslados recientes. */
 export default async function PaginaCustodiaCliente({ searchParams }: { searchParams: Promise<{ empresa?: string }> }) {
-  const { perfil } = await exigirPerfil(["cliente", "admin"]);
+  const { perfil } = await exigirPerfil(["cliente", "admin", "operativo"]);
   const params = await searchParams;
-  const empresaId = perfil.empresa_cliente_id ?? (perfil.rol === "admin" && /^[0-9a-f-]{36}$/i.test(params.empresa ?? "") ? params.empresa! : null);
+  const empresaId = perfil.empresa_cliente_id ?? (esLector(perfil.rol) && /^[0-9a-f-]{36}$/i.test(params.empresa ?? "") ? params.empresa! : null);
   const custodias = empresaId ? await custodiasDeEmpresa(empresaId) : [];
   const enCurso = custodias.reduce((n, c) => n + c.traslados.filter((t) => t.estado === "abierto").length, 0);
-  const volver = perfil.rol === "admin" ? { href: "/operacion/clientes", texto: "Volver a clientes" } : { href: "/perfiles", texto: "Menú principal" };
+  const volver = esLector(perfil.rol) ? { href: "/operacion/clientes", texto: "Volver a clientes" } : { href: "/perfiles", texto: "Menú principal" };
 
   return (
     <div className="min-h-dvh pb-12">
@@ -52,7 +53,7 @@ export default async function PaginaCustodiaCliente({ searchParams }: { searchPa
                   <ul className="mt-2 space-y-2">
                     {c.agentes.map((a) => (
                       <li key={a.id}>
-                        <Link href={`/portal/agentes/${a.id}${perfil.rol === "admin" ? `?empresa=${empresaId}` : ""}`} className="flex items-center gap-3 rounded-xl border border-borde/60 bg-white/[0.03] px-3 py-2.5">
+                        <Link href={`/portal/agentes/${a.id}${esLector(perfil.rol) ? `?empresa=${empresaId}` : ""}`} className="flex items-center gap-3 rounded-xl border border-borde/60 bg-white/[0.03] px-3 py-2.5">
                           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-azul-500/40 bg-azul-500/10 text-xs font-semibold text-azul-300">{iniciales(a.nombre)}</span>
                           <span className="min-w-0 flex-1"><span className="block truncate text-sm text-white">{a.nombre}</span><span className="block text-xs text-gris-500">Credencial {a.credencial ?? "pendiente"}</span></span>
                           <IconoFlecha className="h-4 w-4 text-gris-500" />

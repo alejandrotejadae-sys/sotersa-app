@@ -26,9 +26,17 @@ export type CuentaCliente = { id: string; nombre: string; activo: boolean };
  * panel abierto a la vez: la tarjeta es angosta y dos formularios apilados
  * se confunden con los datos del cliente.
  */
-export function AccionesCliente({ empresa, cuentas }: { empresa: Empresa; cuentas: CuentaCliente[] }) {
+export function AccionesCliente({ empresa, cuentas, soloLectura = false }: { empresa: Empresa; cuentas: CuentaCliente[]; soloLectura?: boolean }) {
   const [panel, setPanel] = useState<Panel>(null);
   const alternar = (p: Panel) => setPanel((actual) => (actual === p ? null : p));
+
+  if (soloLectura) {
+    return cuentas.length > 0 ? <ul className="mt-4 space-y-2">{cuentas.map((cuenta) => <Cuenta key={cuenta.id} cuenta={cuenta} />)}</ul> : null;
+  }
+
+  if (soloLectura) {
+    return cuentas.length > 0 ? <ul className="mt-4 space-y-2">{cuentas.map((cuenta) => <Cuenta key={cuenta.id} cuenta={cuenta} />)}</ul> : null;
+  }
 
   return (
     <div className="mt-4">

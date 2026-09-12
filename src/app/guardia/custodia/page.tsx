@@ -4,14 +4,15 @@ import { Marca, Pulso } from "@/app/componentes/marca";
 import { EstadoConexion } from "@/app/componentes/estado-conexion";
 import { IconoCamion, IconoEscudoOk, IconoFlecha, IconoMapa, IconoMensaje, IconoPersona, IconoRonda, IconoTelefono } from "@/app/componentes/iconos";
 import { exigirPerfil } from "@/lib/sesion";
+import { esLector } from "@/lib/roles";
 import { uno } from "@/lib/sesion";
 
 export const metadata = { title: "Custodia armada — SOTERSA" };
 export const dynamic = "force-dynamic";
 
 export default async function PaginaCustodia() {
-  const { supabase, user, perfil } = await exigirPerfil(["guardia", "admin"]);
-  const { data: agente } = perfil.rol === "admin"
+  const { supabase, user, perfil } = await exigirPerfil(["guardia", "admin", "operativo"]);
+  const { data: agente } = esLector(perfil.rol)
     ? await supabase.from("guardias").select("id,nombre").eq("activo", true).order("nombre").limit(1).maybeSingle()
     : await supabase.from("guardias").select("id,nombre").eq("perfil_id", user.id).maybeSingle();
   if (!agente) redirect("/guardia");

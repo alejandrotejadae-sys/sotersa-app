@@ -10,6 +10,7 @@ import { MapaPuestos } from "@/app/componentes/mapa-puestos";
 import { DocumentosAdmin } from "./documentos-admin";
 import { documentosParaAdmin, tamanoLegible } from "@/lib/documentos";
 import { fechaHoraEcuador } from "@/lib/sesion";
+import { puedeEditar } from "@/lib/roles";
 
 export const metadata = { title: "Clientes y servicios — SOTERSA" };
 export const dynamic = "force-dynamic";
@@ -17,7 +18,8 @@ export const dynamic = "force-dynamic";
 type Filtro = "todos" | "activos" | "incompletos";
 
 export default async function PaginaClientes({ searchParams }: { searchParams: Promise<{ filtro?: string }> }) {
-  const { supabase } = await exigirPerfil(["admin"]);
+  const { supabase, perfil } = await exigirPerfil(["admin", "operativo"]);
+  const editable = puedeEditar(perfil.rol);
   const params = await searchParams;
   const filtro: Filtro = params.filtro === "activos" || params.filtro === "incompletos" ? params.filtro : "todos";
   const desde = ahoraConDesfase(-30 * 24);
@@ -75,17 +77,17 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
           <div className="mt-4 overflow-hidden rounded-xl border border-[#27425e]"><MapaPuestos puntos={puntosMapa} alto="h-72 lg:h-96" /></div>
         </section>
 
-        <Desplegable titulo="Contactos operativos por puesto" detalle="Central, supervisor, jefe de operaciones y administración del cliente. Guardar el mismo tipo lo actualiza sin duplicar." pendiente={contactosPendientes > 0 ? `${contactosPendientes} puesto${contactosPendientes === 1 ? "" : "s"} incompleto${contactosPendientes === 1 ? "" : "s"}` : undefined}>
+        {editable && <Desplegable titulo="Contactos operativos por puesto" detalle="Central, supervisor, jefe de operaciones y administración del cliente. Guardar el mismo tipo lo actualiza sin duplicar." pendiente={contactosPendientes > 0 ? `${contactosPendientes} puesto${contactosPendientes === 1 ? "" : "s"} incompleto${contactosPendientes === 1 ? "" : "s"}` : undefined}>
           <FormularioContacto puestos={puestosActivos.map(({ id, codigo, nombre }) => ({ id, codigo, nombre }))}/>
-        </Desplegable>
+        </Desplegable>}
 
-        <Desplegable titulo="Documentación habilitante" detalle="Permisos, RUC, BASC, pólizas. Lo general lo ven todos los clientes en su portal; lo específico, solo ese cliente." pendiente={documentos.generales.length === 0 ? "sin documentos" : undefined}>
+        {editable && <Desplegable titulo="Documentación habilitante" detalle="Permisos, RUC, BASC, pólizas. Lo general lo ven todos los clientes en su portal; lo específico, solo ese cliente." pendiente={documentos.generales.length === 0 ? "sin documentos" : undefined}>
           <DocumentosAdmin empresas={empresas.filter((e) => e.activo).map((e) => ({ id: e.id, nombre: e.nombre }))} generales={documentos.generales.map(aDocAdmin)} porCliente={documentos.porCliente.map((c) => ({ empresa: c.empresa, documentos: c.documentos.map(aDocAdmin) }))} />
-        </Desplegable>
+        </Desplegable>}
 
-        <Desplegable titulo="Registrar cliente o puesto" detalle="Alta de un cliente nuevo con su primer puesto, o de un puesto para un cliente existente.">
+        {editable && <Desplegable titulo="Registrar cliente o puesto" detalle="Alta de un cliente nuevo con su primer puesto, o de un puesto para un cliente existente.">
           <FormularioCliente empresas={empresas.filter((empresa) => empresa.activo).map((empresa) => ({ id: empresa.id, nombre: empresa.nombre }))} />
-        </Desplegable>
+        </Desplegable>}
 
         <nav className="mt-5 flex gap-2 overflow-x-auto pb-1" aria-label="Filtros de clientes"><FiltroEnlace filtro="todos" actual={filtro} texto="Todos" /><FiltroEnlace filtro="activos" actual={filtro} texto="Activos" /><FiltroEnlace filtro="incompletos" actual={filtro} texto="Datos pendientes" /></nav>
 
@@ -116,12 +118,13 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
 
                     {faltantes.length > 0 && <p className="mt-3 rounded-xl border border-amber-500/25 bg-amber-500/8 px-3 py-2.5 text-xs text-amber-200">Información pendiente: {faltantes.join(", ")}.</p>}
 
-                    <AccionesCliente empresa={empresa} cuentas={cuentas.map((cuenta) => ({ id: cuenta.id, nombre: cuenta.nombre, activo: cuenta.activo }))} />
+                    <AccionesCliente empresa={empresa} cuentas={cuentas.map((cuenta) => ({ id: cuenta.id, nombre: cuenta.nombre, activo: cuenta.activo }))} soloLectura={!editable} />
 
                     <ServiciosCliente
                       empresa={{ id: empresa.id, nombre: empresa.nombre, activo: empresa.activo }}
                       puestos={servicios.map((puesto) => ({ id: puesto.id, codigo: puesto.codigo, nombre: puesto.nombre, direccion: puesto.direccion, tipo_servicio: puesto.tipo_servicio, armado: puesto.armado, origen: puesto.origen, destino: puesto.destino, lat: puesto.lat, lng: puesto.lng, activo: puesto.activo, contactos: puesto.contactos_puesto ?? [] }))}
                       guardias={guardias}
+                      soloLectura={!editable}
                     />
 
                     <Link href={`/portal?empresa=${empresa.id}`} className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#087ff0] to-[#02b9e8] px-4 text-sm font-semibold text-white shadow-lg shadow-blue-950/30">Ver portal del cliente <IconoFlecha className="h-4 w-4" /></Link>

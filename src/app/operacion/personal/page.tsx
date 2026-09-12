@@ -2,13 +2,14 @@ import Link from "next/link";
 import { Marca, Pulso } from "@/app/componentes/marca";
 import { IconoFlecha, IconoPersona, IconoTurno } from "@/app/componentes/iconos";
 import { ahoraConDesfase, exigirPerfil, uno } from "@/lib/sesion";
+import { esLector } from "@/lib/roles";
 import { FormularioAgente } from "./formulario-agente";
 
 export const metadata = { title: "Agentes de seguridad — SOTERSA" };
 export const dynamic = "force-dynamic";
 
 export default async function PaginaPersonal() {
-  const { supabase, perfil } = await exigirPerfil(["admin", "supervisor"]);
+  const { supabase, perfil } = await exigirPerfil(["admin", "supervisor", "operativo"]);
   const desde = ahoraConDesfase(-12);
   const hasta = ahoraConDesfase(16);
 
@@ -28,7 +29,7 @@ export default async function PaginaPersonal() {
     <main className="min-h-dvh bg-[#020b18] text-white">
       <div className="mx-auto min-h-dvh w-full max-w-[1280px] bg-[radial-gradient(circle_at_50%_-5%,rgba(0,128,255,0.14),transparent_34%),linear-gradient(180deg,#020b18,#031226_55%,#020b18)] px-4 pb-10 pt-[max(1rem,env(safe-area-inset-top))] lg:px-8">
         <header className="flex items-center justify-between gap-4"><Marca tamano="panel" /><span className="flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300"><Pulso /> En línea</span></header>
-        <Link href={perfil.rol === "admin" ? "/admin" : "/supervisor"} className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-[#0788ff]"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> Volver al panel</Link>
+        <Link href={esLector(perfil.rol) ? "/admin" : "/supervisor"} className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-[#0788ff]"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> Volver al panel</Link>
 
         <section className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="flex items-center gap-2 text-base font-medium text-[#0788ff]"><IconoPersona className="h-6 w-6" /> Gestión operativa</p><h1 className="mt-2 text-3xl font-bold">Agentes de seguridad</h1><p className="mt-1 text-sm text-slate-400">Toca un agente para abrir su ficha: datos, plaza, acceso y actividad.</p></div>{perfil.rol === "admin" && <Link href="/operacion/turnos" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#0788ff]/15 px-4 text-sm font-semibold text-[#65c8ff]"><IconoTurno className="h-5 w-5" /> Programar turno</Link>}</section>
 

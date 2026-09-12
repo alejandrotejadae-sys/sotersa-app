@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { exigirPerfil, fechaHoraEcuador } from "@/lib/sesion";
 import { MODULOS, MODULOS_BASICOS, TOTAL_LECCIONES } from "@/lib/formacion";
+import { esLector } from "@/lib/roles";
 import { Etiqueta, MarcoEscuela, TONO } from "../ui";
 
 export const metadata = { title: "Avance del equipo — Escuela SOTERSA" };
@@ -16,7 +17,7 @@ export const dynamic = "force-dynamic";
  * pero no cuentan para ese estado.
  */
 export default async function PaginaAvance() {
-  const { supabase, perfil } = await exigirPerfil(["admin", "supervisor"]);
+  const { supabase, perfil } = await exigirPerfil(["admin", "supervisor", "operativo"]);
 
   const [agentesR, progresoR, evaluacionesR] = await Promise.all([
     supabase.from("guardias").select("id,nombre,perfil_id,activo").eq("activo", true).not("perfil_id", "is", null).order("nombre"),
@@ -92,7 +93,7 @@ export default async function PaginaAvance() {
                 </div>
               ))}
             </div>
-            {perfil.rol === "admin" && <div className="border-t border-[#20374e] px-4 py-2 text-right"><Link href={`/operacion/personal/${f.id}`} className="text-xs font-medium text-[#8ddaff]">Ver ficha del agente →</Link></div>}
+            {esLector(perfil.rol) && <div className="border-t border-[#20374e] px-4 py-2 text-right"><Link href={`/operacion/personal/${f.id}`} className="text-xs font-medium text-[#8ddaff]">Ver ficha del agente →</Link></div>}
           </details>
         ))}
       </section>

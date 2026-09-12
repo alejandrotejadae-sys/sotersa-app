@@ -7,7 +7,7 @@ export const metadata = { title: "Abrir turno — SOTERSA" };
 export const dynamic = "force-dynamic";
 
 export default async function PaginaApertura() {
-  const { supabase, user } = await exigirPerfil(["guardia", "admin"]);
+  const { supabase, user } = await exigirPerfil(["guardia", "admin", "operativo"]);
 
   const { data: guardia } = await supabase
     .from("guardias")

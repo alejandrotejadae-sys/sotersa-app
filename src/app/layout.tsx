@@ -60,7 +60,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       .select("rol")
       .eq("id", user.id)
       .maybeSingle();
-    esAdmin = perfil?.rol === "admin";
+    esAdmin = perfil?.rol === "admin" || perfil?.rol === "operativo";
   }
 
   return (

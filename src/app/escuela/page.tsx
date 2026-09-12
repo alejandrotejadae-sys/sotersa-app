@@ -3,6 +3,7 @@ import { IconoFlecha, IconoLibro } from "@/app/componentes/iconos";
 import { exigirPerfil } from "@/lib/sesion";
 import { GRUPOS, MODULOS, MODULOS_BASICOS, TOTAL_LECCIONES } from "@/lib/formacion";
 import { avanceDe, resumenModulo } from "./datos";
+import { esLector } from "@/lib/roles";
 import { Barra, Etiqueta, MarcoEscuela, TONO } from "./ui";
 
 export const metadata = { title: "Escuela de Formación — SOTERSA" };
@@ -14,12 +15,12 @@ export const dynamic = "force-dynamic";
  * se vuelve y si el admin ve el resumen del equipo.
  */
 export default async function PaginaEscuela() {
-  const { supabase, user, perfil } = await exigirPerfil(["guardia", "supervisor", "admin", "cliente"]);
+  const { supabase, user, perfil } = await exigirPerfil(["guardia", "supervisor", "admin", "cliente", "operativo"]);
   const avance = await avanceDe(supabase, user.id);
   const hechas = avance.completadas.size;
   const aprobados = MODULOS.filter((m) => avance.evaluaciones.get(m.id)?.aprobado).length;
   const basicosCompletos = MODULOS_BASICOS.filter((m) => resumenModulo(avance, m.id).completo).length;
-  const volver = perfil.rol === "admin" ? { href: "/admin", texto: "Panel administrativo" } : perfil.rol === "supervisor" ? { href: "/supervisor", texto: "Panel de supervisión" } : { href: "/perfiles", texto: "Menú principal" };
+  const volver = esLector(perfil.rol) ? { href: "/admin", texto: "Panel administrativo" } : perfil.rol === "supervisor" ? { href: "/supervisor", texto: "Panel de supervisión" } : { href: "/perfiles", texto: "Menú principal" };
 
   return (
     <MarcoEscuela volver={volver}>
@@ -74,7 +75,7 @@ export default async function PaginaEscuela() {
         </section>
       ))}
 
-      {(perfil.rol === "admin" || perfil.rol === "supervisor") && (
+      {(esLector(perfil.rol) || perfil.rol === "supervisor") && (
         <Link href="/escuela/avance" className="mt-6 flex items-center justify-between rounded-2xl border border-[#27425e] bg-[#041225] px-4 py-4 text-sm"><span><span className="block font-semibold">Avance del equipo</span><span className="text-slate-400">Quién completó qué, y con qué puntaje.</span></span><IconoFlecha className="h-5 w-5 text-[#0788ff]" /></Link>
       )}
 

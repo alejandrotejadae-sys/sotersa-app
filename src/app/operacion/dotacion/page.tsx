@@ -7,6 +7,7 @@ import {
 } from "@/app/componentes/iconos";
 import { exigirPerfil } from "@/lib/sesion";
 import { servicio } from "@/lib/servicios";
+import { puedeEditar } from "@/lib/roles";
 import { Asignador } from "./asignador";
 import { alternarRelevo, liberarAgente } from "./acciones";
 
@@ -23,7 +24,8 @@ function plazasDe(tipoServicio: string | null) {
 }
 
 export default async function PaginaDotacion() {
-  const { supabase } = await exigirPerfil(["admin"]);
+  const { supabase, perfil } = await exigirPerfil(["admin", "operativo"]);
+  const editable = puedeEditar(perfil.rol);
 
   const [empresasR, puestosR, guardiasR] = await Promise.all([
     supabase
@@ -115,16 +117,20 @@ export default async function PaginaDotacion() {
             <ul className="mt-3 flex flex-wrap gap-2">
               {sinPlaza.map((g) => (
                 <li key={g.id}>
-                  <form action={alternarRelevo}>
-                    <input type="hidden" name="guardia_id" value={g.id} />
-                    <input type="hidden" name="activar" value="1" />
-                    <button className="rounded-full border border-amber-400/40 bg-[#041225] px-3 py-1.5 text-xs text-amber-100">
-                      {g.nombre}
-                      <span className="ml-2 text-amber-300">
-                        marcar relevo
-                      </span>
-                    </button>
-                  </form>
+                  {editable ? (
+                    <form action={alternarRelevo}>
+                      <input type="hidden" name="guardia_id" value={g.id} />
+                      <input type="hidden" name="activar" value="1" />
+                      <button className="rounded-full border border-amber-400/40 bg-[#041225] px-3 py-1.5 text-xs text-amber-100">
+                        {g.nombre}
+                        <span className="ml-2 text-amber-300">
+                          marcar relevo
+                        </span>
+                      </button>
+                    </form>
+                  ) : (
+                    <span className="rounded-full border border-amber-400/40 bg-[#041225] px-3 py-1.5 text-xs text-amber-100">{g.nombre}</span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -222,29 +228,33 @@ export default async function PaginaDotacion() {
                                     {g.cedula ?? "sin cédula"}
                                   </span>
                                 </span>
-                                <form action={liberarAgente}>
-                                  <input
-                                    type="hidden"
-                                    name="guardia_id"
-                                    value={g.id}
-                                  />
-                                  <button className="rounded-full border border-[#27425e] px-3 py-1.5 text-xs text-slate-400">
-                                    Liberar
-                                  </button>
-                                </form>
+                                {editable && (
+                                  <form action={liberarAgente}>
+                                    <input
+                                      type="hidden"
+                                      name="guardia_id"
+                                      value={g.id}
+                                    />
+                                    <button className="rounded-full border border-[#27425e] px-3 py-1.5 text-xs text-slate-400">
+                                      Liberar
+                                    </button>
+                                  </form>
+                                )}
                               </li>
                             ))}
                           </ul>
                         )}
 
-                        <Asignador
-                          puestoId={puesto.id}
-                          disponibles={disponibles.map((g) => ({
-                            id: g.id,
-                            nombre: g.nombre,
-                            es_relevo: g.es_relevo,
-                          }))}
-                        />
+                        {editable && (
+                          <Asignador
+                            puestoId={puesto.id}
+                            disponibles={disponibles.map((g) => ({
+                              id: g.id,
+                              nombre: g.nombre,
+                              es_relevo: g.es_relevo,
+                            }))}
+                          />
+                        )}
                       </article>
                     );
                   })}
@@ -271,13 +281,15 @@ export default async function PaginaDotacion() {
                   <span className="min-w-0 flex-1 truncate text-sm font-medium">
                     {g.nombre}
                   </span>
-                  <form action={alternarRelevo}>
-                    <input type="hidden" name="guardia_id" value={g.id} />
-                    <input type="hidden" name="activar" value="0" />
-                    <button className="rounded-full border border-[#27425e] px-3 py-1.5 text-xs text-slate-400">
-                      Ya no es relevo
-                    </button>
-                  </form>
+                  {editable && (
+                    <form action={alternarRelevo}>
+                      <input type="hidden" name="guardia_id" value={g.id} />
+                      <input type="hidden" name="activar" value="0" />
+                      <button className="rounded-full border border-[#27425e] px-3 py-1.5 text-xs text-slate-400">
+                        Ya no es relevo
+                      </button>
+                    </form>
+                  )}
                 </li>
               ))}
             </ul>

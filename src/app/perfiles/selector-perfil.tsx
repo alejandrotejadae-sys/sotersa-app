@@ -30,6 +30,7 @@ const visibles: Record<RolUsuario, Perfil[]> = {
   supervisor: ["supervisor", "escuela"],
   cliente: ["cliente_agentes", "escuela", "cliente_custodia", "cliente_documentos", "cliente"],
   admin: ["central", "supervisor", "guardia", "custodia", "cliente", "escuela"],
+  operativo: ["central", "supervisor", "guardia", "custodia", "cliente", "escuela"],
 };
 
 const destinos: Record<Perfil, string> = { cliente: "/portal", cliente_agentes: "/portal/agentes", cliente_custodia: "/portal/custodia", cliente_documentos: "/portal/documentos", guardia: "/guardia?desde=perfiles", custodia: "/guardia/custodia", supervisor: "/supervisor", central: "/admin", escuela: "/escuela" };

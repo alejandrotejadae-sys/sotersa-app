@@ -18,7 +18,7 @@ export default async function PaginaModulo({ params }: { params: Promise<{ modul
   const m = modulo(moduloId);
   if (!m) notFound();
 
-  const { supabase, user, perfil } = await exigirPerfil(["guardia", "supervisor", "admin", "cliente"]);
+  const { supabase, user, perfil } = await exigirPerfil(["guardia", "supervisor", "admin", "cliente", "operativo"]);
   const avance = await avanceDe(supabase, user.id);
   const r = resumenModulo(avance, m.id);
   const t = TONO[m.color];

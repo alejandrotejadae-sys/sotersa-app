@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 export default async function PaginaConsentimiento() {
   const { supabase, user, perfil } = await exigirPerfil(
-    ["guardia", "supervisor", "admin", "cliente"],
+    ["guardia", "supervisor", "admin", "cliente", "operativo"],
     { permitirSinConsentimiento: true },
   );
 

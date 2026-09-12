@@ -36,7 +36,7 @@ export default async function PaginaDetalleCustodia({ params }: Props) {
   const { id } = await params;
   if (!UUID.test(id)) notFound();
 
-  const { supabase } = await exigirPerfil(["admin", "supervisor"]);
+  const { supabase } = await exigirPerfil(["admin", "supervisor", "operativo"]);
   const { data: puesto } = await supabase
     .from("puestos")
     .select("id,codigo,nombre,activo,armado,origen,destino,origen_lat,origen_lng,destino_lat,destino_lng,empresas_cliente(nombre)")

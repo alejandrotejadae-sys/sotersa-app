@@ -15,7 +15,7 @@ export const metadata = { title: "Supervisión — SOTERSA" };
 export const dynamic = "force-dynamic";
 
 export default async function PaginaSupervisor() {
-  const { supabase, perfil } = await exigirPerfil(["supervisor", "admin"]);
+  const { supabase, perfil } = await exigirPerfil(["supervisor", "admin", "operativo"]);
   const desde = ahoraConDesfase(-24);
   const hasta = ahoraConDesfase(16);
 

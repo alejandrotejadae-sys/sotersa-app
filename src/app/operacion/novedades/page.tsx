@@ -3,6 +3,7 @@ import { Marca, Pulso } from "@/app/componentes/marca";
 import { IconoAlerta, IconoEscudoOk, IconoFlecha, IconoLista } from "@/app/componentes/iconos";
 import { validarNovedad } from "@/app/supervisor/acciones";
 import { exigirPerfil, fechaHoraEcuador, uno } from "@/lib/sesion";
+import { esLector } from "@/lib/roles";
 import { firmarEvidencias } from "@/lib/evidencias";
 
 export const metadata = { title: "Novedades y alertas — SOTERSA" };
@@ -15,7 +16,7 @@ export default async function PaginaNovedades({
 }: {
   searchParams: Promise<{ filtro?: string }>;
 }) {
-  const { supabase, perfil } = await exigirPerfil(["admin", "supervisor"]);
+  const { supabase, perfil } = await exigirPerfil(["admin", "supervisor", "operativo"]);
   const params = await searchParams;
   const filtro: Filtro = ["pendientes", "emergencias", "resueltas"].includes(params.filtro ?? "")
     ? (params.filtro as Filtro)
@@ -49,7 +50,7 @@ export default async function PaginaNovedades({
           <span className="flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300"><Pulso /> En línea</span>
         </header>
 
-        <Link href={perfil.rol === "admin" ? "/admin" : "/supervisor"} className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-[#0788ff]"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> Volver al panel</Link>
+        <Link href={esLector(perfil.rol) ? "/admin" : "/supervisor"} className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-[#0788ff]"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> Volver al panel</Link>
 
         <section className="mt-5">
           <p className="flex items-center gap-2 text-base font-medium text-[#0788ff]"><IconoAlerta className="h-6 w-6" /> Central de seguimiento</p>
@@ -107,7 +108,7 @@ export default async function PaginaNovedades({
                     {novedad.nota_supervisor && <p className="mt-3 rounded-xl border border-[#0788ff]/20 bg-[#0788ff]/8 px-3 py-3 text-sm text-[#b9e6ff]"><strong>Nota de supervisión:</strong> {novedad.nota_supervisor}</p>}
                     {novedad.foto_url && evidencias.get(novedad.foto_url) && <a href={evidencias.get(novedad.foto_url)} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-[#49b6ff]">Ver evidencia fotográfica <IconoFlecha className="h-4 w-4" /></a>}
 
-                    {pendiente && (
+                    {pendiente && perfil.rol !== "operativo" && (
                       <form action={validarNovedad} className="mt-4 border-t border-[#20374e] pt-4">
                         <input type="hidden" name="id" value={novedad.id} />
                         <label className="text-xs font-medium text-slate-300" htmlFor={`nota-${novedad.id}`}>Observación de supervisión</label>

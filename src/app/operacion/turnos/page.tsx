@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Marca, Pulso } from "@/app/componentes/marca";
 import { IconoAlerta, IconoEscudoOk, IconoFlecha, IconoPersona, IconoTurno } from "@/app/componentes/iconos";
 import { exigirPerfil, fechaHoraEcuador, horaEcuador, uno } from "@/lib/sesion";
+import { esLector } from "@/lib/roles";
 import { FormularioTurno } from "./formulario-turno";
 import { FormularioCuadrante } from "./formulario-cuadrante";
 
@@ -9,7 +10,7 @@ export const metadata = { title: "Turnos y asistencia — SOTERSA" };
 export const dynamic = "force-dynamic";
 
 export default async function PaginaTurnos() {
-  const { supabase, perfil } = await exigirPerfil(["admin", "supervisor"]);
+  const { supabase, perfil } = await exigirPerfil(["admin", "supervisor", "operativo"]);
   const hoy = fechaEcuador();
   const inicioHoy = new Date(`${hoy}T00:00:00-05:00`);
   const finHoy = new Date(inicioHoy.getTime() + 24 * 60 * 60 * 1000);
@@ -33,7 +34,7 @@ export default async function PaginaTurnos() {
   return (
     <main className="min-h-dvh bg-[#020b18] text-white"><div className="mx-auto min-h-dvh w-full max-w-[1280px] bg-[radial-gradient(circle_at_50%_-5%,rgba(0,128,255,0.14),transparent_34%),linear-gradient(180deg,#020b18,#031226_55%,#020b18)] px-4 pb-10 pt-[max(1rem,env(safe-area-inset-top))] lg:px-8">
       <header className="flex items-center justify-between gap-4"><Marca tamano="panel" /><span className="flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300"><Pulso /> En línea</span></header>
-      <Link href={perfil.rol === "admin" ? "/admin" : "/supervisor"} className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-[#0788ff]"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> Volver al panel</Link>
+      <Link href={esLector(perfil.rol) ? "/admin" : "/supervisor"} className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-[#0788ff]"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> Volver al panel</Link>
 
       <section className="mt-5"><p className="flex items-center gap-2 text-base font-medium text-[#0788ff]"><IconoTurno className="h-6 w-6" /> Gestión operativa</p><h1 className="mt-2 text-3xl font-bold lg:text-4xl">Turnos y asistencia</h1><p className="mt-1 text-sm text-slate-400">Programación, cobertura y aperturas de puesto en tiempo real.</p></section>
 

@@ -35,7 +35,7 @@ export type GuardiaResumen = { id: string; nombre: string; puesto_habitual_id: s
  * desde el puesto. Para el admin es mas natural: "a Citimed le pongo a
  * fulano" antes que buscar P-01 en una lista de todos los puestos.
  */
-export function ServiciosCliente({ empresa, puestos, guardias }: { empresa: { id: string; nombre: string; activo: boolean }; puestos: PuestoCliente[]; guardias: GuardiaResumen[] }) {
+export function ServiciosCliente({ empresa, puestos, guardias, soloLectura = false }: { empresa: { id: string; nombre: string; activo: boolean }; puestos: PuestoCliente[]; guardias: GuardiaResumen[]; soloLectura?: boolean }) {
   const [agregando, setAgregando] = useState(false);
   const disponibles = guardias.filter((g) => g.es_relevo || !g.puesto_habitual_id);
 
@@ -43,7 +43,7 @@ export function ServiciosCliente({ empresa, puestos, guardias }: { empresa: { id
     <div className="mt-4 rounded-xl border border-[#27425e] bg-[#041225]">
       <div className="flex items-center justify-between gap-3 px-3 py-3">
         <p className="text-sm font-medium text-slate-200">Servicios contratados <span className="text-slate-500">· {puestos.filter((p) => p.activo).length} activo{puestos.filter((p) => p.activo).length === 1 ? "" : "s"}</span></p>
-        {empresa.activo && (
+        {empresa.activo && !soloLectura && (
           <button type="button" aria-pressed={agregando} onClick={() => setAgregando((v) => !v)} className={`min-h-9 rounded-full border px-3 text-xs font-medium ${agregando ? "border-[#0788ff] bg-[#0788ff]/15 text-[#65c8ff]" : "border-[#27425e] text-slate-300"}`}>
             {agregando ? "Cancelar" : "+ Agregar puesto"}
           </button>
@@ -57,7 +57,7 @@ export function ServiciosCliente({ empresa, puestos, guardias }: { empresa: { id
           <p className="px-3 py-4 text-sm text-slate-500">Sin puestos registrados.</p>
         ) : (
           puestos.map((puesto) => (
-            <Puesto key={puesto.id} puesto={puesto} empresaActiva={empresa.activo} asignados={guardias.filter((g) => g.puesto_habitual_id === puesto.id)} disponibles={disponibles} />
+            <Puesto key={puesto.id} puesto={puesto} empresaActiva={empresa.activo} asignados={guardias.filter((g) => g.puesto_habitual_id === puesto.id)} disponibles={disponibles} soloLectura={soloLectura} />
           ))
         )}
       </div>
@@ -65,7 +65,7 @@ export function ServiciosCliente({ empresa, puestos, guardias }: { empresa: { id
   );
 }
 
-function Puesto({ puesto, empresaActiva, asignados, disponibles }: { puesto: PuestoCliente; empresaActiva: boolean; asignados: GuardiaResumen[]; disponibles: GuardiaResumen[] }) {
+function Puesto({ puesto, empresaActiva, asignados, disponibles, soloLectura }: { puesto: PuestoCliente; empresaActiva: boolean; asignados: GuardiaResumen[]; disponibles: GuardiaResumen[]; soloLectura: boolean }) {
   const [editando, setEditando] = useState(false);
   const modalidad = servicio(puesto.tipo_servicio);
   const plazas = modalidad.fijos;
@@ -87,12 +87,12 @@ function Puesto({ puesto, empresaActiva, asignados, disponibles }: { puesto: Pue
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <span className={`h-2.5 w-2.5 rounded-full ${puesto.activo ? "bg-emerald-400" : "bg-slate-500"}`} />
-          {puesto.activo && (
+          {puesto.activo && !soloLectura && (
             <button type="button" aria-pressed={editando} onClick={() => setEditando((v) => !v)} className={`rounded-md border px-2 py-1 text-[0.65rem] ${editando ? "border-[#0788ff] text-[#65c8ff]" : "border-[#27425e] text-slate-300"}`}>
               {editando ? "Cerrar edición" : "Editar"}
             </button>
           )}
-          {(puesto.activo || empresaActiva) && (
+          {(puesto.activo || empresaActiva) && !soloLectura && (
             <form action={cambiarEstadoPuesto}>
               <input type="hidden" name="puesto_id" value={puesto.id} />
               <input type="hidden" name="activar" value={puesto.activo ? "0" : "1"} />
@@ -130,13 +130,13 @@ function Puesto({ puesto, empresaActiva, asignados, disponibles }: { puesto: Pue
                   <form action={liberarAgente} className="flex items-center gap-1 rounded-full border border-[#27425e] bg-[#07172a] py-1 pl-3 pr-1 text-xs text-slate-200">
                     <input type="hidden" name="guardia_id" value={g.id} />
                     {g.nombre}
-                    <button title="Quitar de este puesto" aria-label={`Quitar a ${g.nombre} de ${puesto.codigo}`} className="grid h-6 w-6 place-items-center rounded-full text-slate-500 hover:bg-red-500/15 hover:text-red-300">×</button>
+                    {!soloLectura && <button title="Quitar de este puesto" aria-label={`Quitar a ${g.nombre} de ${puesto.codigo}`} className="grid h-6 w-6 place-items-center rounded-full text-slate-500 hover:bg-red-500/15 hover:text-red-300">×</button>}
                   </form>
                 </li>
               ))}
             </ul>
           )}
-          <Asignador puestoId={puesto.id} disponibles={disponibles} />
+          {!soloLectura && <Asignador puestoId={puesto.id} disponibles={disponibles} />}
         </div>
       )}
     </div>

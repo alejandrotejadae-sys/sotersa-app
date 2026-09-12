@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CabeceraPanel } from "@/app/componentes/cabecera-panel";
 import { IconoFlecha, IconoPersona } from "@/app/componentes/iconos";
 import { exigirPerfil } from "@/lib/sesion";
+import { esLector } from "@/lib/roles";
 import { agentesDeEmpresa } from "./datos";
 import { Estado, Resumen, iniciales } from "./ui";
 
@@ -10,19 +11,19 @@ export const dynamic = "force-dynamic";
 
 /** Plantilla que cubre los puestos del cliente. Un admin puede verla con ?empresa=. */
 export default async function PaginaAgentesCliente({ searchParams }: { searchParams: Promise<{ empresa?: string }> }) {
-  const { perfil } = await exigirPerfil(["cliente", "admin"]);
+  const { perfil } = await exigirPerfil(["cliente", "admin", "operativo"]);
   const params = await searchParams;
-  const empresaId = perfil.empresa_cliente_id ?? (perfil.rol === "admin" && /^[0-9a-f-]{36}$/i.test(params.empresa ?? "") ? params.empresa! : null);
+  const empresaId = perfil.empresa_cliente_id ?? (esLector(perfil.rol) && /^[0-9a-f-]{36}$/i.test(params.empresa ?? "") ? params.empresa! : null);
 
   const { agentes, puestos } = empresaId ? await agentesDeEmpresa(empresaId) : { agentes: [], puestos: [] };
   const enPuesto = agentes.filter((a) => a.estado === "en_puesto").length;
-  const sufijo = perfil.rol === "admin" && empresaId ? `?empresa=${empresaId}` : "";
+  const sufijo = esLector(perfil.rol) && empresaId ? `?empresa=${empresaId}` : "";
 
   return (
     <div className="min-h-dvh pb-12">
       <CabeceraPanel rol="cliente" nombre={perfil.nombre} />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-6">
-        <Link href={perfil.rol === "admin" ? "/operacion/clientes" : "/perfiles"} className="inline-flex items-center gap-1 self-start text-sm font-medium text-azul-400"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> {perfil.rol === "admin" ? "Volver a clientes" : "Menú principal"}</Link>
+        <Link href={esLector(perfil.rol) ? "/operacion/clientes" : "/perfiles"} className="inline-flex items-center gap-1 self-start text-sm font-medium text-azul-400"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> {esLector(perfil.rol) ? "Volver a clientes" : "Menú principal"}</Link>
 
         <section>
           <p className="flex items-center gap-2 text-sm font-medium text-azul-400"><IconoPersona className="h-5 w-5" /> Tu servicio</p>
