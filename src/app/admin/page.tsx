@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Marca, Pulso } from "@/app/componentes/marca";
-import { IconoAlerta, IconoCamion, IconoEscudoOk, IconoLista, IconoPersona, IconoTurno } from "@/app/componentes/iconos";
+import { IconoAlerta, IconoCamion, IconoEscudoOk, IconoLista, IconoPersona, IconoTurno, IconoLibro } from "@/app/componentes/iconos";
 import { exigirPerfil } from "@/lib/sesion";
 
 export const metadata = { title: "Panel administrativo — SOTERSA" };
@@ -39,6 +39,7 @@ export default async function PaginaAdmin() {
             <Modulo href="/supervisor" titulo="Supervisión" detalle="Vista de supervisión, novedades, cobertura y control operativo." icono={<IconoAlerta className="h-7 w-7"/>}/>
             <Modulo href="/central" titulo="Panel central" detalle="Monitoreo diario de turnos, rondas, incidentes y alertas." icono={<IconoLista className="h-7 w-7"/>}/>
             <Modulo href="/operacion/usuarios" titulo="Usuarios y accesos" detalle="Credenciales, perfiles y control de acceso al sistema." icono={<IconoPersona className="h-7 w-7"/>}/>
+            <Modulo href="/escuela" titulo="Escuela de Formación Sotersa" detalle="Capacitación, procedimientos y constancias para agentes y clientes." icono={<IconoLibro className="h-7 w-7"/>}/>
           </div>
         </section>
 
