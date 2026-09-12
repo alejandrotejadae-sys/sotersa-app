@@ -11,6 +11,10 @@ export type PuntoMapa = {
   codigo: string;
   puesto: string;
   activo: boolean;
+  /** Color del pin; si no se da, azul (activo) o gris (inactivo). */
+  color?: string;
+  /** Linea extra en el tooltip (estado, agente...). */
+  detalle?: string;
 };
 
 /** Ecuador continental. Se usa cuando todavia no hay ningun puesto ubicado. */
@@ -50,10 +54,10 @@ export function MapaPuestos({ puntos, alto = "h-72" }: { puntos: PuntoMapa[]; al
           radius: 8,
           color: "#ffffff",
           weight: 2,
-          fillColor: p.activo ? "#0788ff" : "#64748b",
+          fillColor: p.color ?? (p.activo ? "#0788ff" : "#64748b"),
           fillOpacity: 0.95,
         })
-          .bindTooltip(`<strong>${escapar(p.cliente)}</strong><br>${escapar(p.codigo)} · ${escapar(p.puesto)}`, { direction: "top", offset: [0, -8] })
+          .bindTooltip(`<strong>${escapar(p.cliente)}</strong><br>${escapar(p.codigo)} · ${escapar(p.puesto)}${p.detalle ? `<br>${escapar(p.detalle)}` : ""}`, { direction: "top", offset: [0, -8] })
           .addTo(grupo);
       }
       grupo.addTo(mapa);

@@ -322,8 +322,10 @@ export async function actualizarPuesto(_: EstadoCliente, formData: FormData): Pr
   const destino = texto(formData, "puesto_destino", 200);
   const armado = formData.get("puesto_armado") === "on";
   const enlaceMaps = texto(formData, "puesto_google_maps", 500);
+  const zonaId = String(formData.get("puesto_zona_id") ?? "");
 
   if (!UUID.test(id)) return { tipo: "error", mensaje: "Puesto no identificado." };
+  if (zonaId && !UUID.test(zonaId)) return { tipo: "error", mensaje: "Zona no válida." };
   if (!esTipoServicio(tipo)) return { tipo: "error", mensaje: "Selecciona el tipo de servicio." };
   const modalidad = servicio(tipo);
   if (modalidad.requiereRuta && (!origen || !destino)) return { tipo: "error", mensaje: "Una custodia armada necesita origen y destino." };
@@ -353,6 +355,7 @@ export async function actualizarPuesto(_: EstadoCliente, formData: FormData): Pr
       armado: armado || tipo === "custodia_armada",
       origen: modalidad.requiereRuta ? origen : null,
       destino: modalidad.requiereRuta ? destino : null,
+      zona_id: zonaId || null,
       ...(coordenadas ? { lat: coordenadas.lat, lng: coordenadas.lng } : {}),
     })
     .eq("id", id);
@@ -366,5 +369,6 @@ export async function actualizarPuesto(_: EstadoCliente, formData: FormData): Pr
   revalidatePath("/operacion/rondas");
   revalidatePath("/operacion/custodias");
   revalidatePath("/guardia");
+  revalidatePath("/supervisor");
   return { tipo: "exito", mensaje: `Puesto ${codigo} actualizado.` };
 }

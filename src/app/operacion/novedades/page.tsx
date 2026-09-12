@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Marca, Pulso } from "@/app/componentes/marca";
 import { IconoAlerta, IconoEscudoOk, IconoFlecha, IconoLista } from "@/app/componentes/iconos";
-import { validarNovedad } from "@/app/supervisor/acciones";
+import { cerrarNovedad, notificarNovedad, validarNovedad } from "@/app/supervisor/acciones";
 import { exigirPerfil, fechaHoraEcuador, uno } from "@/lib/sesion";
 import { esLector } from "@/lib/roles";
 import { firmarEvidencias } from "@/lib/evidencias";
@@ -118,6 +118,12 @@ export default async function PaginaNovedades({
                           <button name="decision" value="cliente" className="min-h-11 rounded-xl bg-gradient-to-r from-[#087ff0] to-[#02b9e8] px-3 text-sm font-semibold text-white shadow-lg shadow-blue-950/30 transition active:scale-[0.98]">Validar y publicar</button>
                         </div>
                       </form>
+                    )}
+                    {perfil.rol !== "operativo" && (novedad.estado === "validada" || novedad.estado === "notificada") && (
+                      <div className="mt-4 grid gap-2 border-t border-[#20374e] pt-4 sm:grid-cols-2">
+                        {novedad.estado === "validada" && <form action={notificarNovedad}><input type="hidden" name="id" value={novedad.id} /><button className="min-h-11 w-full rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-3 text-sm font-semibold text-cyan-200 transition active:scale-[0.98]">Cliente notificado ✓</button></form>}
+                        <form action={cerrarNovedad} className={`flex gap-2 ${novedad.estado === "validada" ? "" : "sm:col-span-2"}`}><input type="hidden" name="id" value={novedad.id} /><input name="cierre" maxLength={500} placeholder="Nota de cierre (opcional)" className="min-h-11 min-w-0 flex-1 rounded-xl border border-[#27425e] bg-[#041225] px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-[#0788ff]" /><button className="min-h-11 shrink-0 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 text-sm font-semibold text-emerald-200 transition active:scale-[0.98]">Cerrar</button></form>
+                      </div>
                     )}
                   </div>
                 </article>

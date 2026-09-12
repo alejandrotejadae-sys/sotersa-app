@@ -21,6 +21,7 @@ export type PuestoCliente = {
   destino: string | null;
   lat: number | null;
   lng: number | null;
+  zona_id: string | null;
   activo: boolean;
   contactos: { id: string; tipo: string; nombre: string | null; telefono: string }[];
 };
@@ -35,7 +36,9 @@ export type GuardiaResumen = { id: string; nombre: string; puesto_habitual_id: s
  * desde el puesto. Para el admin es mas natural: "a Citimed le pongo a
  * fulano" antes que buscar P-01 en una lista de todos los puestos.
  */
-export function ServiciosCliente({ empresa, puestos, guardias, soloLectura = false }: { empresa: { id: string; nombre: string; activo: boolean }; puestos: PuestoCliente[]; guardias: GuardiaResumen[]; soloLectura?: boolean }) {
+export type ZonaResumen = { id: string; nombre: string };
+
+export function ServiciosCliente({ empresa, puestos, guardias, zonas = [], soloLectura = false }: { empresa: { id: string; nombre: string; activo: boolean }; puestos: PuestoCliente[]; guardias: GuardiaResumen[]; zonas?: ZonaResumen[]; soloLectura?: boolean }) {
   const [agregando, setAgregando] = useState(false);
   const disponibles = guardias.filter((g) => g.es_relevo || !g.puesto_habitual_id);
 
@@ -57,7 +60,7 @@ export function ServiciosCliente({ empresa, puestos, guardias, soloLectura = fal
           <p className="px-3 py-4 text-sm text-slate-500">Sin puestos registrados.</p>
         ) : (
           puestos.map((puesto) => (
-            <Puesto key={puesto.id} puesto={puesto} empresaActiva={empresa.activo} asignados={guardias.filter((g) => g.puesto_habitual_id === puesto.id)} disponibles={disponibles} soloLectura={soloLectura} />
+            <Puesto key={puesto.id} puesto={puesto} empresaActiva={empresa.activo} asignados={guardias.filter((g) => g.puesto_habitual_id === puesto.id)} disponibles={disponibles} zonas={zonas} soloLectura={soloLectura} />
           ))
         )}
       </div>
@@ -65,7 +68,7 @@ export function ServiciosCliente({ empresa, puestos, guardias, soloLectura = fal
   );
 }
 
-function Puesto({ puesto, empresaActiva, asignados, disponibles, soloLectura }: { puesto: PuestoCliente; empresaActiva: boolean; asignados: GuardiaResumen[]; disponibles: GuardiaResumen[]; soloLectura: boolean }) {
+function Puesto({ puesto, empresaActiva, asignados, disponibles, zonas, soloLectura }: { puesto: PuestoCliente; empresaActiva: boolean; asignados: GuardiaResumen[]; disponibles: GuardiaResumen[]; zonas: ZonaResumen[]; soloLectura: boolean }) {
   const [editando, setEditando] = useState(false);
   const modalidad = servicio(puesto.tipo_servicio);
   const plazas = modalidad.fijos;
@@ -113,7 +116,7 @@ function Puesto({ puesto, empresaActiva, asignados, disponibles, soloLectura }: 
         </div>
       )}
 
-      {editando && <FormularioEditarPuesto puesto={puesto} alGuardar={() => setEditando(false)} />}
+      {editando && <FormularioEditarPuesto puesto={puesto} zonas={zonas} alGuardar={() => setEditando(false)} />}
 
       {puesto.activo && (
         <div className="mt-3">
@@ -158,7 +161,7 @@ function FormularioNuevoPuesto({ empresaId, alCrear }: { empresaId: string; alCr
   );
 }
 
-function FormularioEditarPuesto({ puesto, alGuardar }: { puesto: PuestoCliente; alGuardar: () => void }) {
+function FormularioEditarPuesto({ puesto, zonas, alGuardar }: { puesto: PuestoCliente; zonas: ZonaResumen[]; alGuardar: () => void }) {
   const [estado, accion, pendiente] = useActionState(actualizarPuesto, INICIAL);
   const [tipo, setTipo] = useState<TipoServicio>((puesto.tipo_servicio as TipoServicio) ?? "punto_24_l_d");
   const modalidad = servicio(tipo);
@@ -184,6 +187,12 @@ function FormularioEditarPuesto({ puesto, alGuardar }: { puesto: PuestoCliente; 
       )}
       <Campo etiqueta="Nombre del puesto"><input name="puesto_nombre" required maxLength={120} defaultValue={puesto.nombre} className={control} /></Campo>
       <Campo etiqueta="Dirección"><input name="puesto_direccion" maxLength={200} defaultValue={puesto.direccion ?? ""} className={control} /></Campo>
+      <Campo etiqueta="Zona de supervisión" ayuda="define qué supervisor ve este puesto">
+        <select name="puesto_zona_id" defaultValue={puesto.zona_id ?? ""} className={control}>
+          <option value="">Sin zona asignada</option>
+          {zonas.map((z) => <option key={z.id} value={z.id}>{z.nombre}</option>)}
+        </select>
+      </Campo>
       <Campo etiqueta="Ubicación Google Maps" ayuda={puesto.lat != null ? "ya tiene coordenadas · pega un enlace solo para cambiarlas" : "opcional · pega el enlace del punto"}>
         <input name="puesto_google_maps" type="url" maxLength={500} placeholder="https://maps.app.goo.gl/..." className={control} />
       </Campo>

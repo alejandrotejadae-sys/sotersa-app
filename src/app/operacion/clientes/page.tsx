@@ -24,12 +24,13 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
   const filtro: Filtro = params.filtro === "activos" || params.filtro === "incompletos" ? params.filtro : "todos";
   const desde = ahoraConDesfase(-30 * 24);
 
-  const [empresasR, puestosR, guardiasR, perfilesR, novedadesR] = await Promise.all([
+  const [empresasR, puestosR, guardiasR, perfilesR, novedadesR, zonasR] = await Promise.all([
     supabase.from("empresas_cliente").select("id,nombre,ruc,direccion,contacto_nombre,contacto_correo,contacto_telefono,activo").order("nombre"),
-    supabase.from("puestos").select("id,empresa_cliente_id,codigo,nombre,cobertura_horas,armado,direccion,tipo_servicio,origen,destino,lat,lng,activo,contactos_puesto(id,tipo,nombre,telefono)").order("codigo"),
+    supabase.from("puestos").select("id,empresa_cliente_id,codigo,nombre,cobertura_horas,armado,direccion,tipo_servicio,origen,destino,lat,lng,zona_id,activo,contactos_puesto(id,tipo,nombre,telefono)").order("codigo"),
     supabase.from("guardias").select("id,nombre,puesto_habitual_id,es_relevo").eq("activo", true).order("nombre"),
     supabase.from("perfiles").select("id,nombre,empresa_cliente_id,activo").eq("rol", "cliente"),
     supabase.from("novedades").select("id,puesto_id,estado,severidad").gte("hora_captura", desde),
+    supabase.from("zonas").select("id,nombre").order("nombre"),
   ]);
 
   const empresas = empresasR.data ?? [];
@@ -122,8 +123,9 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
 
                     <ServiciosCliente
                       empresa={{ id: empresa.id, nombre: empresa.nombre, activo: empresa.activo }}
-                      puestos={servicios.map((puesto) => ({ id: puesto.id, codigo: puesto.codigo, nombre: puesto.nombre, direccion: puesto.direccion, tipo_servicio: puesto.tipo_servicio, armado: puesto.armado, origen: puesto.origen, destino: puesto.destino, lat: puesto.lat, lng: puesto.lng, activo: puesto.activo, contactos: puesto.contactos_puesto ?? [] }))}
+                      puestos={servicios.map((puesto) => ({ id: puesto.id, codigo: puesto.codigo, nombre: puesto.nombre, direccion: puesto.direccion, tipo_servicio: puesto.tipo_servicio, armado: puesto.armado, origen: puesto.origen, destino: puesto.destino, lat: puesto.lat, lng: puesto.lng, zona_id: puesto.zona_id, activo: puesto.activo, contactos: puesto.contactos_puesto ?? [] }))}
                       guardias={guardias}
+                      zonas={zonasR.data ?? []}
                       soloLectura={!editable}
                     />
 
