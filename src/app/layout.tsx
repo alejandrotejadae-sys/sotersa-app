@@ -6,6 +6,8 @@ import { SincronizadorOperativo } from "@/app/componentes/sincronizador-operativ
 import { NotificadorOperativo } from "@/app/componentes/notificador-operativo";
 import { RegistroPwa } from "@/app/componentes/registro-pwa";
 import { BotonPanel } from "@/app/componentes/boton-panel";
+import { BarraVistaComo } from "@/app/componentes/barra-vista-como";
+import { leerVistaComo } from "@/lib/vista-como";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import "./globals.css";
 
@@ -53,6 +55,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const vista = await leerVistaComo();
   let esAdmin = false;
   if (user) {
     const { data: perfil } = await supabase
@@ -69,13 +72,14 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-gris-900 text-gris-50">
+        {vista && <BarraVistaComo vista={vista} />}
         <PantallaApertura />
         <PantallaBienvenida />
         <SincronizadorOperativo />
         <NotificadorOperativo />
         <RegistroPwa />
         {children}
-        {esAdmin && <BotonPanel />}
+        {esAdmin && !vista && <BotonPanel />}
       </body>
     </html>
   );

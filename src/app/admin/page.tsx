@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Marca, Pulso } from "@/app/componentes/marca";
 import { IconoAlerta, IconoCamion, IconoEscudoOk, IconoLista, IconoPersona, IconoTurno, IconoLibro } from "@/app/componentes/iconos";
 import { exigirPerfil } from "@/lib/sesion";
+import { puedeEditar } from "@/lib/roles";
 import { BotonSalir } from "@/app/guardia/perfil/boton-salir";
 
 export const metadata = { title: "Panel administrativo — SOTERSA" };
@@ -20,6 +21,7 @@ export default async function PaginaAdmin() {
   ]);
 
   const nombre = perfil.nombre.split(" ")[0];
+  const administra = puedeEditar(perfil.rol);
 
   return (
     <main className="min-h-dvh bg-[#020b18] text-white">
@@ -41,12 +43,11 @@ export default async function PaginaAdmin() {
             <Modulo href="/central" titulo="Panel central" detalle="Monitoreo diario de turnos, rondas, incidentes y alertas." icono={<IconoLista className="h-7 w-7"/>}/>
             <Modulo href="/operacion/usuarios" titulo="Usuarios y accesos" detalle="Credenciales, perfiles y control de acceso al sistema." icono={<IconoPersona className="h-7 w-7"/>}/>
             <Modulo href="/escuela" titulo="Escuela de Formación Sotersa" detalle="Capacitación, procedimientos y constancias para agentes y clientes." icono={<IconoLibro className="h-7 w-7"/>}/>
+            {administra && <Modulo href="/admin/ver-como" titulo="Ver como" detalle="Entra a la app como cliente, supervisor, custodia, operativo o agente y mira lo que ven ellos." icono={<IconoPersona className="h-7 w-7"/>}/>}
           </div>
         </section>
 
         <section className="mt-7 rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4 lg:p-5"><h2 className="text-lg font-semibold">Operación y configuración</h2><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6"><Acceso href="/operacion/turnos" texto="Turnos" icono={<IconoTurno className="h-5 w-5"/>}/><Acceso href="/operacion/rondas" texto="Rondas" icono={<IconoEscudoOk className="h-5 w-5"/>}/><Acceso href="/operacion/novedades" texto="Novedades" icono={<IconoAlerta className="h-5 w-5"/>}/><Acceso href="/operacion/dotacion" texto="Dotación" icono={<IconoEscudoOk className="h-5 w-5"/>}/><Acceso href="/operacion/reportes" texto="Reportes" icono={<IconoLista className="h-5 w-5"/>}/><Acceso href="/configuracion/dispositivo" texto="Configuración" icono={<IconoEscudoOk className="h-5 w-5"/>}/></div></section>
-
-        <section className="mt-5 rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4 lg:p-5"><h2 className="text-lg font-semibold">Ver la app como la ven ellos</h2><p className="mt-1 text-sm text-slate-500">Las mismas pantallas que abre cada rol, para revisar lo que ven.</p><div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3"><Acceso href="/portal" texto="Portal del cliente" icono={<IconoEscudoOk className="h-5 w-5"/>}/><Acceso href="/guardia?desde=perfiles" texto="App del agente" icono={<IconoTurno className="h-5 w-5"/>}/><Acceso href="/guardia/custodia" texto="Custodia armada" icono={<IconoCamion className="h-5 w-5"/>}/></div></section>
       </div>
     </main>
   );
