@@ -359,3 +359,68 @@ function generarClave() {
   crypto.getRandomValues(numeros);
   return `Sot!${[...numeros].map((n) => alfabeto[n % alfabeto.length]).join("")}`;
 }
+
+/**
+ * Edita un puesto existente: modalidad, nombre, direccion, ruta y arma.
+ *
+ * Cambiar la modalidad cambia las plazas (un 24 h son dos fijos, un 12 h uno).
+ * Si el puesto queda con mas agentes que plazas no se bloquea: dotacion lo
+ * muestra en rojo y el admin decide a quien mueve. Bloquear aqui obligaria a
+ * liberar gente antes de poder corregir un dato.
+ */
+export async function actualizarPuesto(_: EstadoCliente, formData: FormData): Promise<EstadoCliente> {
+  const id = String(formData.get("puesto_id") ?? "");
+  const codigo = texto(formData, "puesto_codigo", 16).toUpperCase();
+  const nombre = texto(formData, "puesto_nombre", 120);
+  const direccion = texto(formData, "puesto_direccion", 200);
+  const tipo = String(formData.get("puesto_tipo_servicio") ?? "");
+  const origen = texto(formData, "puesto_origen", 200);
+  const destino = texto(formData, "puesto_destino", 200);
+  const armado = formData.get("puesto_armado") === "on";
+  const enlaceMaps = texto(formData, "puesto_google_maps", 500);
+
+  if (!UUID.test(id)) return { tipo: "error", mensaje: "Puesto no identificado." };
+  if (!esTipoServicio(tipo)) return { tipo: "error", mensaje: "Selecciona el tipo de servicio." };
+  const modalidad = servicio(tipo);
+  if (modalidad.requiereRuta && (!origen || !destino)) return { tipo: "error", mensaje: "Una custodia armada necesita origen y destino." };
+  if (!/^[A-Z0-9-]{2,16}$/.test(codigo)) return { tipo: "error", mensaje: "El código del puesto usa letras, números y guiones (ej. P-01)." };
+  if (nombre.length < 3) return { tipo: "error", mensaje: "El nombre del puesto es obligatorio." };
+
+  const { supabase } = await exigirPerfil(["admin"]);
+  const { data: puesto } = await supabase.from("puestos").select("id,empresa_cliente_id").eq("id", id).maybeSingle();
+  if (!puesto) return { tipo: "error", mensaje: "Ese puesto ya no existe." };
+
+  // Las coordenadas solo se tocan si se pega un enlace nuevo. Un campo vacio
+  // significa "dejar las que estan", no "borrarlas".
+  let coordenadas: { lat: number; lng: number } | null = null;
+  if (enlaceMaps) {
+    coordenadas = await coordenadasGoogleMaps(enlaceMaps);
+    if (!coordenadas) return { tipo: "error", mensaje: "No pude obtener las coordenadas del enlace de Google Maps." };
+  }
+
+  const { error } = await supabase
+    .from("puestos")
+    .update({
+      codigo,
+      nombre,
+      direccion: direccion || null,
+      cobertura_horas: modalidad.horas,
+      tipo_servicio: tipo,
+      armado: armado || tipo === "custodia_armada",
+      origen: modalidad.requiereRuta ? origen : null,
+      destino: modalidad.requiereRuta ? destino : null,
+      ...(coordenadas ? { lat: coordenadas.lat, lng: coordenadas.lng } : {}),
+    })
+    .eq("id", id);
+
+  if (error) {
+    if (error.code === "23505") return { tipo: "error", mensaje: `Ese cliente ya tiene otro puesto ${codigo}.` };
+    return { tipo: "error", mensaje: "No fue posible guardar el puesto." };
+  }
+
+  refrescar();
+  revalidatePath("/operacion/rondas");
+  revalidatePath("/operacion/custodias");
+  revalidatePath("/guardia");
+  return { tipo: "exito", mensaje: `Puesto ${codigo} actualizado.` };
+}

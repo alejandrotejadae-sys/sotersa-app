@@ -28,7 +28,7 @@ function Aviso({ estado }: { estado: EstadoCliente }) {
   );
 }
 
-function CamposPuesto({ requerido }: { requerido?: boolean }) {
+export function CamposPuesto({ requerido }: { requerido?: boolean }) {
   const [tipo, setTipo] = useState<TipoServicio>("punto_24_l_d");
   const modalidad = servicio(tipo);
 
