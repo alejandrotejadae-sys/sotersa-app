@@ -71,7 +71,6 @@ export default async function PaginaUsuario({ params }: { params: Promise<{ id: 
           {perfil.rol === "cliente" && perfil.empresa_cliente_id && <Dato etiqueta="Portal" valor="Ver como el cliente" enlace={`/portal?empresa=${perfil.empresa_cliente_id}`} />}
           {perfil.rol === "admin" && <Dato etiqueta="Alcance" valor="Acceso completo" />}
           {perfil.rol === "operativo" && <Dato etiqueta="Alcance" valor="Ve todo; no edita ni restablece claves" />}
-          {perfil.rol === "operativo" && <Dato etiqueta="Alcance" valor="Ve todo; no edita ni restablece claves" />}
         </section>
 
         {!editable && <p className="mt-5 rounded-xl border border-[#27425e] bg-[#041225] px-4 py-3 text-sm text-slate-400">Vista de consulta. Editar datos, restablecer claves y bloquear cuentas es exclusivo del administrador.</p>}
