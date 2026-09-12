@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Marca, Pulso } from "@/app/componentes/marca";
 import { IconoAlerta, IconoCamion, IconoEscudoOk, IconoLista, IconoPersona, IconoTurno, IconoLibro } from "@/app/componentes/iconos";
 import { exigirPerfil } from "@/lib/sesion";
+import { BotonSalir } from "@/app/guardia/perfil/boton-salir";
 
 export const metadata = { title: "Panel administrativo — SOTERSA" };
 export const dynamic = "force-dynamic";
@@ -23,7 +24,7 @@ export default async function PaginaAdmin() {
   return (
     <main className="min-h-dvh bg-[#020b18] text-white">
       <div className="mx-auto min-h-dvh w-full max-w-[1440px] bg-[radial-gradient(circle_at_50%_-5%,rgba(0,128,255,0.14),transparent_34%),linear-gradient(180deg,#020b18,#031226_55%,#020b18)] px-4 pb-10 pt-[max(1rem,env(safe-area-inset-top))] lg:px-8">
-        <header className="flex items-center justify-between gap-4"><Marca tamano="panel" /><div className="flex items-center gap-2"><span className="flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300"><Pulso /> En línea</span><Link href="/mi-perfil" className="grid h-10 w-10 place-items-center rounded-full border border-[#27425e] bg-[#07172a] text-[#49b6ff]" aria-label="Mi perfil"><IconoPersona className="h-5 w-5"/></Link></div></header>
+        <header className="flex items-center justify-between gap-4"><Marca tamano="panel" /><div className="flex items-center gap-2"><span className="flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300"><Pulso /> En línea</span><Link href="/mi-perfil" className="grid h-10 w-10 place-items-center rounded-full border border-[#27425e] bg-[#07172a] text-[#49b6ff]" aria-label="Mi perfil"><IconoPersona className="h-5 w-5"/></Link><div className="w-32 [&_button]:min-h-10 [&_button]:px-3 [&_button]:text-xs"><BotonSalir destino="/acceso" /></div></div></header>
 
         <section className="mt-7"><p className="flex items-center gap-2 text-base font-medium text-[#0788ff]"><IconoEscudoOk className="h-6 w-6" /> Panel administrativo</p><h1 className="mt-2 text-3xl font-bold lg:text-4xl">Buenos días, {nombre}</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Desde aquí administras toda la plataforma y entras a cada área para revisar o modificar su configuración.</p></section>
 
@@ -44,6 +45,8 @@ export default async function PaginaAdmin() {
         </section>
 
         <section className="mt-7 rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4 lg:p-5"><h2 className="text-lg font-semibold">Operación y configuración</h2><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6"><Acceso href="/operacion/turnos" texto="Turnos" icono={<IconoTurno className="h-5 w-5"/>}/><Acceso href="/operacion/rondas" texto="Rondas" icono={<IconoEscudoOk className="h-5 w-5"/>}/><Acceso href="/operacion/novedades" texto="Novedades" icono={<IconoAlerta className="h-5 w-5"/>}/><Acceso href="/operacion/dotacion" texto="Dotación" icono={<IconoEscudoOk className="h-5 w-5"/>}/><Acceso href="/operacion/reportes" texto="Reportes" icono={<IconoLista className="h-5 w-5"/>}/><Acceso href="/configuracion/dispositivo" texto="Configuración" icono={<IconoEscudoOk className="h-5 w-5"/>}/></div></section>
+
+        <section className="mt-5 rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4 lg:p-5"><h2 className="text-lg font-semibold">Ver la app como la ven ellos</h2><p className="mt-1 text-sm text-slate-500">Las mismas pantallas que abre cada rol, para revisar lo que ven.</p><div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3"><Acceso href="/portal" texto="Portal del cliente" icono={<IconoEscudoOk className="h-5 w-5"/>}/><Acceso href="/guardia?desde=perfiles" texto="App del agente" icono={<IconoTurno className="h-5 w-5"/>}/><Acceso href="/guardia/custodia" texto="Custodia armada" icono={<IconoCamion className="h-5 w-5"/>}/></div></section>
       </div>
     </main>
   );

@@ -10,6 +10,8 @@ export default async function PaginaConfiguracionDispositivo() {
   const supabase = await crearClienteServidor();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/acceso");
+  const { data: perfil } = await supabase.from("perfiles").select("rol").eq("id", user.id).maybeSingle();
+  const lector = perfil?.rol === "admin" || perfil?.rol === "operativo";
 
   return (
     <main className="min-h-dvh bg-[#020b18] px-4 py-6 text-white sm:px-6">
@@ -20,7 +22,7 @@ export default async function PaginaConfiguracionDispositivo() {
           <h1 className="mt-2 text-3xl font-bold">Configura este dispositivo</h1>
           <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-400">Autoriza únicamente las funciones que SOTERSA necesita para rondas, evidencia y avisos operativos.</p>
         </header>
-        <ConfiguracionDispositivo />
+        <ConfiguracionDispositivo volver={lector ? { href: "/admin", texto: "Volver al panel" } : { href: "/perfiles", texto: "Volver al menú principal" }} />
       </div>
     </main>
   );

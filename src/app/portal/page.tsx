@@ -66,7 +66,7 @@ export default async function PaginaPortal({ searchParams }: { searchParams: Pro
     <div className="min-h-dvh pb-12">
       <CabeceraPanel rol="cliente" nombre={perfil.nombre} />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-6">
-        <Link href={esLector(perfil.rol) ? "/operacion/clientes" : "/perfiles"} className="inline-flex items-center gap-1 self-start text-sm font-medium text-azul-400"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> {esLector(perfil.rol) ? "Volver a clientes" : "Menú principal"}</Link>
+        <Link href={esLector(perfil.rol) ? "/admin" : "/perfiles"} className="inline-flex items-center gap-1 self-start text-sm font-medium text-azul-400"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> {esLector(perfil.rol) ? "Panel administrativo" : "Menú principal"}</Link>
         {esLector(perfil.rol) && <SelectorEmpresa empresas={todas} actual={empresaId ?? null} />}
         <section>
           <p className="text-sm font-medium text-azul-400">Cliente</p>

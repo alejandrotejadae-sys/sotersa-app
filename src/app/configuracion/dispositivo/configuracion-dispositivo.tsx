@@ -7,7 +7,7 @@ import { crearClienteNavegador } from "@/lib/supabase/navegador";
 
 type Estado = "comprobando" | "permitido" | "denegado" | "pendiente" | "no-disponible";
 
-export function ConfiguracionDispositivo() {
+export function ConfiguracionDispositivo({ volver }: { volver: { href: string; texto: string } }) {
   const [ubicacion, setUbicacion] = useState<Estado>("comprobando");
   const [camara, setCamara] = useState<Estado>("comprobando");
   const [notificaciones, setNotificaciones] = useState<Estado>("comprobando");
@@ -105,7 +105,7 @@ export function ConfiguracionDispositivo() {
 
       {mensaje && <p role="status" className="rounded-xl border border-[#27425e] bg-[#07172a] px-4 py-3 text-sm leading-5 text-slate-300">{mensaje}</p>}
       <div className="flex flex-col gap-3 pt-3 sm:flex-row">
-        <Link href="/perfiles" className="boton-primario grid min-h-13 flex-1 place-items-center rounded-xl px-5 font-semibold text-white">Volver a los perfiles</Link>
+        <Link href={volver.href} className="boton-primario grid min-h-13 flex-1 place-items-center rounded-xl px-5 font-semibold text-white">{volver.texto}</Link>
         <Link href="/guardia?desde=perfiles" className="grid min-h-13 flex-1 place-items-center rounded-xl border border-[#27425e] bg-[#07172a] px-5 font-medium text-slate-200">Ir al panel operativo</Link>
       </div>
       <p className="pt-2 text-center text-xs leading-5 text-slate-500">Los permisos se guardan en este dispositivo y puedes revocarlos desde los ajustes del navegador o del teléfono.</p>
