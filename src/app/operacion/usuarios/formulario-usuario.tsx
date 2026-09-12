@@ -7,7 +7,7 @@ const INICIAL: EstadoAlta = { tipo: "inicial", mensaje: "" };
 
 export function FormularioUsuario({ empresas, zonas, guardias }: { empresas: { id: string; nombre: string }[]; zonas: { id: string; nombre: string }[]; guardias: { id: string; nombre: string; cedula: string | null }[] }) {
   const [estado, accion, pendiente] = useActionState(crearCuenta, INICIAL);
-  const [rol, setRol] = useState<"cliente" | "supervisor" | "guardia">("cliente");
+  const [rol, setRol] = useState<"cliente" | "supervisor" | "guardia" | "admin">("cliente");
   const [copiado, setCopiado] = useState(false);
 
   async function copiar() {
@@ -20,13 +20,15 @@ export function FormularioUsuario({ empresas, zonas, guardias }: { empresas: { i
 
   return (
     <form action={accion} className="space-y-4">
-      <Campo etiqueta="Tipo de usuario"><select name="rol" value={rol} onChange={(evento) => setRol(evento.target.value as typeof rol)} className={control}><option value="cliente">Cliente</option><option value="supervisor">Supervisor</option><option value="guardia">Agente de seguridad</option></select></Campo>
+      <Campo etiqueta="Tipo de usuario"><select name="rol" value={rol} onChange={(evento) => setRol(evento.target.value as typeof rol)} className={control}><option value="cliente">Cliente</option><option value="supervisor">Supervisor</option><option value="guardia">Agente de seguridad</option><option value="admin">Administrador</option></select></Campo>
       {rol !== "guardia" && <><Campo etiqueta="Nombre completo"><input name="nombre" required minLength={3} maxLength={100} className={control} placeholder="Nombre del usuario" /></Campo><Campo etiqueta="Correo electrónico"><input name="correo" type="email" required className={control} placeholder="usuario@sotersa.com" /></Campo></>}
       {rol === "cliente" && <Campo etiqueta="Empresa"><select name="empresa_id" required defaultValue="" className={control}><option value="" disabled>Selecciona una empresa</option>{empresas.map((empresa) => <option key={empresa.id} value={empresa.id}>{empresa.nombre}</option>)}</select></Campo>}
       {rol === "supervisor" && <Campo etiqueta="Zona asignada"><select name="zona_id" required defaultValue="" className={control}><option value="" disabled>Selecciona una zona</option>{zonas.map((zona) => <option key={zona.id} value={zona.id}>{zona.nombre}</option>)}</select></Campo>}
       {rol === "guardia" && <Campo etiqueta="Agente sin acceso"><select name="guardia_id" required defaultValue="" className={control}><option value="" disabled>Selecciona un agente de seguridad</option>{guardias.map((guardia) => <option key={guardia.id} value={guardia.id}>{guardia.nombre}{guardia.cedula ? ` · ${guardia.cedula}` : " · cédula pendiente"}</option>)}</select></Campo>}
+      {rol === "admin" && <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-3 text-xs leading-5 text-amber-200">Un administrador puede hacer todo lo que tú haces: crear y bloquear cuentas, editar clientes, ver toda la operación. Crea uno solo si de verdad necesita ese alcance.</p>}
+      <Campo etiqueta={rol === "guardia" ? "PIN temporal (opcional · 6 números)" : "Clave temporal (opcional · mínimo 8)"}><input name="clave_temporal" inputMode={rol === "guardia" ? "numeric" : "text"} maxLength={rol === "guardia" ? 6 : 64} autoComplete="off" placeholder="Vacío = se genera una segura" className={control} /></Campo>
       {estado.mensaje && <p role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-3 text-sm text-red-200">{estado.mensaje}</p>}
-      <p className="rounded-xl border border-[#27425e] bg-[#041225] px-3 py-3 text-xs leading-5 text-slate-400">La contraseña se genera automáticamente y se muestra una sola vez después de crear la cuenta.</p>
+      <p className="rounded-xl border border-[#27425e] bg-[#041225] px-3 py-3 text-xs leading-5 text-slate-400">La clave se muestra una sola vez después de crear la cuenta; la persona deberá cambiarla en su primer ingreso.</p>
       <button disabled={pendiente} className="min-h-12 w-full rounded-xl bg-gradient-to-r from-[#087ff0] to-[#02b9e8] px-4 text-sm font-semibold text-white shadow-lg shadow-blue-950/30 disabled:opacity-50">{pendiente ? "Creando acceso..." : "Crear cuenta"}</button>
     </form>
   );

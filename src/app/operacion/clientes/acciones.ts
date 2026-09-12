@@ -200,8 +200,6 @@ function extraerCoordenadas(valor: string): { lat: number; lng: number } | null 
 // en blanco, cerrar un contrato sin borrar su historial, y darle acceso al
 // portal a quien lo firmo.
 
-export type EstadoAcceso = EstadoCliente & { usuario?: string; claveTemporal?: string };
-
 const CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Corrige los datos de contacto y facturacion de un cliente existente. */
@@ -305,95 +303,6 @@ export async function cambiarEstadoPuesto(formData: FormData) {
   revalidatePath("/portal");
 }
 
-/**
- * Crea la cuenta del portal para un cliente, desde su propia tarjeta.
- *
- * La clave temporal la puede escribir el admin (para dictarla por telefono) o
- * se genera una. En ambos casos la cuenta nace con debe_cambiar_clave, asi que
- * el cliente la reemplaza en su primer ingreso y el admin deja de conocerla.
- */
-export async function crearAccesoCliente(_: EstadoAcceso, formData: FormData): Promise<EstadoAcceso> {
-  const empresaId = String(formData.get("empresa_id") ?? "");
-  const nombre = texto(formData, "nombre", 100);
-  const correo = texto(formData, "correo", 120).toLowerCase();
-  const claveElegida = String(formData.get("clave_temporal") ?? "").trim();
-
-  if (!UUID.test(empresaId)) return { tipo: "error", mensaje: "Cliente no identificado." };
-  if (nombre.length < 3) return { tipo: "error", mensaje: "Escribe el nombre de la persona que usará el acceso." };
-  if (!CORREO.test(correo)) return { tipo: "error", mensaje: "Escribe un correo electrónico válido." };
-  if (claveElegida && claveElegida.length < 8) return { tipo: "error", mensaje: "La clave temporal necesita al menos 8 caracteres." };
-
-  const { supabase } = await exigirPerfil(["admin"]);
-  const { data: empresa } = await supabase.from("empresas_cliente").select("id,nombre,contacto_correo").eq("id", empresaId).eq("activo", true).maybeSingle();
-  if (!empresa) return { tipo: "error", mensaje: "El cliente no está activo." };
-
-  const claveTemporal = claveElegida || generarClave();
-  const administrador = crearClienteAdministrador();
-  const { data: creado, error: errorAuth } = await administrador.auth.admin.createUser({
-    email: correo,
-    password: claveTemporal,
-    email_confirm: true,
-    app_metadata: { rol: "cliente", empresa_cliente_id: empresa.id, zona_id: null },
-    user_metadata: { nombre, rol: "cliente", debe_cambiar_clave: true },
-  });
-  if (errorAuth || !creado.user) {
-    return { tipo: "error", mensaje: errorAuth?.message.toLowerCase().includes("registered") ? "Ya existe una cuenta con ese correo." : "No fue posible crear la cuenta en este momento." };
-  }
-
-  const { error: errorPerfil } = await administrador.from("perfiles").upsert({ id: creado.user.id, rol: "cliente", nombre, empresa_cliente_id: empresa.id, zona_id: null, activo: true }, { onConflict: "id" });
-  if (errorPerfil) {
-    await administrador.auth.admin.deleteUser(creado.user.id);
-    return { tipo: "error", mensaje: "La cuenta no pudo vincularse con el cliente." };
-  }
-
-  // Si la ficha no tenia correo, este es el mejor dato que vamos a tener.
-  if (!empresa.contacto_correo) await supabase.from("empresas_cliente").update({ contacto_correo: correo }).eq("id", empresa.id);
-
-  refrescar();
-  return { tipo: "exito", mensaje: `Acceso creado para ${empresa.nombre}. Entrega estas credenciales solo a ${nombre}; deberá cambiar la clave al entrar.`, usuario: correo, claveTemporal };
-}
-
-/**
- * Clave temporal nueva para una cuenta de cliente que ya existe.
- *
- * La app no envia correos: las credenciales se muestran una vez y el admin
- * las entrega. Si esa clave se perdio antes de enviarla, o el cliente la
- * olvido, esto genera otra. La anterior deja de servir al instante y la
- * nueva obliga a cambiarla al entrar.
- */
-export async function restablecerClaveCliente(_: EstadoAcceso, formData: FormData): Promise<EstadoAcceso> {
-  const perfilId = String(formData.get("perfil_id") ?? "");
-  const claveElegida = String(formData.get("clave_temporal") ?? "").trim();
-  if (!UUID.test(perfilId)) return { tipo: "error", mensaje: "Cuenta no identificada." };
-  if (claveElegida && claveElegida.length < 8) return { tipo: "error", mensaje: "La clave temporal necesita al menos 8 caracteres." };
-
-  const { supabase } = await exigirPerfil(["admin"]);
-  const { data: cuenta } = await supabase.from("perfiles").select("id,nombre,rol,activo,empresa_cliente_id").eq("id", perfilId).eq("rol", "cliente").maybeSingle();
-  if (!cuenta) return { tipo: "error", mensaje: "Esa cuenta de cliente no existe." };
-  if (!cuenta.activo) return { tipo: "error", mensaje: "La cuenta está bloqueada. Reactiva el cliente primero." };
-
-  const administrador = crearClienteAdministrador();
-  const { data: auth } = await administrador.auth.admin.getUserById(perfilId);
-  const correo = auth?.user?.email;
-  if (!correo) return { tipo: "error", mensaje: "La cuenta no tiene correo asociado." };
-
-  const claveTemporal = claveElegida || generarClave();
-  const { error } = await administrador.auth.admin.updateUserById(perfilId, {
-    password: claveTemporal,
-    user_metadata: { ...(auth?.user?.user_metadata ?? {}), debe_cambiar_clave: true },
-  });
-  if (error) return { tipo: "error", mensaje: "No fue posible restablecer la clave." };
-
-  refrescar();
-  return { tipo: "exito", mensaje: `Clave restablecida para ${cuenta.nombre}. Envíasela solo a esa persona; deberá cambiarla al entrar.`, usuario: correo, claveTemporal };
-}
-
-function generarClave() {
-  const alfabeto = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-  const numeros = new Uint32Array(10);
-  crypto.getRandomValues(numeros);
-  return `Sot!${[...numeros].map((n) => alfabeto[n % alfabeto.length]).join("")}`;
-}
 
 /**
  * Edita un puesto existente: modalidad, nombre, direccion, ruta y arma.

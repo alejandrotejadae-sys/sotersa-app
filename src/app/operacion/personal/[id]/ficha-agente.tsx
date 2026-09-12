@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { alternarRelevo, asignarAgente, liberarAgente, type EstadoDotacion } from "../../dotacion/acciones";
-import { actualizarAgente, cambiarEstadoAgente, restablecerPin, type EstadoFicha } from "./acciones";
+import { actualizarAgente, cambiarEstadoAgente, type EstadoFicha } from "./acciones";
 
 const INICIAL: EstadoFicha = { tipo: "inicial", mensaje: "" };
 const INICIAL_DOTACION: EstadoDotacion = { tipo: "inicial", mensaje: "" };
@@ -104,49 +104,6 @@ function SelectorPuesto({ guardiaId, puestos }: { guardiaId: string; puestos: { 
       </select>
       <button disabled={pendiente} className="min-h-11 shrink-0 rounded-xl bg-gradient-to-r from-[#087ff0] to-[#02b9e8] px-4 text-sm font-semibold text-white disabled:opacity-50">{pendiente ? "Asignando…" : "Asignar"}</button>
       {estado.mensaje && <p aria-live="polite" className={`w-full text-xs ${estado.tipo === "exito" ? "text-emerald-300" : "text-red-300"}`}>{estado.mensaje}</p>}
-    </form>
-  );
-}
-
-/** Acceso a la app: crear o restablecer el PIN. Solo admin. */
-export function AccesoAgente({ agente }: { agente: AgenteFicha }) {
-  const [estado, accion, pendiente] = useActionState(restablecerPin, INICIAL);
-  const [copiado, setCopiado] = useState(false);
-
-  if (estado.tipo === "exito" && estado.usuario && estado.pin) {
-    const texto = `Acceso a la app SOTERSA\nUsuario: ${estado.usuario}\nPIN temporal: ${estado.pin}\nAl entrar te pedirá un PIN nuevo.`;
-    return (
-      <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
-        <p className="text-sm text-emerald-200">{estado.mensaje}</p>
-        <dl className="mt-3 space-y-2 font-mono text-sm">
-          <div className="flex justify-between rounded-lg bg-[#041225] px-3 py-2"><dt className="text-slate-400">Usuario</dt><dd className="text-white">{estado.usuario}</dd></div>
-          <div className="flex justify-between rounded-lg bg-[#041225] px-3 py-2"><dt className="text-slate-400">PIN temporal</dt><dd className="text-white">{estado.pin}</dd></div>
-        </dl>
-        <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(texto); setCopiado(true); } catch { setCopiado(false); } }} className="mt-3 min-h-11 w-full rounded-xl border border-emerald-400/40 bg-emerald-500/15 px-4 text-sm font-semibold text-emerald-100">
-          {copiado ? "Copiado" : "Copiar credenciales"}
-        </button>
-        <p className="mt-2 text-xs text-emerald-200/70">El PIN no vuelve a mostrarse.</p>
-      </div>
-    );
-  }
-
-  return (
-    <form action={accion} className="space-y-3">
-      <input type="hidden" name="guardia_id" value={agente.id} />
-      <p className="text-xs leading-5 text-slate-400">
-        {agente.tieneCuenta
-          ? "Genera un PIN temporal nuevo. Sirve si lo olvidó o si nunca cambió el que se le entregó. El anterior deja de funcionar al instante."
-          : "Este agente todavía no tiene acceso a la app. Se creará su cuenta con la cédula como usuario y un PIN temporal."}
-      </p>
-      <Aviso estado={estado} />
-      <button
-        disabled={pendiente || !agente.activo || !agente.cedula}
-        onClick={(e) => { if (agente.tieneCuenta && !window.confirm("¿Restablecer el PIN? El actual dejará de funcionar.")) e.preventDefault(); }}
-        className="min-h-11 w-full rounded-xl border border-[#0788ff]/40 bg-[#0788ff]/10 px-4 text-sm font-semibold text-[#8ddaff] disabled:opacity-50"
-      >
-        {pendiente ? "Generando…" : agente.tieneCuenta ? "Restablecer PIN" : "Crear acceso"}
-      </button>
-      {!agente.cedula && <p className="text-xs text-amber-300">Primero registra su cédula en la ficha.</p>}
     </form>
   );
 }

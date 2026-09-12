@@ -1,16 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { cedulaACorreo, cedulaEsValida, validarPin } from "@/lib/auth";
+import { cedulaEsValida } from "@/lib/auth";
 import { exigirPerfil } from "@/lib/sesion";
 import { crearClienteAdministrador } from "@/lib/supabase/administrador";
 
-export type EstadoFicha = {
-  tipo: "inicial" | "error" | "exito";
-  mensaje: string;
-  usuario?: string;
-  pin?: string;
-};
+export type EstadoFicha = { tipo: "inicial" | "error" | "exito"; mensaje: string };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -96,67 +91,5 @@ export async function cambiarEstadoAgente(formData: FormData) {
   refrescar(id);
 }
 
-/**
- * Nuevo PIN temporal. Para cuando el agente lo olvido o cuando se entrego
- * uno y nunca lo cambio. Sale una sola vez y obliga a cambiarlo al entrar.
- * Si el agente no tenia cuenta, se la crea aqui mismo.
- */
-export async function restablecerPin(_: EstadoFicha, formData: FormData): Promise<EstadoFicha> {
-  const id = String(formData.get("guardia_id") ?? "");
-  if (!UUID.test(id)) return fallo("Agente no identificado.");
-
-  const { supabase } = await exigirPerfil(["admin"]);
-  const { data: agente } = await supabase.from("guardias").select("id,nombre,cedula,telefono,perfil_id,activo").eq("id", id).maybeSingle();
-  if (!agente) return fallo("Ese agente ya no existe.");
-  if (!agente.activo) return fallo("El agente está dado de baja. Reactívalo antes de darle acceso.");
-  if (!agente.cedula || !cedulaEsValida(agente.cedula)) return fallo("El agente necesita una cédula válida: es su usuario de acceso.");
-
-  const pin = generarPin(agente.cedula);
-  const administrador = crearClienteAdministrador();
-
-  if (agente.perfil_id) {
-    const { error } = await administrador.auth.admin.updateUserById(agente.perfil_id, {
-      password: pin,
-      user_metadata: { nombre: agente.nombre, rol: "guardia", debe_cambiar_clave: true },
-    });
-    if (error) return fallo("No fue posible restablecer el PIN.");
-    refrescar(id);
-    return { tipo: "exito", mensaje: "PIN restablecido. Entrégalo solo al agente; deberá cambiarlo al entrar.", usuario: agente.cedula, pin };
-  }
-
-  // Sin cuenta todavia: misma alta que en el registro de personal.
-  const { data: creado, error: errorAuth } = await administrador.auth.admin.createUser({
-    email: cedulaACorreo(agente.cedula),
-    password: pin,
-    email_confirm: true,
-    app_metadata: { rol: "guardia" },
-    user_metadata: { nombre: agente.nombre, rol: "guardia", debe_cambiar_clave: true },
-  });
-  if (errorAuth || !creado.user) return fallo(errorAuth?.message.toLowerCase().includes("registered") ? "Ya existe una cuenta con esa cédula que no está vinculada a esta ficha." : "No fue posible crear el acceso.");
-
-  const { error: errorPerfil } = await administrador.from("perfiles").upsert({ id: creado.user.id, rol: "guardia", nombre: agente.nombre, telefono: agente.telefono, activo: true }, { onConflict: "id" });
-  if (errorPerfil) {
-    await administrador.auth.admin.deleteUser(creado.user.id);
-    return fallo("No fue posible crear el perfil del agente.");
-  }
-  const { error: errorVinculo } = await administrador.from("guardias").update({ perfil_id: creado.user.id }).eq("id", id).is("perfil_id", null);
-  if (errorVinculo) {
-    await administrador.auth.admin.deleteUser(creado.user.id);
-    return fallo("No fue posible vincular la cuenta con la ficha.");
-  }
-
-  refrescar(id);
-  return { tipo: "exito", mensaje: "Acceso creado. Entrégalo solo al agente; deberá cambiar el PIN al entrar.", usuario: agente.cedula, pin };
-}
-
 function fallo(mensaje: string): EstadoFicha { return { tipo: "error", mensaje }; }
 
-function generarPin(cedula: string) {
-  for (let intento = 0; intento < 40; intento += 1) {
-    const numero = new Uint32Array(1);
-    crypto.getRandomValues(numero);
-    const pin = String(numero[0] % 1_000_000).padStart(6, "0");
-    if (validarPin(pin, cedula).valido) return pin;
-  }
-  throw new Error("No fue posible generar un PIN seguro.");
-}

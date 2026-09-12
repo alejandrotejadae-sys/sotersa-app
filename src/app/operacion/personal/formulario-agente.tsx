@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import Link from "next/link";
+import { useActionState } from "react";
 import { registrarAgente, type EstadoRegistroAgente } from "./acciones";
 
 const INICIAL: EstadoRegistroAgente = { tipo: "inicial", mensaje: "" };
@@ -8,23 +9,11 @@ const control = "mt-2 min-h-12 w-full rounded-xl border border-[#27425e] bg-[#04
 
 export function FormularioAgente() {
   const [estado, accion, pendiente] = useActionState(registrarAgente, INICIAL);
-  const [copiado, setCopiado] = useState(false);
-
-  async function copiar() {
-    if (!estado.usuario || !estado.pin) return;
-    await navigator.clipboard.writeText(`Usuario: ${estado.usuario}\nPIN temporal: ${estado.pin}`);
-    setCopiado(true);
-  }
-
   if (estado.tipo === "exito") {
     return <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/8 p-4">
-      <h3 className="font-semibold text-emerald-300">Agente creado correctamente</h3>
+      <h3 className="font-semibold text-emerald-300">Agente registrado</h3>
       <p className="mt-2 text-sm leading-6 text-slate-300">{estado.mensaje}</p>
-      <div className="mt-4 space-y-2 rounded-xl bg-[#020b18] p-3 font-mono text-sm">
-        <p><span className="text-slate-500">Usuario:</span> {estado.usuario}</p>
-        <p><span className="text-slate-500">PIN:</span> {estado.pin}</p>
-      </div>
-      <button type="button" onClick={copiar} className="mt-3 min-h-11 w-full rounded-xl bg-emerald-500/15 px-4 text-sm font-semibold text-emerald-200">{copiado ? "Credenciales copiadas" : "Copiar credenciales"}</button>
+      <Link href="/operacion/usuarios?rol=guardia" className="mt-3 flex min-h-11 items-center justify-center rounded-xl bg-[#0788ff]/15 px-4 text-sm font-semibold text-[#8ddaff]">Ir a Usuarios y permisos</Link>
       <button type="button" onClick={() => window.location.reload()} className="mt-2 min-h-11 w-full rounded-xl border border-[#27425e] px-4 text-sm font-semibold text-slate-300">Registrar otro agente</button>
     </div>;
   }
@@ -35,8 +24,8 @@ export function FormularioAgente() {
     <Campo etiqueta="Teléfono (opcional)"><input name="telefono" inputMode="tel" maxLength={15} className={control} placeholder="0990000000" /></Campo>
     <Campo etiqueta="Credencial (opcional)"><input name="credencial" maxLength={40} className={control} placeholder="Código interno" /></Campo>
     {estado.mensaje && <p role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-3 text-sm text-red-200 sm:col-span-2">{estado.mensaje}</p>}
-    <p className="rounded-xl border border-[#27425e] bg-[#041225] px-3 py-3 text-xs leading-5 text-slate-400 sm:col-span-2">Se creará su ficha operativa y su acceso. El sistema generará un PIN seguro de seis números y lo mostrará una sola vez.</p>
-    <button disabled={pendiente} className="min-h-12 rounded-xl bg-gradient-to-r from-[#087ff0] to-[#02b9e8] px-4 text-sm font-semibold text-white shadow-lg shadow-blue-950/30 disabled:opacity-50 sm:col-span-2">{pendiente ? "Creando agente y acceso..." : "Crear agente y acceso"}</button>
+    <p className="rounded-xl border border-[#27425e] bg-[#041225] px-3 py-3 text-xs leading-5 text-slate-400 sm:col-span-2">Se crea solo la ficha operativa. El acceso a la app (usuario y PIN) se crea después en Usuarios y permisos.</p>
+    <button disabled={pendiente} className="min-h-12 rounded-xl bg-gradient-to-r from-[#087ff0] to-[#02b9e8] px-4 text-sm font-semibold text-white shadow-lg shadow-blue-950/30 disabled:opacity-50 sm:col-span-2">{pendiente ? "Registrando..." : "Registrar agente"}</button>
   </form>;
 }
 

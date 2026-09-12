@@ -1,16 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { cedulaACorreo, cedulaEsValida, validarPin } from "@/lib/auth";
+import { cedulaEsValida } from "@/lib/auth";
 import { exigirPerfil } from "@/lib/sesion";
 import { crearClienteAdministrador } from "@/lib/supabase/administrador";
 
-export type EstadoRegistroAgente = {
-  tipo: "inicial" | "error" | "exito";
-  mensaje: string;
-  usuario?: string;
-  pin?: string;
-};
+export type EstadoRegistroAgente = { tipo: "inicial" | "error" | "exito"; mensaje: string };
 
 export async function registrarAgente(_: EstadoRegistroAgente, formData: FormData): Promise<EstadoRegistroAgente> {
   await exigirPerfil(["admin"]);
@@ -31,70 +26,21 @@ export async function registrarAgente(_: EstadoRegistroAgente, formData: FormDat
     .eq("cedula", cedula)
     .maybeSingle();
 
-  if (guardiaExistente?.perfil_id) return fallo("Este agente ya tiene una cuenta de acceso vinculada.");
+  if (guardiaExistente?.perfil_id) return fallo("Este agente ya existe y tiene cuenta. Edítalo desde su ficha.");
 
-  const correoInterno = cedulaACorreo(cedula);
-  const pin = generarPin(cedula);
-  const { data: usuarioCreado, error: errorAuth } = await administrador.auth.admin.createUser({
-    email: correoInterno,
-    password: pin,
-    email_confirm: true,
-    app_metadata: { rol: "guardia" },
-    user_metadata: { nombre, rol: "guardia", debe_cambiar_clave: true },
-  });
-
-  if (errorAuth || !usuarioCreado.user) {
-    return fallo(errorAuth?.message.toLowerCase().includes("registered")
-      ? "Ya existe una cuenta con esta cédula. Revisa el listado de accesos."
-      : "No fue posible crear el acceso en este momento.");
-  }
-
-  const usuarioId = usuarioCreado.user.id;
-  // La base puede crear este perfil mediante su trigger de alta en Auth.
-  // Upsert hace que el flujo funcione tanto con ese trigger como sin él.
-  const { error: errorPerfil } = await administrador.from("perfiles").upsert({
-    id: usuarioId,
-    rol: "guardia",
-    nombre,
-    telefono,
-    activo: true,
-  }, { onConflict: "id" });
-
-  if (errorPerfil) {
-    await administrador.auth.admin.deleteUser(usuarioId);
-    return fallo("No fue posible crear el perfil operativo del agente.");
-  }
-
-  const datosGuardia = { perfil_id: usuarioId, nombre, cedula, telefono, credencial, activo: true };
+  // Solo la ficha operativa. El acceso a la app (cuenta, PIN) se crea en
+  // Usuarios y permisos, que es el unico lugar autorizado para eso.
+  const datosGuardia = { nombre, cedula, telefono, credencial, activo: true };
   const resultadoGuardia = guardiaExistente
-    ? await administrador.from("guardias").update(datosGuardia).eq("id", guardiaExistente.id).is("perfil_id", null)
+    ? await administrador.from("guardias").update(datosGuardia).eq("id", guardiaExistente.id)
     : await administrador.from("guardias").insert(datosGuardia);
-
-  if (resultadoGuardia.error) {
-    await administrador.from("perfiles").delete().eq("id", usuarioId);
-    await administrador.auth.admin.deleteUser(usuarioId);
-    return fallo("No fue posible registrar al agente en el equipo operativo.");
-  }
+  if (resultadoGuardia.error) return fallo("No fue posible registrar al agente en el equipo operativo.");
 
   revalidatePath("/operacion/personal");
   revalidatePath("/operacion/usuarios");
   revalidatePath("/admin");
-  return {
-    tipo: "exito",
-    mensaje: "Agente y acceso creados. El PIN se muestra una sola vez.",
-    usuario: cedula,
-    pin,
-  };
+  return { tipo: "exito", mensaje: "Ficha creada. Para darle acceso a la app, crea su cuenta en Usuarios y permisos." };
 }
 
 function fallo(mensaje: string): EstadoRegistroAgente { return { tipo: "error", mensaje }; }
 
-function generarPin(cedula: string) {
-  for (let intento = 0; intento < 40; intento += 1) {
-    const numero = new Uint32Array(1);
-    crypto.getRandomValues(numero);
-    const pin = String(numero[0] % 1_000_000).padStart(6, "0");
-    if (validarPin(pin, cedula).valido) return pin;
-  }
-  throw new Error("No fue posible generar un PIN seguro.");
-}

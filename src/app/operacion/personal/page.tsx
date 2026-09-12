@@ -34,7 +34,7 @@ export default async function PaginaPersonal() {
 
         <section className="mt-5 grid grid-cols-3 gap-3"><Resumen titulo="Agentes" valor={guardias.filter((g) => g.activo).length}/><Resumen titulo="En puesto" valor={activos.length} normal/><Resumen titulo="Puestos" valor={puestos.length}/></section>
 
-        {perfil.rol === "admin" && <section className="mt-5 rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4 sm:p-5"><div className="mb-4"><p className="text-sm font-semibold text-[#65c8ff]">Alta de personal</p><h2 className="mt-1 text-xl font-semibold">Registrar agente de seguridad</h2><p className="mt-1 text-sm text-slate-400">Crea su ficha y su acceso a la app en un solo paso.</p></div><FormularioAgente /></section>}
+        {perfil.rol === "admin" && <section className="mt-5 rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4 sm:p-5"><div className="mb-4"><p className="text-sm font-semibold text-[#65c8ff]">Alta de personal</p><h2 className="mt-1 text-xl font-semibold">Registrar agente de seguridad</h2><p className="mt-1 text-sm text-slate-400">Crea su ficha operativa. El acceso a la app se crea después en Usuarios y permisos.</p></div><FormularioAgente /></section>}
 
         <div className="mt-5 grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
         <section className="overflow-hidden rounded-2xl border border-[#27425e] bg-[#07172a]/95"><div className="border-b border-[#20374e] px-4 py-4"><h2 className="text-lg font-semibold">Equipo de seguridad</h2></div><div className="divide-y divide-[#20374e]">{guardias.length === 0 ? <Vacio texto="No hay personal registrado."/> : guardias.map((guardia) => {

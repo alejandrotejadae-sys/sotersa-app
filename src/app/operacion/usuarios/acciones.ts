@@ -5,7 +5,7 @@ import { cedulaACorreo, cedulaEsValida, validarPin } from "@/lib/auth";
 import { exigirPerfil } from "@/lib/sesion";
 import { crearClienteAdministrador } from "@/lib/supabase/administrador";
 
-type RolCreable = "guardia" | "supervisor" | "cliente";
+type RolCreable = "guardia" | "supervisor" | "cliente" | "admin";
 
 export type EstadoAlta = {
   tipo: "inicial" | "error" | "exito";
@@ -25,12 +25,15 @@ export async function crearCuenta(_: EstadoAlta, formData: FormData): Promise<Es
   const empresaId = String(formData.get("empresa_id") ?? "");
   const zonaId = String(formData.get("zona_id") ?? "");
   const guardiaId = String(formData.get("guardia_id") ?? "");
-  if (!(["guardia", "supervisor", "cliente"] as string[]).includes(rol)) return fallo("Selecciona un rol válido.");
+  if (!(["guardia", "supervisor", "cliente", "admin"] as string[]).includes(rol)) return fallo("Selecciona un rol válido.");
+  // Clave temporal elegida por el admin (para dictarla), o generada.
+  const claveElegida = String(formData.get("clave_temporal") ?? "").trim();
+  if (claveElegida && rol !== "guardia" && claveElegida.length < 8) return fallo("La clave temporal necesita al menos 8 caracteres.");
 
   const administrador = crearClienteAdministrador();
   let nombre = nombreIngresado;
   let correo = correoIngresado;
-  let claveTemporal = generarClave();
+  let claveTemporal = claveElegida && rol !== "guardia" ? claveElegida : generarClave();
   let empresa: string | null = null;
   let zona: string | null = null;
   let guardiaVincular: string | null = null;
@@ -42,7 +45,7 @@ export async function crearCuenta(_: EstadoAlta, formData: FormData): Promise<Es
     if (!guardia.cedula || !cedulaEsValida(guardia.cedula)) return fallo("El agente de seguridad necesita una cédula ecuatoriana válida antes de crear su acceso.");
     nombre = guardia.nombre;
     correo = cedulaACorreo(guardia.cedula);
-    claveTemporal = generarPin(guardia.cedula);
+    if (claveElegida) { const v = validarPin(claveElegida, guardia.cedula); if (!v.valido) return fallo(v.motivo); claveTemporal = claveElegida; } else claveTemporal = generarPin(guardia.cedula);
     guardiaVincular = guardia.id;
   } else {
     if (nombre.length < 3) return fallo("Escribe el nombre completo del usuario.");
@@ -89,6 +92,7 @@ export async function crearCuenta(_: EstadoAlta, formData: FormData): Promise<Es
 
   revalidatePath("/operacion/usuarios");
   revalidatePath("/operacion/personal");
+  revalidatePath("/operacion/clientes");
   return { tipo: "exito", mensaje: "Cuenta creada. Entrega estas credenciales únicamente al usuario correspondiente.", usuario: rol === "guardia" ? correo.split("@")[0] : correo, claveTemporal };
 }
 

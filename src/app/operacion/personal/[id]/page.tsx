@@ -5,7 +5,7 @@ import { IconoFlecha, IconoPersona } from "@/app/componentes/iconos";
 import { ahoraConDesfase, exigirPerfil, fechaHoraEcuador, uno } from "@/lib/sesion";
 import { crearClienteAdministrador } from "@/lib/supabase/administrador";
 import { AVISO_VERSION } from "@/lib/consentimiento";
-import { AccesoAgente, EditorAgente, PlazaAgente } from "./ficha-agente";
+import { EditorAgente, PlazaAgente } from "./ficha-agente";
 
 export const metadata = { title: "Ficha del agente — SOTERSA" };
 export const dynamic = "force-dynamic";
@@ -124,7 +124,10 @@ export default async function PaginaFichaAgente({ params }: { params: Promise<{ 
                     {cuenta.bloqueada && <li><Etiqueta tono="rojo">Cuenta bloqueada</Etiqueta></li>}
                   </ul>
                 )}
-                <AccesoAgente agente={ficha} />
+                <Link href={agente.perfil_id ? `/operacion/usuarios/${agente.perfil_id}` : "/operacion/usuarios?rol=guardia"} className="flex min-h-11 items-center justify-center rounded-xl border border-[#0788ff]/40 bg-[#0788ff]/10 px-4 text-sm font-semibold text-[#8ddaff]">
+                  {agente.perfil_id ? "Abrir su cuenta en Usuarios y permisos" : "Crear su acceso en Usuarios y permisos"}
+                </Link>
+                <p className="mt-2 text-center text-xs text-slate-500">Restablecer el PIN, bloquear o editar la cuenta se hace únicamente allí.</p>
               </Panel>
             )}
           </div>
