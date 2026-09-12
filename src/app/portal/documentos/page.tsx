@@ -18,13 +18,12 @@ export default async function PaginaDocumentos({ searchParams }: { searchParams:
   const params = await searchParams;
   const empresaId = perfil.empresa_cliente_id ?? (perfil.rol === "admin" && /^[0-9a-f-]{36}$/i.test(params.empresa ?? "") ? params.empresa! : null);
   const { generales, propios } = empresaId ? await documentosParaCliente(empresaId) : { generales: [], propios: [] };
-  const sufijo = perfil.rol === "admin" && empresaId ? `?empresa=${empresaId}` : "";
 
   return (
     <div className="min-h-dvh pb-12">
       <CabeceraPanel rol="cliente" nombre={perfil.nombre} />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-6">
-        <Link href={`/portal${sufijo}`} className="inline-flex items-center gap-1 self-start text-sm font-medium text-azul-400"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> Volver al portal</Link>
+        <Link href={perfil.rol === "admin" ? "/operacion/clientes" : "/perfiles"} className="inline-flex items-center gap-1 self-start text-sm font-medium text-azul-400"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> {perfil.rol === "admin" ? "Volver a clientes" : "Menú principal"}</Link>
 
         <section>
           <p className="flex items-center gap-2 text-sm font-medium text-azul-400"><IconoEscudoOk className="h-5 w-5" /> Transparencia</p>

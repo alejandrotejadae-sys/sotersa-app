@@ -78,3 +78,54 @@ export async function turnosDeAgenteEnEmpresa(guardiaId: string, empresaId: stri
     .limit(20);
   return data ?? [];
 }
+
+/**
+ * Custodias armadas del cliente: cada servicio con su ruta, quien lo cubre y
+ * los ultimos traslados. Mismo criterio que la plantilla: solo lo de esta
+ * empresa, y del agente solo nombre y credencial.
+ */
+export type CustodiaCliente = {
+  id: string;
+  codigo: string;
+  nombre: string;
+  origen: string | null;
+  destino: string | null;
+  contactos: { tipo: string; nombre: string | null; telefono: string }[];
+  agentes: { id: string; nombre: string; credencial: string | null }[];
+  traslados: { id: string; inicio: string; fin: string; estado: string; agente: string | null; abierto: boolean }[];
+};
+
+export async function custodiasDeEmpresa(empresaId: string): Promise<CustodiaCliente[]> {
+  const administrador = crearClienteAdministrador();
+  const { data: puestos } = await administrador
+    .from("puestos")
+    .select("id,codigo,nombre,origen,destino,contactos_puesto(tipo,nombre,telefono)")
+    .eq("empresa_cliente_id", empresaId)
+    .eq("activo", true)
+    .eq("tipo_servicio", "custodia_armada")
+    .order("codigo");
+  const ids = (puestos ?? []).map((p) => p.id);
+  if (ids.length === 0) return [];
+
+  const [fijosR, turnosR] = await Promise.all([
+    administrador.from("guardias").select("id,nombre,credencial,puesto_habitual_id").eq("activo", true).in("puesto_habitual_id", ids).order("nombre"),
+    administrador
+      .from("turnos")
+      .select("id,puesto_id,inicio_programado,fin_programado,estado,aperturas_turno(id),guardias(nombre)")
+      .in("puesto_id", ids)
+      .gte("fin_programado", ahoraConDesfase(-30 * 24))
+      .lte("inicio_programado", ahoraConDesfase(7 * 24))
+      .order("inicio_programado", { ascending: false }),
+  ]);
+
+  return (puestos ?? []).map((p) => ({
+    id: p.id,
+    codigo: p.codigo,
+    nombre: p.nombre,
+    origen: p.origen,
+    destino: p.destino,
+    contactos: (p.contactos_puesto ?? []).map((c) => ({ tipo: c.tipo, nombre: c.nombre, telefono: c.telefono })),
+    agentes: (fijosR.data ?? []).filter((g) => g.puesto_habitual_id === p.id).map((g) => ({ id: g.id, nombre: g.nombre, credencial: g.credencial })),
+    traslados: (turnosR.data ?? []).filter((t) => t.puesto_id === p.id).slice(0, 10).map((t) => ({ id: t.id, inicio: t.inicio_programado, fin: t.fin_programado, estado: t.estado, agente: uno(t.guardias)?.nombre ?? null, abierto: (t.aperturas_turno?.length ?? 0) > 0 })),
+  }));
+}

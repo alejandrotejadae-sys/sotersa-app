@@ -41,7 +41,10 @@ export default async function PaginaFichaServicio({ params, searchParams }: { pa
     <div className="min-h-dvh pb-12">
       <CabeceraPanel rol="cliente" nombre={perfil.nombre} />
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-6">
-        <Link href={`/portal/agentes${sufijo}`} className="inline-flex items-center gap-1 self-start text-sm font-medium text-azul-400"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> Volver a los agentes</Link>
+        <div className="flex flex-wrap items-center gap-4">
+          <Link href={`/portal/agentes${sufijo}`} className="inline-flex items-center gap-1 text-sm font-medium text-azul-400"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> Volver a los agentes</Link>
+          {perfil.rol !== "admin" && <Link href="/perfiles" className="inline-flex items-center gap-1 text-sm font-medium text-gris-400"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> Menú principal</Link>}
+        </div>
 
         <section className="flex flex-wrap items-center gap-4">
           <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border border-azul-500/40 bg-azul-500/10 text-lg font-semibold text-azul-300">{iniciales(agente.nombre)}</span>
