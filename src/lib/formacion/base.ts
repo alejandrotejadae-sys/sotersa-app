@@ -1,74 +1,7 @@
-/**
- * Escuela de Formacion SOTERSA: plan de estudios.
- *
- * El contenido vive en el codigo, como los protocolos: se versiona, se revisa
- * en un cambio y no depende de que alguien lo cargue en una tabla. Lo que si
- * va a la base es el avance de cada persona (lecciones completadas y
- * resultados de evaluacion), en formacion_progreso y formacion_evaluaciones.
- *
- * Citas legales: Ley Organica de Vigilancia y Seguridad Privada (LOVSP),
- * Registro Oficial Suplemento 496 de 9 de febrero de 2024, fe de erratas
- * Suplemento 507 de 28 de febrero de 2024; y Codigo Organico Integral Penal
- * (COIP). Los articulos citados se tomaron del texto oficial. Esta escuela es
- * formacion INTERNA de SOTERSA: no sustituye los cursos de Nivel I y II ni el
- * reentrenamiento bienal, que solo pueden impartir centros acreditados por el
- * ente rector (LOVSP Art. 50-53 y 66).
- *
- * Recursos externos: todos fueron verificados al momento de escribirlos; si
- * un video desaparece, el enlace simplemente abre YouTube con el aviso.
- */
+import { yt, type Modulo } from "./tipos";
 
-export type Recurso = {
-  tipo: "video" | "documento" | "web";
-  titulo: string;
-  url: string;
-  fuente: string;
-  nota?: string;
-  /** Solo para videos de YouTube: permite incrustarlos. */
-  youtubeId?: string;
-};
-
-export type Seccion = {
-  titulo?: string;
-  parrafos?: string[];
-  lista?: string[];
-  /** Regla o idea que conviene que quede grabada. */
-  destacado?: string;
-  /** Como se aplica en SOTERSA: enlaza con la app o con los reglamentos. */
-  enSotersa?: string;
-};
-
-export type Leccion = {
-  id: string;
-  titulo: string;
-  minutos: number;
-  objetivo: string;
-  secciones: Seccion[];
-  recursos: Recurso[];
-};
-
-export type Pregunta = {
-  id: string;
-  texto: string;
-  opciones: string[];
-  correcta: number;
-  explicacion: string;
-};
-
-export type Modulo = {
-  id: string;
-  codigo: string;
-  titulo: string;
-  resumen: string;
-  paraQuien: string;
-  color: "azul" | "verde" | "ambar";
-  lecciones: Leccion[];
-  evaluacion: { minimoAprobar: number; preguntas: Pregunta[] };
-};
-
-const yt = (id: string, titulo: string, fuente: string, nota?: string): Recurso => ({ tipo: "video", titulo, url: `https://www.youtube.com/watch?v=${id}`, fuente, nota, youtubeId: id });
-
-export const MODULOS: Modulo[] = [
+/** M1-M3: servicio al cliente, seguridad privada y seguridad ciudadana. */
+export const MODULOS_BASE: Modulo[] = [
   // ==========================================================================
   // MODULO 1 · SERVICIO AL CLIENTE
   // ==========================================================================
@@ -648,21 +581,3 @@ export const MODULOS: Modulo[] = [
     },
   },
 ];
-
-export function modulo(id: string) {
-  return MODULOS.find((m) => m.id === id) ?? null;
-}
-
-export function leccion(moduloId: string, leccionId: string) {
-  const m = modulo(moduloId);
-  const indice = m?.lecciones.findIndex((l) => l.id === leccionId) ?? -1;
-  if (!m || indice < 0) return null;
-  return { modulo: m, leccion: m.lecciones[indice], indice, siguiente: m.lecciones[indice + 1] ?? null, anterior: m.lecciones[indice - 1] ?? null };
-}
-
-/** Identificador de leccion tal como se guarda en formacion_progreso. */
-export function claveLeccion(moduloId: string, leccionId: string) {
-  return `${moduloId}/${leccionId}`;
-}
-
-export const TOTAL_LECCIONES = MODULOS.reduce((n, m) => n + m.lecciones.length, 0);
