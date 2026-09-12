@@ -28,13 +28,13 @@ export default async function PaginaAdmin() {
         <section className="mt-7"><p className="flex items-center gap-2 text-base font-medium text-[#0788ff]"><IconoEscudoOk className="h-6 w-6" /> Panel administrativo</p><h1 className="mt-2 text-3xl font-bold lg:text-4xl">Buenos días, {nombre}</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Desde aquí administras toda la plataforma y entras a cada área para revisar o modificar su configuración.</p></section>
 
         <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          <Resumen titulo="Clientes" valor={clientesR.count ?? 0}/><Resumen titulo="Guardias" valor={guardiasR.count ?? 0}/><Resumen titulo="Custodias" valor={custodiasR.count ?? 0}/><Resumen titulo="Supervisores" valor={supervisoresR.count ?? 0}/><Resumen titulo="Usuarios" valor={usuariosR.count ?? 0}/><Resumen titulo="Alertas" valor={alertasR.count ?? 0} alerta={(alertasR.count ?? 0) > 0}/>
+          <Resumen titulo="Clientes" valor={clientesR.count ?? 0}/><Resumen titulo="Agentes de seguridad" valor={guardiasR.count ?? 0}/><Resumen titulo="Custodias" valor={custodiasR.count ?? 0}/><Resumen titulo="Supervisores" valor={supervisoresR.count ?? 0}/><Resumen titulo="Usuarios" valor={usuariosR.count ?? 0}/><Resumen titulo="Alertas" valor={alertasR.count ?? 0} alerta={(alertasR.count ?? 0) > 0}/>
         </section>
 
         <section className="mt-7"><div className="flex items-end justify-between gap-4"><div><h2 className="text-xl font-semibold">Áreas de gestión</h2><p className="mt-1 text-sm text-slate-500">Selecciona el módulo que quieres revisar.</p></div></div>
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <Modulo href="/operacion/clientes" titulo="Clientes" detalle="Empresas, puestos, servicios y contactos operativos." icono={<IconoPersona className="h-7 w-7"/>}/>
-            <Modulo href="/operacion/personal" titulo="Guardias" detalle="Personal activo, fichas, credenciales y asignaciones." icono={<IconoEscudoOk className="h-7 w-7"/>}/>
+            <Modulo href="/operacion/personal" titulo="Agentes de seguridad" detalle="Fichas, accesos, plazas y actividad de cada agente." icono={<IconoEscudoOk className="h-7 w-7"/>}/>
             <Modulo href="/operacion/custodias" titulo="Custodias" detalle="Servicios armados, rutas, agentes y trazabilidad." icono={<IconoCamion className="h-7 w-7"/>}/>
             <Modulo href="/supervisor" titulo="Supervisión" detalle="Vista de supervisión, novedades, cobertura y control operativo." icono={<IconoAlerta className="h-7 w-7"/>}/>
             <Modulo href="/central" titulo="Panel central" detalle="Monitoreo diario de turnos, rondas, incidentes y alertas." icono={<IconoLista className="h-7 w-7"/>}/>
