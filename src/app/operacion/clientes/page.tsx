@@ -107,7 +107,7 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
 
                     {faltantes.length > 0 && <p className="mt-3 rounded-xl border border-amber-500/25 bg-amber-500/8 px-3 py-2.5 text-xs text-amber-200">Información pendiente: {faltantes.join(", ")}.</p>}
 
-                    <AccionesCliente empresa={empresa} cuentas={cuentas.filter((cuenta) => cuenta.activo).length} />
+                    <AccionesCliente empresa={empresa} cuentas={cuentas.map((cuenta) => ({ id: cuenta.id, nombre: cuenta.nombre, activo: cuenta.activo }))} />
 
                     <ServiciosCliente
                       empresa={{ id: empresa.id, nombre: empresa.nombre, activo: empresa.activo }}

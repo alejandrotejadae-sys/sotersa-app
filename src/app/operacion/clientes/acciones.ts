@@ -353,6 +353,41 @@ export async function crearAccesoCliente(_: EstadoAcceso, formData: FormData): P
   return { tipo: "exito", mensaje: `Acceso creado para ${empresa.nombre}. Entrega estas credenciales solo a ${nombre}; deberá cambiar la clave al entrar.`, usuario: correo, claveTemporal };
 }
 
+/**
+ * Clave temporal nueva para una cuenta de cliente que ya existe.
+ *
+ * La app no envia correos: las credenciales se muestran una vez y el admin
+ * las entrega. Si esa clave se perdio antes de enviarla, o el cliente la
+ * olvido, esto genera otra. La anterior deja de servir al instante y la
+ * nueva obliga a cambiarla al entrar.
+ */
+export async function restablecerClaveCliente(_: EstadoAcceso, formData: FormData): Promise<EstadoAcceso> {
+  const perfilId = String(formData.get("perfil_id") ?? "");
+  const claveElegida = String(formData.get("clave_temporal") ?? "").trim();
+  if (!UUID.test(perfilId)) return { tipo: "error", mensaje: "Cuenta no identificada." };
+  if (claveElegida && claveElegida.length < 8) return { tipo: "error", mensaje: "La clave temporal necesita al menos 8 caracteres." };
+
+  const { supabase } = await exigirPerfil(["admin"]);
+  const { data: cuenta } = await supabase.from("perfiles").select("id,nombre,rol,activo,empresa_cliente_id").eq("id", perfilId).eq("rol", "cliente").maybeSingle();
+  if (!cuenta) return { tipo: "error", mensaje: "Esa cuenta de cliente no existe." };
+  if (!cuenta.activo) return { tipo: "error", mensaje: "La cuenta está bloqueada. Reactiva el cliente primero." };
+
+  const administrador = crearClienteAdministrador();
+  const { data: auth } = await administrador.auth.admin.getUserById(perfilId);
+  const correo = auth?.user?.email;
+  if (!correo) return { tipo: "error", mensaje: "La cuenta no tiene correo asociado." };
+
+  const claveTemporal = claveElegida || generarClave();
+  const { error } = await administrador.auth.admin.updateUserById(perfilId, {
+    password: claveTemporal,
+    user_metadata: { ...(auth?.user?.user_metadata ?? {}), debe_cambiar_clave: true },
+  });
+  if (error) return { tipo: "error", mensaje: "No fue posible restablecer la clave." };
+
+  refrescar();
+  return { tipo: "exito", mensaje: `Clave restablecida para ${cuenta.nombre}. Envíasela solo a esa persona; deberá cambiarla al entrar.`, usuario: correo, claveTemporal };
+}
+
 function generarClave() {
   const alfabeto = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
   const numeros = new Uint32Array(10);
