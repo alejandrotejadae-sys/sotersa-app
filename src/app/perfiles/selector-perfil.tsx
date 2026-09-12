@@ -2,10 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { IconoCamion, IconoEscudoOk, IconoPersona, IconoSalir, IconoTurno } from "@/app/componentes/iconos";
+import { IconoCamion, IconoEscudoOk, IconoLibro, IconoPersona, IconoSalir, IconoTurno } from "@/app/componentes/iconos";
+import type { RolUsuario } from "@/lib/tipos";
 import { crearClienteNavegador } from "@/lib/supabase/navegador";
 
-type Perfil = "cliente" | "guardia" | "custodia" | "supervisor" | "central";
+type Perfil = "cliente" | "guardia" | "custodia" | "supervisor" | "central" | "escuela";
 
 const perfiles: Array<{ id: Perfil; etiqueta: string; detalle: string; icono: React.ReactNode }> = [
   { id: "cliente", etiqueta: "Cliente", detalle: "Estado del servicio y reportes", icono: <IconoPersona className="h-7 w-7" /> },
@@ -13,13 +14,27 @@ const perfiles: Array<{ id: Perfil; etiqueta: string; detalle: string; icono: Re
   { id: "custodia", etiqueta: "Custodia armada", detalle: "Operación, ruta y comunicación segura", icono: <IconoCamion className="h-7 w-7" /> },
   { id: "supervisor", etiqueta: "Supervisor", detalle: "Personal, puestos y novedades", icono: <IconoEscudoOk className="h-7 w-7" /> },
   { id: "central", etiqueta: "Central operativa", detalle: "Control general de la operación", icono: <Central className="h-7 w-7" /> },
+  { id: "escuela", etiqueta: "Escuela de Formación Sotersa", detalle: "Capacitación y procedimientos", icono: <IconoLibro className="h-7 w-7" /> },
 ];
 
-const destinos: Record<Perfil, string> = { cliente: "/portal", guardia: "/guardia?desde=perfiles", custodia: "/guardia/custodia", supervisor: "/supervisor", central: "/admin" };
+/**
+ * Que ve cada rol. El selector es solo una puerta: cada pantalla vuelve a
+ * comprobar el rol por su cuenta. Pero mostrarle a un agente la central o el
+ * portal del cliente es confuso y lo invita a probar puertas que no son suyas.
+ */
+const visibles: Record<RolUsuario, Perfil[]> = {
+  guardia: ["guardia", "custodia", "escuela"],
+  supervisor: ["supervisor", "escuela"],
+  cliente: ["cliente"],
+  admin: ["central", "supervisor", "guardia", "custodia", "cliente", "escuela"],
+};
 
-export function SelectorPerfil() {
+const destinos: Record<Perfil, string> = { cliente: "/portal", guardia: "/guardia?desde=perfiles", custodia: "/guardia/custodia", supervisor: "/supervisor", central: "/admin", escuela: "/escuela" };
+
+export function SelectorPerfil({ rol }: { rol: RolUsuario }) {
   const router = useRouter();
-  const [seleccionado, setSeleccionado] = useState<Perfil>("central");
+  const opciones = perfiles.filter((perfil) => visibles[rol].includes(perfil.id));
+  const [seleccionado, setSeleccionado] = useState<Perfil>(opciones[0]?.id ?? "guardia");
   const [saliendo, setSaliendo] = useState(false);
 
   async function cerrarSesion() {
@@ -32,7 +47,7 @@ export function SelectorPerfil() {
   return (
     <div className="mt-8 flex flex-1 flex-col">
       <div className="space-y-3 md:grid md:grid-cols-2 md:gap-3 md:space-y-0" role="radiogroup" aria-label="Selecciona tu perfil de acceso">
-        {perfiles.map((perfil) => {
+        {opciones.map((perfil) => {
           const activo = seleccionado === perfil.id;
           return (
             <button key={perfil.id} type="button" role="radio" aria-checked={activo} onClick={() => setSeleccionado(perfil.id)} className={`flex min-h-[92px] w-full items-center gap-4 rounded-2xl border-2 px-4 text-left transition ${activo ? "border-[#00cfff] bg-[#08213a] shadow-[0_0_24px_rgba(0,166,255,0.12)]" : "border-[#344659] bg-[#07172a]/80"}`}>

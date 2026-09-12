@@ -1,9 +1,13 @@
 import { Marca } from "@/app/componentes/marca";
 import { SelectorPerfil } from "./selector-perfil";
+import { exigirPerfil } from "@/lib/sesion";
 
 export const metadata = { title: "Selecciona tu perfil — SOTERSA" };
 
-export default function PaginaPerfiles() {
+export default async function PaginaPerfiles() {
+  // Es un punto de paso, no trata datos: se permite entrar sin consentimiento
+  // para que el aviso LOPDP pueda volver aqui al aceptarse.
+  const { perfil } = await exigirPerfil(["admin", "supervisor", "cliente", "guardia"], { permitirSinConsentimiento: true });
   return (
     <main className="min-h-dvh bg-[#020b18]">
       <div className="mx-auto flex min-h-dvh w-full max-w-[540px] flex-col md:max-w-3xl bg-[radial-gradient(circle_at_50%_8%,rgba(0,140,255,0.17),transparent_32%),linear-gradient(180deg,#020b18,#03152b_62%,#020b18)] px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))]">
@@ -13,7 +17,7 @@ export default function PaginaPerfiles() {
           <h1 className="mt-3 text-3xl font-bold text-white">Selecciona tu perfil</h1>
           <p className="mt-2 text-sm text-slate-400">Elige cómo deseas ingresar a la plataforma.</p>
         </header>
-        <SelectorPerfil />
+        <SelectorPerfil rol={perfil.rol} />
       </div>
     </main>
   );
