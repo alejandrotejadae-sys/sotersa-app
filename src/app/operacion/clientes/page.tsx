@@ -4,6 +4,8 @@ import { IconoEscudoOk, IconoFlecha, IconoPersona, IconoTurno } from "@/app/comp
 import { ahoraConDesfase, exigirPerfil } from "@/lib/sesion";
 import { FormularioCliente } from "./formulario-cliente";
 import { FormularioContacto } from "./formulario-contacto";
+import { AccionesCliente } from "./acciones-cliente";
+import { cambiarEstadoPuesto } from "./acciones";
 
 export const metadata = { title: "Clientes y servicios — SOTERSA" };
 export const dynamic = "force-dynamic";
@@ -91,9 +93,11 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
 
                     {faltantes.length > 0 && <p className="mt-3 rounded-xl border border-amber-500/25 bg-amber-500/8 px-3 py-2.5 text-xs text-amber-200">Información pendiente: {faltantes.join(", ")}.</p>}
 
+                    <AccionesCliente empresa={empresa} cuentas={cuentas.filter((cuenta) => cuenta.activo).length} />
+
                     <details className="group mt-4 rounded-xl border border-[#27425e] bg-[#041225]">
                       <summary className="flex cursor-pointer list-none items-center justify-between px-3 py-3 text-sm font-medium text-slate-200"><span className="flex items-center gap-2"><IconoTurno className="h-5 w-5 text-[#0788ff]" /> Servicios contratados</span><IconoFlecha className="h-4 w-4 rotate-90 text-slate-500 transition group-open:-rotate-90" /></summary>
-                      <div className="divide-y divide-[#20374e] border-t border-[#20374e]">{servicios.length === 0 ? <p className="px-3 py-4 text-sm text-slate-500">Sin puestos registrados.</p> : servicios.map((puesto) => <div key={puesto.id} className="px-3 py-3"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-medium">{puesto.codigo} · {puesto.nombre}</p><p className="mt-1 text-xs text-slate-500">{puesto.cobertura_horas} h · {puesto.armado ? "Armado" : "No armado"} · {puesto.contactos_puesto?.length ?? 0}/4 contactos</p></div><span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${puesto.activo ? "bg-emerald-400" : "bg-slate-500"}`} /></div>{(puesto.contactos_puesto?.length ?? 0) > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{puesto.contactos_puesto.map((contacto) => <span key={contacto.id} className="rounded-md bg-[#0b2035] px-2 py-1 text-[0.65rem] text-slate-400">{etiquetaContacto(contacto.tipo)} · {contacto.telefono}</span>)}</div>}</div>)}</div>
+                      <div className="divide-y divide-[#20374e] border-t border-[#20374e]">{servicios.length === 0 ? <p className="px-3 py-4 text-sm text-slate-500">Sin puestos registrados.</p> : servicios.map((puesto) => <div key={puesto.id} className="px-3 py-3"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-medium">{puesto.codigo} · {puesto.nombre}</p><p className="mt-1 text-xs text-slate-500">{puesto.cobertura_horas} h · {puesto.armado ? "Armado" : "No armado"} · {puesto.contactos_puesto?.length ?? 0}/4 contactos</p></div><div className="flex shrink-0 items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${puesto.activo ? "bg-emerald-400" : "bg-slate-500"}`} />{(puesto.activo || empresa.activo) && <form action={cambiarEstadoPuesto}><input type="hidden" name="puesto_id" value={puesto.id} /><input type="hidden" name="activar" value={puesto.activo ? "0" : "1"} /><button className={`rounded-md border px-2 py-1 text-[0.65rem] ${puesto.activo ? "border-[#27425e] text-slate-400" : "border-emerald-500/40 text-emerald-300"}`}>{puesto.activo ? "Cerrar" : "Reabrir"}</button></form>}</div></div>{(puesto.contactos_puesto?.length ?? 0) > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{puesto.contactos_puesto.map((contacto) => <span key={contacto.id} className="rounded-md bg-[#0b2035] px-2 py-1 text-[0.65rem] text-slate-400">{etiquetaContacto(contacto.tipo)} · {contacto.telefono}</span>)}</div>}</div>)}</div>
                     </details>
 
                     <Link href={`/portal?empresa=${empresa.id}`} className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#087ff0] to-[#02b9e8] px-4 text-sm font-semibold text-white shadow-lg shadow-blue-950/30">Ver portal del cliente <IconoFlecha className="h-4 w-4" /></Link>

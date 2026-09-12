@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { exigirPerfil } from "@/lib/sesion";
 import { esTipoServicio, servicio } from "@/lib/servicios";
+import { crearClienteAdministrador } from "@/lib/supabase/administrador";
 
 export type EstadoCliente = {
   tipo: "inicial" | "error" | "exito";
@@ -190,4 +191,171 @@ function extraerCoordenadas(valor: string): { lat: number; lng: number } | null 
     if (Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180) return { lat, lng };
   }
   return null;
+}
+
+// --- Edicion, estado y accesos ------------------------------------------------
+//
+// Todo lo de abajo trabaja sobre clientes que YA existen. Las altas estan
+// arriba; esto es lo que hace falta despues: completar datos que se cargaron
+// en blanco, cerrar un contrato sin borrar su historial, y darle acceso al
+// portal a quien lo firmo.
+
+export type EstadoAcceso = EstadoCliente & { usuario?: string; claveTemporal?: string };
+
+const CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Corrige los datos de contacto y facturacion de un cliente existente. */
+export async function actualizarCliente(_: EstadoCliente, formData: FormData): Promise<EstadoCliente> {
+  const id = String(formData.get("empresa_id") ?? "");
+  const nombre = texto(formData, "nombre", 120);
+  const ruc = texto(formData, "ruc", 13).replace(/\D/g, "");
+  const direccion = texto(formData, "direccion", 200);
+  const contactoNombre = texto(formData, "contacto_nombre", 120);
+  const contactoCorreo = texto(formData, "contacto_correo", 120).toLowerCase();
+  const contactoTelefono = texto(formData, "contacto_telefono", 40);
+
+  if (!UUID.test(id)) return { tipo: "error", mensaje: "Cliente no identificado." };
+  if (nombre.length < 3) return { tipo: "error", mensaje: "El nombre del cliente es obligatorio." };
+  if (ruc && ruc.length !== 13) return { tipo: "error", mensaje: "El RUC ecuatoriano tiene 13 dígitos." };
+  if (contactoCorreo && !CORREO.test(contactoCorreo)) return { tipo: "error", mensaje: "El correo de contacto no es válido." };
+
+  const { supabase } = await exigirPerfil(["admin"]);
+
+  // Mismo cuidado que en el alta: dos fichas con el mismo nombre parten el
+  // historial. Aqui se excluye la propia.
+  const { data: repetido } = await supabase.from("empresas_cliente").select("id").ilike("nombre", nombre).neq("id", id).maybeSingle();
+  if (repetido) return { tipo: "error", mensaje: `Ya existe otro cliente llamado «${nombre}».` };
+
+  const { error } = await supabase
+    .from("empresas_cliente")
+    .update({ nombre, ruc: ruc || null, direccion: direccion || null, contacto_nombre: contactoNombre || null, contacto_correo: contactoCorreo || null, contacto_telefono: contactoTelefono || null })
+    .eq("id", id);
+  if (error) return { tipo: "error", mensaje: "No fue posible guardar los cambios." };
+
+  refrescar();
+  revalidatePath("/portal");
+  return { tipo: "exito", mensaje: `Datos de «${nombre}» actualizados.` };
+}
+
+/**
+ * Cierra o reabre un contrato. Nunca se borra: las novedades, rondas y turnos
+ * de ese cliente son evidencia y tienen que seguir existiendo.
+ *
+ * Al desactivar se cierran tambien sus puestos y se bloquean sus cuentas del
+ * portal. Al reactivar se desbloquean las cuentas, pero los puestos quedan
+ * como estaban: el contrato nuevo no siempre cubre los mismos puntos, y es
+ * mejor que el admin reabra uno por uno los que correspondan.
+ */
+export async function cambiarEstadoCliente(formData: FormData) {
+  const id = String(formData.get("empresa_id") ?? "");
+  const activar = formData.get("activar") === "1";
+  if (!UUID.test(id)) return;
+
+  const { supabase } = await exigirPerfil(["admin"]);
+  const { data: empresa } = await supabase.from("empresas_cliente").select("id").eq("id", id).maybeSingle();
+  if (!empresa) return;
+
+  await supabase.from("empresas_cliente").update({ activo: activar }).eq("id", id);
+
+  if (!activar) {
+    const { data: puestos } = await supabase.from("puestos").select("id").eq("empresa_cliente_id", id).eq("activo", true);
+    const idsPuestos = (puestos ?? []).map((p) => p.id);
+    if (idsPuestos.length > 0) {
+      await supabase.from("puestos").update({ activo: false }).in("id", idsPuestos);
+      // Los agentes de esos puestos vuelven a "sin plaza" para que dotacion
+      // los muestre disponibles y no queden colgados de un puesto cerrado.
+      await supabase.from("guardias").update({ puesto_habitual_id: null }).in("puesto_habitual_id", idsPuestos);
+    }
+  }
+
+  // Las cuentas del portal siguen la suerte del contrato. Un cliente cesante
+  // no debe poder entrar a ver nada, ni siquiera su propio historial.
+  const { data: cuentas } = await supabase.from("perfiles").select("id").eq("rol", "cliente").eq("empresa_cliente_id", id);
+  if (cuentas && cuentas.length > 0) {
+    await supabase.from("perfiles").update({ activo: activar }).in("id", cuentas.map((c) => c.id));
+    const administrador = crearClienteAdministrador();
+    await Promise.all(cuentas.map((c) => administrador.auth.admin.updateUserById(c.id, { ban_duration: activar ? "none" : "876000h" })));
+  }
+
+  refrescar();
+  revalidatePath("/portal");
+}
+
+/** Cierra o reabre un puesto concreto sin tocar al cliente. */
+export async function cambiarEstadoPuesto(formData: FormData) {
+  const id = String(formData.get("puesto_id") ?? "");
+  const activar = formData.get("activar") === "1";
+  if (!UUID.test(id)) return;
+
+  const { supabase } = await exigirPerfil(["admin"]);
+  const { data: puesto } = await supabase.from("puestos").select("id,empresa_cliente_id").eq("id", id).maybeSingle();
+  if (!puesto) return;
+
+  // No se reabre un puesto de un cliente cerrado: primero se reactiva el cliente.
+  if (activar) {
+    const { data: empresa } = await supabase.from("empresas_cliente").select("activo").eq("id", puesto.empresa_cliente_id).maybeSingle();
+    if (!empresa?.activo) return;
+  }
+
+  await supabase.from("puestos").update({ activo: activar }).eq("id", id);
+  if (!activar) await supabase.from("guardias").update({ puesto_habitual_id: null }).eq("puesto_habitual_id", id);
+
+  refrescar();
+  revalidatePath("/operacion/rondas");
+  revalidatePath("/portal");
+}
+
+/**
+ * Crea la cuenta del portal para un cliente, desde su propia tarjeta.
+ *
+ * La clave temporal la puede escribir el admin (para dictarla por telefono) o
+ * se genera una. En ambos casos la cuenta nace con debe_cambiar_clave, asi que
+ * el cliente la reemplaza en su primer ingreso y el admin deja de conocerla.
+ */
+export async function crearAccesoCliente(_: EstadoAcceso, formData: FormData): Promise<EstadoAcceso> {
+  const empresaId = String(formData.get("empresa_id") ?? "");
+  const nombre = texto(formData, "nombre", 100);
+  const correo = texto(formData, "correo", 120).toLowerCase();
+  const claveElegida = String(formData.get("clave_temporal") ?? "").trim();
+
+  if (!UUID.test(empresaId)) return { tipo: "error", mensaje: "Cliente no identificado." };
+  if (nombre.length < 3) return { tipo: "error", mensaje: "Escribe el nombre de la persona que usará el acceso." };
+  if (!CORREO.test(correo)) return { tipo: "error", mensaje: "Escribe un correo electrónico válido." };
+  if (claveElegida && claveElegida.length < 8) return { tipo: "error", mensaje: "La clave temporal necesita al menos 8 caracteres." };
+
+  const { supabase } = await exigirPerfil(["admin"]);
+  const { data: empresa } = await supabase.from("empresas_cliente").select("id,nombre,contacto_correo").eq("id", empresaId).eq("activo", true).maybeSingle();
+  if (!empresa) return { tipo: "error", mensaje: "El cliente no está activo." };
+
+  const claveTemporal = claveElegida || generarClave();
+  const administrador = crearClienteAdministrador();
+  const { data: creado, error: errorAuth } = await administrador.auth.admin.createUser({
+    email: correo,
+    password: claveTemporal,
+    email_confirm: true,
+    app_metadata: { rol: "cliente", empresa_cliente_id: empresa.id, zona_id: null },
+    user_metadata: { nombre, rol: "cliente", debe_cambiar_clave: true },
+  });
+  if (errorAuth || !creado.user) {
+    return { tipo: "error", mensaje: errorAuth?.message.toLowerCase().includes("registered") ? "Ya existe una cuenta con ese correo." : "No fue posible crear la cuenta en este momento." };
+  }
+
+  const { error: errorPerfil } = await administrador.from("perfiles").upsert({ id: creado.user.id, rol: "cliente", nombre, empresa_cliente_id: empresa.id, zona_id: null, activo: true }, { onConflict: "id" });
+  if (errorPerfil) {
+    await administrador.auth.admin.deleteUser(creado.user.id);
+    return { tipo: "error", mensaje: "La cuenta no pudo vincularse con el cliente." };
+  }
+
+  // Si la ficha no tenia correo, este es el mejor dato que vamos a tener.
+  if (!empresa.contacto_correo) await supabase.from("empresas_cliente").update({ contacto_correo: correo }).eq("id", empresa.id);
+
+  refrescar();
+  return { tipo: "exito", mensaje: `Acceso creado para ${empresa.nombre}. Entrega estas credenciales solo a ${nombre}; deberá cambiar la clave al entrar.`, usuario: correo, claveTemporal };
+}
+
+function generarClave() {
+  const alfabeto = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const numeros = new Uint32Array(10);
+  crypto.getRandomValues(numeros);
+  return `Sot!${[...numeros].map((n) => alfabeto[n % alfabeto.length]).join("")}`;
 }
