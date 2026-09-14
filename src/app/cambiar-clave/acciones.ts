@@ -11,7 +11,7 @@ export async function cambiarClave(_: EstadoClave, formData: FormData): Promise<
   const confirmacion = String(formData.get("confirmacion") ?? "");
   if (clave !== confirmacion) return { tipo: "error", mensaje: "Las contraseñas no coinciden." };
 
-  const { supabase, user, perfil } = await exigirPerfil(["admin", "supervisor", "cliente", "guardia"], { permitirClaveTemporal: true, permitirSinConsentimiento: true });
+  const { supabase, user, perfil } = await exigirPerfil(["admin", "supervisor", "cliente", "guardia", "operativo"], { permitirClaveTemporal: true, permitirSinConsentimiento: true });
   if (perfil.rol === "guardia") {
     const { data: guardia } = await supabase.from("guardias").select("cedula").eq("perfil_id", user.id).maybeSingle();
     const resultado = validarPin(clave, guardia?.cedula ?? undefined);
@@ -22,7 +22,12 @@ export async function cambiarClave(_: EstadoClave, formData: FormData): Promise<
   }
 
   const { error } = await supabase.auth.updateUser({ password: clave, data: { ...user.user_metadata, debe_cambiar_clave: false } });
-  if (error) return { tipo: "error", mensaje: "No fue posible actualizar la contraseña. Intenta nuevamente." };
+  if (error) {
+    const m = error.message.toLowerCase();
+    if (m.includes("different from the old") || m.includes("same password")) return { tipo: "error", mensaje: "La nueva contraseña no puede ser igual a la temporal. Elige otra." };
+    if (m.includes("weak") || m.includes("password should")) return { tipo: "error", mensaje: `Supabase rechazó la contraseña: ${error.message}` };
+    return { tipo: "error", mensaje: `No fue posible actualizar la contraseña (${error.message}).` };
+  }
   revalidatePath("/", "layout");
   return { tipo: "exito", mensaje: "Tu nueva contraseña quedó guardada correctamente." };
 }

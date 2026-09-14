@@ -9,7 +9,7 @@ export type EstadoPerfil = { tipo: "inicial" | "error" | "exito"; mensaje: strin
 const TIPOS_IMAGEN = new Map([["image/jpeg", "jpg"], ["image/png", "png"], ["image/webp", "webp"]]);
 
 export async function guardarPerfil(_: EstadoPerfil, formData: FormData): Promise<EstadoPerfil> {
-  const { user, perfil } = await exigirPerfil(["admin", "supervisor", "cliente", "guardia"]);
+  const { user, perfil } = await exigirPerfil(["admin", "supervisor", "cliente", "guardia", "operativo"]);
   const nombre = String(formData.get("nombre") ?? "").trim().replace(/\s+/g, " ").slice(0, 100);
   const telefono = String(formData.get("telefono") ?? "").trim().replace(/[^\d+() -]/g, "").slice(0, 24);
   const foto = formData.get("foto");
