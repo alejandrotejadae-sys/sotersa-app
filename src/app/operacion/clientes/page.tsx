@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Marca, Pulso } from "@/app/componentes/marca";
 import { IconoEscudoOk, IconoFlecha, IconoPersona } from "@/app/componentes/iconos";
-import { ahoraConDesfase, exigirPerfil } from "@/lib/sesion";
+import { ahoraConDesfase, exigirPerfil, uno } from "@/lib/sesion";
 import { FormularioCliente } from "./formulario-cliente";
 import { FormularioContacto } from "./formulario-contacto";
 import { AccionesCliente } from "./acciones-cliente";
@@ -24,7 +24,7 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
   const filtro: Filtro = params.filtro === "activos" || params.filtro === "incompletos" ? params.filtro : "todos";
   const desde = ahoraConDesfase(-30 * 24);
 
-  const [empresasR, puestosR, guardiasR, perfilesR, novedadesR, supervisoresR, supervisionR] = await Promise.all([
+  const [empresasR, puestosR, guardiasR, perfilesR, novedadesR, supervisoresR, supervisionR, relevosR] = await Promise.all([
     supabase.from("empresas_cliente").select("id,nombre,ruc,direccion,contacto_nombre,contacto_correo,contacto_telefono,activo").order("nombre"),
     supabase.from("puestos").select("id,empresa_cliente_id,codigo,nombre,cobertura_horas,armado,direccion,tipo_servicio,origen,destino,lat,lng,zona_id,activo,contactos_puesto(id,tipo,nombre,telefono)").order("codigo"),
     supabase.from("guardias").select("id,nombre,puesto_habitual_id,es_relevo").eq("activo", true).order("nombre"),
@@ -32,7 +32,10 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
     supabase.from("novedades").select("id,puesto_id,estado,severidad").gte("hora_captura", desde),
     supabase.from("perfiles").select("id,nombre").eq("rol", "supervisor").eq("activo", true).order("nombre"),
     supabase.from("supervision_puestos").select("supervisor_id,puesto_id"),
+    supabase.from("relevos_puesto").select("puesto_id,guardia_id,guardias(nombre)"),
   ]);
+  const relevosDe = new Map<string, { id: string; nombre: string }[]>();
+  for (const r of relevosR.data ?? []) { const g = uno(r.guardias); if (!g) continue; if (!relevosDe.has(r.puesto_id)) relevosDe.set(r.puesto_id, []); relevosDe.get(r.puesto_id)!.push({ id: r.guardia_id, nombre: g.nombre }); }
   const supervisorDe = new Map<string, string>();
   for (const s of supervisionR.data ?? []) if (!supervisorDe.has(s.puesto_id)) supervisorDe.set(s.puesto_id, s.supervisor_id);
 
@@ -126,7 +129,7 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
 
                     <ServiciosCliente
                       empresa={{ id: empresa.id, nombre: empresa.nombre, activo: empresa.activo }}
-                      puestos={servicios.map((puesto) => ({ id: puesto.id, codigo: puesto.codigo, nombre: puesto.nombre, direccion: puesto.direccion, tipo_servicio: puesto.tipo_servicio, armado: puesto.armado, origen: puesto.origen, destino: puesto.destino, lat: puesto.lat, lng: puesto.lng, supervisor_id: supervisorDe.get(puesto.id) ?? null, activo: puesto.activo, contactos: puesto.contactos_puesto ?? [] }))}
+                      puestos={servicios.map((puesto) => ({ id: puesto.id, codigo: puesto.codigo, nombre: puesto.nombre, direccion: puesto.direccion, tipo_servicio: puesto.tipo_servicio, armado: puesto.armado, origen: puesto.origen, destino: puesto.destino, lat: puesto.lat, lng: puesto.lng, supervisor_id: supervisorDe.get(puesto.id) ?? null, activo: puesto.activo, contactos: puesto.contactos_puesto ?? [], relevos: relevosDe.get(puesto.id) ?? [] }))}
                       guardias={guardias}
                       supervisores={supervisoresR.data ?? []}
                       soloLectura={!editable}

@@ -6,6 +6,7 @@ import { Asignador } from "../dotacion/asignador";
 import { liberarAgente } from "../dotacion/acciones";
 import { actualizarPuesto, agregarPuesto, cambiarEstadoPuesto, type EstadoCliente } from "./acciones";
 import { CamposPuesto } from "./formulario-cliente";
+import { RelevosPuesto, type Relevo } from "./relevos-puesto";
 
 const INICIAL: EstadoCliente = { tipo: "inicial", mensaje: "" };
 const control = "mt-2 min-h-11 w-full rounded-xl border border-[#27425e] bg-[#041225] px-3 text-sm text-white outline-none focus:border-[#0788ff]";
@@ -24,6 +25,7 @@ export type PuestoCliente = {
   supervisor_id: string | null;
   activo: boolean;
   contactos: { id: string; tipo: string; nombre: string | null; telefono: string }[];
+  relevos: Relevo[];
 };
 
 export type GuardiaResumen = { id: string; nombre: string; puesto_habitual_id: string | null; es_relevo: boolean };
@@ -60,7 +62,7 @@ export function ServiciosCliente({ empresa, puestos, guardias, supervisores = []
           <p className="px-3 py-4 text-sm text-slate-500">Sin puestos registrados.</p>
         ) : (
           puestos.map((puesto) => (
-            <Puesto key={puesto.id} puesto={puesto} empresaActiva={empresa.activo} asignados={guardias.filter((g) => g.puesto_habitual_id === puesto.id)} disponibles={disponibles} supervisores={supervisores} soloLectura={soloLectura} />
+            <Puesto key={puesto.id} puesto={puesto} empresaActiva={empresa.activo} asignados={guardias.filter((g) => g.puesto_habitual_id === puesto.id)} disponibles={disponibles} todos={guardias} supervisores={supervisores} soloLectura={soloLectura} />
           ))
         )}
       </div>
@@ -68,7 +70,7 @@ export function ServiciosCliente({ empresa, puestos, guardias, supervisores = []
   );
 }
 
-function Puesto({ puesto, empresaActiva, asignados, disponibles, supervisores, soloLectura }: { puesto: PuestoCliente; empresaActiva: boolean; asignados: GuardiaResumen[]; disponibles: GuardiaResumen[]; supervisores: SupervisorResumen[]; soloLectura: boolean }) {
+function Puesto({ puesto, empresaActiva, asignados, disponibles, todos, supervisores, soloLectura }: { puesto: PuestoCliente; empresaActiva: boolean; asignados: GuardiaResumen[]; disponibles: GuardiaResumen[]; todos: GuardiaResumen[]; supervisores: SupervisorResumen[]; soloLectura: boolean }) {
   const [editando, setEditando] = useState(false);
   const modalidad = servicio(puesto.tipo_servicio);
   const plazas = modalidad.fijos;
@@ -140,6 +142,7 @@ function Puesto({ puesto, empresaActiva, asignados, disponibles, supervisores, s
             </ul>
           )}
           {!soloLectura && <Asignador puestoId={puesto.id} disponibles={disponibles} />}
+          <RelevosPuesto puestoId={puesto.id} codigo={puesto.codigo} asignados={puesto.relevos} candidatos={todos.filter((g) => g.puesto_habitual_id !== puesto.id)} soloLectura={soloLectura} />
         </div>
       )}
     </div>
