@@ -151,7 +151,7 @@ export default async function PaginaSupervisor({ searchParams }: { searchParams:
           </section>
 
           <section className="overflow-hidden rounded-2xl border border-[#27425e] bg-[#07172a]/95 lg:col-span-5">
-            <div className="flex items-center justify-between border-b border-[#20374e] px-4 py-3.5"><h2 className="text-lg font-semibold">Turnos de hoy <span className="text-sm font-normal text-slate-500">· {r.turnosHoy.length}</span></h2><Link href="/operacion/turnos" className="flex items-center gap-1 text-sm font-medium text-[#0788ff]">Cuadrante <IconoFlecha className="h-4 w-4" /></Link></div>
+            <div className="flex items-center justify-between border-b border-[#20374e] px-4 py-3.5"><h2 className="text-lg font-semibold">Turnos de hoy <span className="text-sm font-normal text-slate-500">· {r.turnosHoy.length}</span></h2><Link href="/operacion/turnos/mes" className="flex items-center gap-1 text-sm font-medium text-[#0788ff]">Cuadrante del mes <IconoFlecha className="h-4 w-4" /></Link></div>
             {r.turnosHoy.length === 0 ? <p className="px-4 py-8 text-center text-sm text-slate-400">No hay turnos cargados para hoy en estos puestos.</p> : (
               <div className="max-h-[32rem] divide-y divide-[#20374e] overflow-y-auto">{r.turnosHoy.map((t) => <FilaTurno key={t.id} turno={t} />)}</div>
             )}
