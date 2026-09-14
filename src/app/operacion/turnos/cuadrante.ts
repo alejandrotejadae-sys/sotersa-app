@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { exigirPerfil } from "@/lib/sesion";
 import { servicio } from "@/lib/servicios";
 import type { TipoTurno } from "@/lib/tipos";
+import { puestosQuePuedeProgramar } from "./permisos";
+import { crearClienteAdministrador } from "@/lib/supabase/administrador";
 
 export type EstadoCuadrante = {
   tipo: "inicial" | "error" | "exito";
@@ -47,15 +49,11 @@ export async function generarCuadrante(
   }
   if (!/^\d{2}:\d{2}$/.test(horaInicio)) return err("Revisa la hora de inicio.");
 
-  const { supabase } = await exigirPerfil(["admin"]);
+  const { supabase, perfil } = await exigirPerfil(["admin", "supervisor"]);
 
-  const { data: puesto } = await supabase
-    .from("puestos")
-    .select("id,codigo,nombre,tipo_servicio,empresa_cliente_id")
-    .eq("id", puestoId)
-    .eq("activo", true)
-    .maybeSingle();
-  if (!puesto) return err("Ese puesto ya no está activo.");
+  const programables = await puestosQuePuedeProgramar(supabase, perfil);
+  const puesto = programables.find((p) => p.id === puestoId) ?? null;
+  if (!puesto) return err(perfil.rol === "supervisor" ? "Ese puesto no está entre los que supervisas." : "Ese puesto ya no está activo.");
 
   const modalidad = servicio(puesto.tipo_servicio);
 
@@ -153,7 +151,10 @@ export async function generarCuadrante(
   const primero = nuevos[0].inicio_programado;
   const ultimo = nuevos[nuevos.length - 1].fin_programado;
 
-  const { data: existentes } = await supabase
+  // El cruce se comprueba con la llave de servicio: un supervisor solo ve los
+  // turnos de sus puestos, pero el agente puede tener turno en un puesto de
+  // otro supervisor. Sin esto se podria programar dos veces a la misma persona.
+  const { data: existentes } = await crearClienteAdministrador()
     .from("turnos")
     .select("guardia_id,inicio_programado,fin_programado")
     .neq("estado", "ausente")

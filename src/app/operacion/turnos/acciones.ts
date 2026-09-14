@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { exigirPerfil } from "@/lib/sesion";
 import type { TipoTurno } from "@/lib/tipos";
+import { puestosQuePuedeProgramar } from "./permisos";
+import { crearClienteAdministrador } from "@/lib/supabase/administrador";
 
 export type EstadoProgramacion = {
   tipo: "inicial" | "error" | "exito";
@@ -30,15 +32,20 @@ export async function programarTurno(_: EstadoProgramacion, formData: FormData):
   if (!Number.isFinite(duracion) || duracion <= 0) return { tipo: "error", mensaje: "La hora de finalización debe ser posterior al inicio." };
   if (duracion > 24 * 60 * 60 * 1000) return { tipo: "error", mensaje: "Un turno no puede superar 24 horas." };
 
-  const { supabase } = await exigirPerfil(["admin"]);
-  const [guardiaR, puestoR] = await Promise.all([
+  const { supabase, perfil } = await exigirPerfil(["admin", "supervisor"]);
+  const [guardiaR, programables] = await Promise.all([
     supabase.from("guardias").select("id,nombre").eq("id", guardiaId).eq("activo", true).maybeSingle(),
-    supabase.from("puestos").select("id,codigo,nombre").eq("id", puestoId).eq("activo", true).maybeSingle(),
+    puestosQuePuedeProgramar(supabase, perfil),
   ]);
+  const puestoR = { data: programables.find((p) => p.id === puestoId) ?? null };
 
-  if (!guardiaR.data || !puestoR.data) return { tipo: "error", mensaje: "El agente de seguridad o el puesto ya no están activos." };
+  if (!guardiaR.data) return { tipo: "error", mensaje: "El agente de seguridad ya no está activo." };
+  if (!puestoR.data) return { tipo: "error", mensaje: perfil.rol === "supervisor" ? "Ese puesto no está entre los que supervisas." : "Ese puesto ya no está activo." };
 
-  const { data: cruces, error: errorCruces } = await supabase
+  // El cruce se comprueba con la llave de servicio: un supervisor solo ve los
+  // turnos de sus puestos, pero el agente puede tener turno en un puesto de
+  // otro supervisor. Sin esto se podria programar dos veces a la misma persona.
+  const { data: cruces, error: errorCruces } = await crearClienteAdministrador()
     .from("turnos")
     .select("id,guardia_id,puesto_id")
     .lt("inicio_programado", fin.toISOString())

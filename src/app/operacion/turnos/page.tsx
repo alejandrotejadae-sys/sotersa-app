@@ -5,6 +5,8 @@ import { exigirPerfil, fechaHoraEcuador, horaEcuador, uno } from "@/lib/sesion";
 import { esLector } from "@/lib/roles";
 import { FormularioTurno } from "./formulario-turno";
 import { FormularioCuadrante } from "./formulario-cuadrante";
+import { FormularioCarga } from "./formulario-carga";
+import { puestosQuePuedeProgramar } from "./permisos";
 
 export const metadata = { title: "Turnos y asistencia — SOTERSA" };
 export const dynamic = "force-dynamic";
@@ -16,15 +18,17 @@ export default async function PaginaTurnos() {
   const finHoy = new Date(inicioHoy.getTime() + 24 * 60 * 60 * 1000);
   const finPeriodo = new Date(inicioHoy.getTime() + 8 * 24 * 60 * 60 * 1000);
 
-  const [guardiasR, puestosR, turnosR, vaciosR] = await Promise.all([
+  const programa = perfil.rol === "admin" || perfil.rol === "supervisor";
+  const [guardiasR, programables, turnosR, vaciosR] = await Promise.all([
     supabase.from("guardias").select("id,nombre").eq("activo", true).order("nombre"),
-    supabase.from("puestos").select("id,codigo,nombre").eq("activo", true).order("codigo"),
+    puestosQuePuedeProgramar(supabase, perfil),
     supabase.from("turnos").select("id,tipo,inicio_programado,fin_programado,estado,guardias(nombre),puestos(codigo,nombre),aperturas_turno(id,hora_captura,checklist,observacion)").lt("inicio_programado", finPeriodo.toISOString()).gt("fin_programado", inicioHoy.toISOString()).order("inicio_programado"),
     supabase.from("v_puestos_sin_apertura").select("turno_id,puesto_codigo,puesto_nombre,guardia_nombre,minutos_de_retraso").order("minutos_de_retraso", { ascending: false }),
   ]);
 
   const guardias = guardiasR.data ?? [];
-  const puestos = puestosR.data ?? [];
+  // Para el supervisor, solo sus puestos; se muestran con el cliente porque los codigos se repiten.
+  const puestos = programables.map((p) => ({ id: p.id, codigo: p.codigo, nombre: `${p.empresa} · ${p.nombre}` }));
   const turnos = turnosR.data ?? [];
   const vacios = vaciosR.data ?? [];
   const turnosHoy = turnos.filter((turno) => new Date(turno.inicio_programado) < finHoy && new Date(turno.fin_programado) > inicioHoy);
@@ -41,7 +45,7 @@ export default async function PaginaTurnos() {
       <section className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4"><Resumen titulo="Programados hoy" valor={turnosHoy.length} /><Resumen titulo="En puesto" valor={abiertos.length} normal /><Resumen titulo="Pendientes" valor={pendientes.length} alerta={pendientes.length > 0} /><Resumen titulo="Alertas de apertura" valor={vacios.length} emergencia={vacios.length > 0} /></section>
 
       <div className="mt-5 grid items-start gap-5 lg:grid-cols-[0.8fr_1.2fr]">
-        {perfil.rol === "admin" ? <section className="rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4 lg:sticky lg:top-5"><div className="mb-4 flex items-center gap-3 border-b border-[#20374e] pb-4"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#0788ff]/12 text-[#49b6ff]"><IconoTurno className="h-6 w-6" /></span><div><h2 className="font-semibold">Programar turno</h2><p className="text-xs text-slate-500">La disponibilidad se valida antes de guardar.</p></div></div><FormularioTurno guardias={guardias} puestos={puestos} /><div className="mt-5 border-t border-[#20374e] pt-5"><div className="mb-4 flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#0788ff]/12 text-[#49b6ff]"><IconoTurno className="h-6 w-6" /></span><div><h2 className="font-semibold">Generar cuadrante</h2><p className="text-xs text-slate-500">Varios días de una vez, con los fijos del puesto.</p></div></div><FormularioCuadrante puestos={puestos} /></div></section> : <section className="rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-5"><IconoEscudoOk className="h-8 w-8 text-[#0788ff]" /><h2 className="mt-3 font-semibold">Vista de supervisión</h2><p className="mt-2 text-sm leading-6 text-slate-400">Puedes revisar la cobertura y la asistencia. La programación de turnos está reservada para el administrador.</p></section>}
+        {programa ? <section className="rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4 lg:sticky lg:top-5"><div className="mb-4 flex items-center gap-3 border-b border-[#20374e] pb-4"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#0788ff]/12 text-[#49b6ff]"><IconoTurno className="h-6 w-6" /></span><div><h2 className="font-semibold">Programar turno</h2><p className="text-xs text-slate-500">La disponibilidad se valida antes de guardar.</p></div></div><FormularioTurno guardias={guardias} puestos={puestos} /><div className="mt-5 border-t border-[#20374e] pt-5"><div className="mb-4 flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#0788ff]/12 text-[#49b6ff]"><IconoTurno className="h-6 w-6" /></span><div><h2 className="font-semibold">Generar cuadrante</h2><p className="text-xs text-slate-500">Varios días de una vez, con los fijos del puesto.</p></div></div><FormularioCuadrante puestos={puestos} /></div><div className="mt-5 border-t border-[#20374e] pt-5"><div className="mb-4 flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#0788ff]/12 text-[#49b6ff]"><IconoTurno className="h-6 w-6" /></span><div><h2 className="font-semibold">Subir Excel de turnos</h2><p className="text-xs text-slate-500">Un turno por fila. Se valida todo antes de guardar.</p></div></div><FormularioCarga /></div>{perfil.rol === "supervisor" && puestos.length === 0 && <p className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-3 text-xs leading-5 text-amber-200">Todavía no tienes puestos asignados; pide a la administración que te los asigne para poder programar.</p>}</section> : <section className="rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-5"><IconoEscudoOk className="h-8 w-8 text-[#0788ff]" /><h2 className="mt-3 font-semibold">Vista de consulta</h2><p className="mt-2 text-sm leading-6 text-slate-400">Puedes revisar la cobertura y la asistencia. La programación de turnos la hacen el supervisor de cada puesto y el administrador.</p></section>}
 
         <section className="overflow-hidden rounded-2xl border border-[#27425e] bg-[#07172a]/95"><div className="flex items-center justify-between border-b border-[#20374e] px-4 py-4"><h2 className="font-semibold">Cobertura de hoy</h2><span className="text-xs text-slate-500">{hoy}</span></div><div className="divide-y divide-[#20374e]">{turnosHoy.length === 0 ? <Vacio texto="No hay turnos programados para hoy." /> : turnosHoy.map((turno) => <FilaTurno key={turno.id} turno={turno} />)}</div></section>
       </div>
