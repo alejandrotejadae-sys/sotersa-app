@@ -56,8 +56,8 @@ export async function crearCuenta(_: EstadoAlta, formData: FormData): Promise<Es
       if (!data) return fallo("La empresa seleccionada ya no está activa.");
       empresa = data.id;
     }
-    if (rol === "supervisor") {
-      if (!UUID.test(zonaId)) return fallo("Selecciona la zona del supervisor.");
+    if (rol === "supervisor" && zonaId) {
+      if (!UUID.test(zonaId)) return fallo("Zona no válida.");
       const { data } = await administrador.from("zonas").select("id").eq("id", zonaId).maybeSingle();
       if (!data) return fallo("La zona seleccionada no existe.");
       zona = data.id;

@@ -5,14 +5,14 @@ import { uno } from "@/lib/sesion";
 import { acumularCobertura, estadoDePuestos, SELECT_TURNOS_AHORA_CON_TELEFONO, type PuestoAhora, type ResumenCobertura } from "@/lib/estado-puestos";
 
 /**
- * Lo que el supervisor necesita ver de SU zona. El filtro de zona sale del
- * perfil verificado en el servidor (para el supervisor) o del selector (solo
- * admin y operativo). "todas" y "sin-zona" existen para el admin: hoy la
- * mayoria de los puestos no tienen zona y alguien tiene que verlos.
+ * Lo que un supervisor necesita ver de SUS puestos (tabla
+ * supervision_puestos). El filtro sale del usuario verificado en el servidor
+ * (el supervisor solo puede ver los suyos) o del selector, que existe solo
+ * para admin y operativo: por supervisor, todos, o los que nadie supervisa.
  */
-export type FiltroZona = { tipo: "zona"; id: string } | { tipo: "todas" } | { tipo: "sin-zona" };
+export type FiltroSupervision = { tipo: "supervisor"; id: string } | { tipo: "todos" } | { tipo: "sin-supervisor" };
 
-export type PuestoZona = PuestoAhora & { empresa: string; zona: string | null };
+export type PuestoZona = PuestoAhora & { empresa: string; supervisores: string[] };
 
 export type TurnoHoy = {
   id: string;
@@ -51,18 +51,35 @@ export type ResumenZona = {
   rondasHoy: number;
 };
 
-export async function resumenDeZona(filtro: FiltroZona): Promise<ResumenZona> {
+export async function resumenDeZona(filtro: FiltroSupervision): Promise<ResumenZona> {
   const administrador = crearClienteAdministrador();
   const ms = Date.now();
   const hace7d = new Date(ms - 7 * 24 * 3600 * 1000).toISOString();
   const hace24h = new Date(ms - 24 * 3600 * 1000).toISOString();
   const en24h = new Date(ms + 24 * 3600 * 1000).toISOString();
 
-  let consulta = administrador.from("puestos").select("id,codigo,nombre,tipo_servicio,cobertura_horas,armado,direccion,lat,lng,zona_id,creado_en,puntos_ronda(id,activo),empresas_cliente(nombre),zonas(nombre)").eq("activo", true).order("codigo");
-  if (filtro.tipo === "zona") consulta = consulta.eq("zona_id", filtro.id);
-  else if (filtro.tipo === "sin-zona") consulta = consulta.is("zona_id", null);
+  // Quien supervisa que. Se trae completo (son pocas filas) para etiquetar
+  // cada puesto con sus supervisores y para resolver "sin supervisor".
+  const { data: asignaciones } = await administrador.from("supervision_puestos").select("supervisor_id,puesto_id,perfiles!supervision_puestos_supervisor_id_fkey(nombre,activo)");
+  const supervisoresDe = new Map<string, string[]>();
+  const puestosDe = new Map<string, Set<string>>();
+  for (const a of asignaciones ?? []) {
+    const perfil = uno(a.perfiles);
+    if (!perfil?.activo) continue;
+    if (!supervisoresDe.has(a.puesto_id)) supervisoresDe.set(a.puesto_id, []);
+    supervisoresDe.get(a.puesto_id)!.push(perfil.nombre);
+    if (!puestosDe.has(a.supervisor_id)) puestosDe.set(a.supervisor_id, new Set());
+    puestosDe.get(a.supervisor_id)!.add(a.puesto_id);
+  }
+
+  let consulta = administrador.from("puestos").select("id,codigo,nombre,tipo_servicio,cobertura_horas,armado,direccion,lat,lng,zona_id,creado_en,puntos_ronda(id,activo),empresas_cliente(nombre)").eq("activo", true).order("codigo");
+  if (filtro.tipo === "supervisor") {
+    const ids = [...(puestosDe.get(filtro.id) ?? [])];
+    if (ids.length === 0) return { puestos: [], turnosHoy: [], pendientes: [], abiertas: [], semana: acumularCobertura([], hace7d, ms), rondasHoy: 0 };
+    consulta = consulta.in("id", ids);
+  }
   const { data: puestosBase } = await consulta;
-  const base = puestosBase ?? [];
+  const base = (puestosBase ?? []).filter((p) => filtro.tipo !== "sin-supervisor" || !supervisoresDe.has(p.id));
   const idsPuestos = base.map((p) => p.id);
   const vacio: ResumenZona = { puestos: [], turnosHoy: [], pendientes: [], abiertas: [], semana: acumularCobertura([], hace7d, ms), rondasHoy: 0 };
   if (idsPuestos.length === 0) return vacio;
@@ -75,10 +92,9 @@ export async function resumenDeZona(filtro: FiltroZona): Promise<ResumenZona> {
 
   const turnos = turnosR.data ?? [];
   const nombreEmpresa = new Map(base.map((p) => [p.id, uno(p.empresas_cliente)?.nombre ?? ""]));
-  const nombreZona = new Map(base.map((p) => [p.id, uno(p.zonas)?.nombre ?? null]));
   const codigoPuesto = new Map(base.map((p) => [p.id, `${p.codigo} · ${p.nombre}`]));
 
-  const puestos: PuestoZona[] = estadoDePuestos(base, turnos, ms).map((p) => ({ ...p, empresa: nombreEmpresa.get(p.id) ?? "", zona: nombreZona.get(p.id) ?? null }));
+  const puestos: PuestoZona[] = estadoDePuestos(base, turnos, ms).map((p) => ({ ...p, empresa: nombreEmpresa.get(p.id) ?? "", supervisores: supervisoresDe.get(p.id) ?? [] }));
   const semana = acumularCobertura(turnos, hace7d, ms);
 
   const turnosHoy: TurnoHoy[] = turnos

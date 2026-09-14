@@ -64,14 +64,13 @@ export async function resumenDeEmpresa(empresaId: string | null): Promise<Resume
   const puestosBase = puestosR.data ?? [];
   const idsPuestos = puestosBase.map((p) => p.id);
   if (idsPuestos.length === 0) return { ...vacio, empresa };
-  const zonas = [...new Set(puestosBase.map((p) => p.zona_id).filter((z): z is string => Boolean(z)))];
 
   const [turnosR, novedadesR, slaR, supervisoresR, contactosR] = await Promise.all([
     // Turnos de la ultima semana y del proximo dia: sirven para "ahora" y para la cobertura semanal.
     administrador.from("turnos").select(SELECT_TURNOS_AHORA).in("puesto_id", idsPuestos).gte("fin_programado", hace7d).lte("inicio_programado", en24h).neq("estado", "ausente"),
     administrador.from("novedades").select("id,tipo,severidad,descripcion,hora_captura,estado,nota_supervisor,puestos(codigo)").in("puesto_id", idsPuestos).eq("visible_cliente", true).in("estado", ["validada", "notificada", "cerrada"]).gte("hora_captura", hace30d).order("hora_captura", { ascending: false }),
     administrador.from("v_sla_novedades").select("hora_captura,cumple_sla").eq("empresa_cliente_id", empresaId).gte("hora_captura", hace30d).order("hora_captura", { ascending: false }),
-    zonas.length ? administrador.from("perfiles").select("nombre,telefono").eq("rol", "supervisor").eq("activo", true).in("zona_id", zonas).order("nombre") : Promise.resolve({ data: [] as { nombre: string; telefono: string | null }[] }),
+    administrador.from("supervision_puestos").select("perfiles!supervision_puestos_supervisor_id_fkey(nombre,telefono,activo)").in("puesto_id", idsPuestos),
     administrador.from("contactos_puesto").select("tipo,nombre,telefono").in("puesto_id", idsPuestos),
   ]);
 
@@ -86,11 +85,18 @@ export async function resumenDeEmpresa(empresaId: string | null): Promise<Resume
   const cumplidos = slaFilas.filter((f) => f.cumple_sla).length;
   const sla = { medidos: slaFilas.length, cumplidos, puntaje: slaFilas.length ? Math.round((cumplidos / slaFilas.length) * 100) : 100, ultimo: slaR.data?.[0]?.hora_captura ?? null };
 
-  const supervisores: Contacto[] = (supervisoresR.data ?? []).filter((s) => s.telefono).map((s) => ({ nombre: s.nombre, telefono: s.telefono!, etiqueta: "Supervisor de zona" }));
+  const vistos = new Set<string>();
+  const supervisores: Contacto[] = [];
+  for (const fila of supervisoresR.data ?? []) {
+    const s = uno(fila.perfiles);
+    if (!s?.activo || !s.telefono || vistos.has(s.nombre)) continue;
+    vistos.add(s.nombre);
+    supervisores.push({ nombre: s.nombre, telefono: s.telefono, etiqueta: "Supervisor" });
+  }
   const contactos = contactosR.data ?? [];
   const central = contactos.find((c) => c.tipo === "central_monitoreo");
   const jefe = contactos.find((c) => c.tipo === "jefe_operaciones");
-  if (supervisores.length === 0) { const s = contactos.find((c) => c.tipo === "supervisor_zona"); if (s) supervisores.push({ nombre: s.nombre, telefono: s.telefono, etiqueta: "Supervisor de zona" }); }
+  if (supervisores.length === 0) { const s = contactos.find((c) => c.tipo === "supervisor_zona"); if (s) supervisores.push({ nombre: s.nombre, telefono: s.telefono, etiqueta: "Supervisor" }); }
 
   const critica = puestos.some((p) => p.estado === "sin_cobertura" || p.estado === "sin_apertura") || novedades.lista.some((n) => n.severidad === "emergencia" && n.estado !== "cerrada");
   const atencion = puestos.some((p) => p.estado === "sin_ronda") || novedades.abiertas > 0;

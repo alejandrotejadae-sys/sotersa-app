@@ -12,23 +12,50 @@ function refrescar() {
   revalidatePath("/admin");
 }
 
-/**
- * Atajo del admin: todos los puestos activos que aun no tienen zona pasan a
- * la zona elegida. Con un solo supervisor es la forma rapida de que vea la
- * operacion completa; despues cada puesto se puede mover desde Clientes.
- */
-export async function asignarPuestosSinZona(formData: FormData) {
-  const zonaId = String(formData.get("zona_id") ?? "");
-  if (!UUID.test(zonaId)) return;
-
-  const { supabase } = await exigirPerfil(["admin"]);
-  const { data: zona } = await supabase.from("zonas").select("id").eq("id", zonaId).maybeSingle();
-  if (!zona) return;
-
-  await supabase.from("puestos").update({ zona_id: zona.id }).is("zona_id", null).eq("activo", true);
+function refrescarSupervision() {
   revalidatePath("/supervisor");
   revalidatePath("/operacion/clientes");
-  revalidatePath("/operacion/personal");
+  revalidatePath("/operacion/usuarios");
+  revalidatePath("/portal");
+}
+
+/**
+ * Atajo del admin: todos los puestos activos que nadie supervisa pasan al
+ * supervisor elegido. Con un solo supervisor es la forma rapida de que vea la
+ * operacion completa; despues se ajusta puesto por puesto en su ficha.
+ */
+export async function asignarPuestosSinSupervisor(formData: FormData) {
+  const supervisorId = String(formData.get("supervisor_id") ?? "");
+  if (!UUID.test(supervisorId)) return;
+
+  const { supabase } = await exigirPerfil(["admin"]);
+  const { data: supervisor } = await supabase.from("perfiles").select("id").eq("id", supervisorId).eq("rol", "supervisor").eq("activo", true).maybeSingle();
+  if (!supervisor) return;
+
+  const [{ data: puestos }, { data: asignados }] = await Promise.all([
+    supabase.from("puestos").select("id").eq("activo", true),
+    supabase.from("supervision_puestos").select("puesto_id"),
+  ]);
+  const conSupervisor = new Set((asignados ?? []).map((a) => a.puesto_id));
+  const filas = (puestos ?? []).filter((p) => !conSupervisor.has(p.id)).map((p) => ({ supervisor_id: supervisor.id, puesto_id: p.id }));
+  if (filas.length) await supabase.from("supervision_puestos").insert(filas);
+  refrescarSupervision();
+}
+
+/** Ficha del supervisor: la lista completa de puestos que supervisa (los marcados reemplazan a los anteriores). */
+export async function guardarPuestosDeSupervisor(formData: FormData) {
+  const supervisorId = String(formData.get("supervisor_id") ?? "");
+  const puestos = formData.getAll("puesto_id").map(String).filter((id) => UUID.test(id));
+  if (!UUID.test(supervisorId)) return;
+
+  const { supabase } = await exigirPerfil(["admin"]);
+  const { data: supervisor } = await supabase.from("perfiles").select("id").eq("id", supervisorId).eq("rol", "supervisor").maybeSingle();
+  if (!supervisor) return;
+
+  await supabase.from("supervision_puestos").delete().eq("supervisor_id", supervisor.id);
+  if (puestos.length) await supabase.from("supervision_puestos").insert(puestos.map((puesto_id) => ({ supervisor_id: supervisor.id, puesto_id })));
+  refrescarSupervision();
+  revalidatePath(`/operacion/usuarios/${supervisor.id}`);
 }
 
 /**

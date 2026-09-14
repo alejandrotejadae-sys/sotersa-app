@@ -7,6 +7,7 @@ import { crearClienteAdministrador } from "@/lib/supabase/administrador";
 import { AVISO_VERSION, ROLES_CON_CONSENTIMIENTO } from "@/lib/consentimiento";
 import { ETIQUETA_ROL, puedeEditar } from "@/lib/roles";
 import { ClaveUsuario, EditorUsuario, EstadoCuenta, type Cuenta } from "./ficha-usuario";
+import { guardarPuestosDeSupervisor } from "@/app/supervisor/acciones";
 
 export const metadata = { title: "Ficha de usuario — SOTERSA" };
 export const dynamic = "force-dynamic";
@@ -33,6 +34,16 @@ export default async function PaginaUsuario({ params }: { params: Promise<{ id: 
 
   const guardia = uno(perfil.guardias);
   const correo = auth?.user?.email ?? "";
+
+  // Supervisor: que puestos tiene a cargo. Se muestran todos los activos
+  // agrupados por cliente, con los suyos marcados.
+  const [puestosR, supervisionR] = perfil.rol === "supervisor" ? await Promise.all([
+    supabase.from("puestos").select("id,codigo,nombre,empresas_cliente(nombre)").eq("activo", true).order("codigo"),
+    supabase.from("supervision_puestos").select("puesto_id").eq("supervisor_id", id),
+  ]) : [{ data: [] }, { data: [] }];
+  const supervisa = new Set((supervisionR.data ?? []).map((s) => s.puesto_id));
+  const porEmpresa = new Map<string, { id: string; codigo: string; nombre: string }[]>();
+  for (const p of puestosR.data ?? []) { const e = uno(p.empresas_cliente)?.nombre ?? "Sin cliente"; if (!porEmpresa.has(e)) porEmpresa.set(e, []); porEmpresa.get(e)!.push({ id: p.id, codigo: p.codigo, nombre: p.nombre }); }
   const usuarioIngreso = perfil.rol === "guardia" ? (guardia?.cedula ?? correo.split("@")[0]) : correo;
   const claveTemporal = auth?.user?.user_metadata?.debe_cambiar_clave === true;
   const bloqueadaAuth = Boolean(auth?.user && "banned_until" in auth.user && auth.user.banned_until && new Date(auth.user.banned_until as string) > new Date());
@@ -65,7 +76,7 @@ export default async function PaginaUsuario({ params }: { params: Promise<{ id: 
           <Dato etiqueta="Último ingreso" valor={ultimoIngreso ? fechaHoraEcuador(ultimoIngreso) : "Nunca"} />
           <Dato etiqueta="Cuenta creada" valor={fechaHoraEcuador(perfil.creado_en)} />
           {perfil.rol === "cliente" && <Dato etiqueta="Empresa" valor={uno(perfil.empresas_cliente)?.nombre ?? "Sin empresa"} />}
-          {perfil.rol === "supervisor" && <Dato etiqueta="Zona" valor={uno(perfil.zonas)?.nombre ?? "Sin zona"} />}
+          {perfil.rol === "supervisor" && <Dato etiqueta="Puestos a cargo" valor={`${supervisa.size} de ${(puestosR.data ?? []).length} activos`} />}
           {perfil.rol === "guardia" && <Dato etiqueta="Credencial" valor={guardia?.credencial ?? "Pendiente"} />}
           {perfil.rol === "guardia" && <Dato etiqueta="Ficha operativa" valor={guardia ? (guardia.activo ? "Activo en nómina" : "Dado de baja") : "Sin ficha"} enlace={guardia ? `/operacion/personal/${guardia.id}` : undefined} />}
           {perfil.rol === "cliente" && perfil.empresa_cliente_id && <Dato etiqueta="Portal" valor="Ver como el cliente" enlace={`/portal?empresa=${perfil.empresa_cliente_id}`} />}
@@ -73,6 +84,26 @@ export default async function PaginaUsuario({ params }: { params: Promise<{ id: 
           {perfil.rol === "operativo" && <Dato etiqueta="Alcance" valor="Ve todo; no edita ni restablece claves" />}
         </section>
 
+        {perfil.rol === "supervisor" && (
+          <Panel titulo="Puestos que supervisa" detalle="Marca los puestos que este supervisor tiene a cargo. Verá sus turnos, rondas y novedades, y validará lo que reporten sus agentes.">
+            {porEmpresa.size === 0 ? <p className="text-sm text-slate-500">No hay puestos activos.</p> : (
+              <form action={guardarPuestosDeSupervisor} className="space-y-4">
+                <input type="hidden" name="supervisor_id" value={perfil.id} />
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {[...porEmpresa.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([empresa, lista]) => (
+                    <fieldset key={empresa} className="rounded-xl border border-[#27425e] bg-[#041225] p-3">
+                      <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-[#8ddaff]">{empresa}</legend>
+                      <div className="mt-1 space-y-1.5">
+                        {lista.map((p) => <label key={p.id} className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 text-sm text-slate-200 hover:bg-white/[0.03]"><input type="checkbox" name="puesto_id" value={p.id} defaultChecked={supervisa.has(p.id)} disabled={!editable} className="h-5 w-5 accent-[#0788ff]" /><span><span className="font-mono text-xs text-slate-400">{p.codigo}</span> {p.nombre}</span></label>)}
+                      </div>
+                    </fieldset>
+                  ))}
+                </div>
+                {editable && <button className="min-h-11 rounded-xl bg-gradient-to-r from-[#087ff0] to-[#02b9e8] px-5 text-sm font-semibold text-white transition active:scale-[0.98]">Guardar puestos a cargo</button>}
+              </form>
+            )}
+          </Panel>
+        )}
         {!editable && <p className="mt-5 rounded-xl border border-[#27425e] bg-[#041225] px-4 py-3 text-sm text-slate-400">Vista de consulta. Editar datos, restablecer claves y bloquear cuentas es exclusivo del administrador.</p>}
         {editable && <div className="mt-5 grid gap-5 lg:grid-cols-2">
           <Panel titulo="Datos de la cuenta" detalle="Nombre, teléfono y vínculo. El rol no se cambia: para otro rol se crea otra cuenta.">
@@ -93,7 +124,7 @@ export default async function PaginaUsuario({ params }: { params: Promise<{ id: 
 }
 
 function Panel({ titulo, detalle, children }: { titulo: string; detalle: string; children: React.ReactNode }) {
-  return <section className="rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4"><h2 className="font-semibold">{titulo}</h2><p className="mt-1 text-sm text-slate-400">{detalle}</p><div className="mt-4">{children}</div></section>;
+  return <section className="mt-5 rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4 first:mt-0 lg:[.grid>&]:mt-0"><h2 className="font-semibold">{titulo}</h2><p className="mt-1 text-sm text-slate-400">{detalle}</p><div className="mt-4">{children}</div></section>;
 }
 function Dato({ etiqueta, valor, enlace }: { etiqueta: string; valor: string; enlace?: string }) {
   const cuerpo = <><p className="text-xs text-slate-500">{etiqueta}</p><p className={`mt-0.5 text-sm ${enlace ? "text-[#8ddaff]" : "text-slate-200"}`}>{valor}{enlace ? " →" : ""}</p></>;

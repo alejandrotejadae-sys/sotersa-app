@@ -33,9 +33,9 @@ export function EditorUsuario({ cuenta, empresas, zonas }: { cuenta: Cuenta; emp
         </Campo>
       )}
       {cuenta.rol === "supervisor" && (
-        <Campo etiqueta="Zona asignada">
-          <select name="zona_id" required defaultValue={cuenta.zona_id ?? ""} className={control}>
-            <option value="" disabled>Selecciona la zona</option>
+        <Campo etiqueta="Zona (opcional, solo referencia)">
+          <select name="zona_id" defaultValue={cuenta.zona_id ?? ""} className={control}>
+            <option value="">Sin zona</option>
             {zonas.map((z) => <option key={z.id} value={z.id}>{z.nombre}</option>)}
           </select>
         </Campo>

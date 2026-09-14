@@ -5,9 +5,9 @@ import { MapaPuestos } from "@/app/componentes/mapa-puestos";
 import { exigirPerfil, fechaHoraEcuador, horaEcuador } from "@/lib/sesion";
 import { esLector } from "@/lib/roles";
 import { ES_ALARMA, type EstadoPuesto } from "@/lib/estado-puestos";
-import { resumenDeZona, type FiltroZona, type NovedadZona, type PuestoZona, type TurnoHoy } from "./datos";
-import { SelectorZona } from "./selector-zona";
-import { asignarPuestosSinZona, cerrarNovedad, notificarNovedad, validarNovedad } from "./acciones";
+import { resumenDeZona, type FiltroSupervision, type NovedadZona, type PuestoZona, type TurnoHoy } from "./datos";
+import { SelectorSupervisor } from "./selector-supervisor";
+import { asignarPuestosSinSupervisor, cerrarNovedad, notificarNovedad, validarNovedad } from "./acciones";
 import { puedeEditar } from "@/lib/roles";
 
 export const metadata = { title: "Supervisión — SOTERSA" };
@@ -17,28 +17,35 @@ export const dynamic = "force-dynamic";
  * Panel del supervisor. Responde en orden: que esta mal ahora, como estan mis
  * puestos, que novedades esperan mi decision, quien esta de turno hoy.
  */
-export default async function PaginaSupervisor({ searchParams }: { searchParams: Promise<{ zona?: string }> }) {
+export default async function PaginaSupervisor({ searchParams }: { searchParams: Promise<{ de?: string }> }) {
   const { supabase, perfil } = await exigirPerfil(["supervisor", "admin", "operativo"]);
   const params = await searchParams;
   const lector = esLector(perfil.rol);
   const puedeDecidir = perfil.rol !== "operativo";
 
-  let zonas: { id: string; nombre: string }[] = [];
-  let filtro: FiltroZona;
-  let zonaActual = "todas";
+  let supervisores: { id: string; nombre: string }[] = [];
+  let filtro: FiltroSupervision;
+  let actual = "todos";
   if (lector) {
-    zonas = (await supabase.from("zonas").select("id,nombre").order("nombre")).data ?? [];
-    const pedido = params.zona ?? "todas";
-    if (pedido === "sin-zona") { filtro = { tipo: "sin-zona" }; zonaActual = "sin-zona"; }
-    else if (zonas.some((z) => z.id === pedido)) { filtro = { tipo: "zona", id: pedido }; zonaActual = pedido; }
-    else filtro = { tipo: "todas" };
+    supervisores = (await supabase.from("perfiles").select("id,nombre").eq("rol", "supervisor").eq("activo", true).order("nombre")).data ?? [];
+    const pedido = params.de ?? "todos";
+    if (pedido === "sin-supervisor") { filtro = { tipo: "sin-supervisor" }; actual = "sin-supervisor"; }
+    else if (supervisores.some((s) => s.id === pedido)) { filtro = { tipo: "supervisor", id: pedido }; actual = pedido; }
+    else filtro = { tipo: "todos" };
   } else {
-    filtro = perfil.zona_id ? { tipo: "zona", id: perfil.zona_id } : { tipo: "sin-zona" };
+    filtro = { tipo: "supervisor", id: perfil.id };
   }
 
   const r = await resumenDeZona(filtro);
-  // Solo para el admin mirando una zona concreta: cuantos puestos quedan sin zona.
-  const sinZona = lector && filtro.tipo === "zona" ? (await supabase.from("puestos").select("id", { count: "exact", head: true }).is("zona_id", null).eq("activo", true)).count ?? 0 : 0;
+  // Solo para el admin mirando a un supervisor: cuantos puestos activos no tiene nadie.
+  let sinSupervisor = 0;
+  if (lector && filtro.tipo === "supervisor") {
+    const [{ count: total }, { data: asignados }] = await Promise.all([
+      supabase.from("puestos").select("id", { count: "exact", head: true }).eq("activo", true),
+      supabase.from("supervision_puestos").select("puesto_id,puestos!inner(activo)").eq("puestos.activo", true),
+    ]);
+    sinSupervisor = Math.max(0, (total ?? 0) - new Set((asignados ?? []).map((a) => a.puesto_id)).size);
+  }
   const ahoraIso = new Date().toISOString();
   const nombre = perfil.nombre.trim().split(" ")[0] || "Supervisor";
   const enApp = r.puestos.filter((p) => p.estado !== "sin_programar" && p.estado !== "sin_turno_hoy");
@@ -49,7 +56,7 @@ export default async function PaginaSupervisor({ searchParams }: { searchParams:
   const emergencias = [...r.pendientes, ...r.abiertas].filter((n) => n.severidad === "emergencia");
   const enPuesto = r.turnosHoy.filter((t) => t.situacion === "en_puesto").length;
   const ubicados = r.puestos.filter((p) => p.lat != null && p.lng != null);
-  const zonaNombre = filtro.tipo === "zona" ? zonas.find((z) => z.id === filtro.id)?.nombre ?? r.puestos[0]?.zona ?? "mi zona" : filtro.tipo === "sin-zona" ? "puestos sin zona" : "todas las zonas";
+  const zonaNombre = filtro.tipo === "supervisor" ? (lector ? supervisores.find((s) => s.id === filtro.id)?.nombre ?? "supervisor" : "mis puestos") : filtro.tipo === "sin-supervisor" ? "puestos sin supervisor" : "todos los puestos";
 
   return (
     <main className="min-h-dvh bg-[#020b18] text-white">
@@ -72,12 +79,11 @@ export default async function PaginaSupervisor({ searchParams }: { searchParams:
         </header>
 
         <div className="grid grid-cols-1 gap-4 px-4 pb-28 lg:grid-cols-12 lg:px-8 lg:pb-10">
-          {lector && <div className="lg:col-span-12"><Link href="/admin" className="inline-flex items-center gap-1 text-sm font-medium text-[#0788ff]"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> Panel administrativo</Link><div className="mt-3"><SelectorZona zonas={zonas} actual={zonaActual} /></div>{filtro.tipo === "zona" && sinZona > 0 && puedeEditar(perfil.rol) && (
-            <form action={asignarPuestosSinZona} className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#0788ff]/35 bg-[#0788ff]/8 px-4 py-3 text-sm">
-              <input type="hidden" name="zona_id" value={filtro.id} />
-              <p className="text-slate-200">Hay <strong>{sinZona}</strong> puesto{sinZona === 1 ? "" : "s"} activo{sinZona === 1 ? "" : "s"} sin zona. Puedes asignar{sinZona === 1 ? "lo" : "los todos"} a <strong>{zonaNombre}</strong> de una vez; después cada puesto se puede mover desde Clientes.</p>
-              <button className="min-h-10 rounded-xl bg-gradient-to-r from-[#087ff0] to-[#02b9e8] px-4 text-sm font-semibold text-white transition active:scale-[0.98]">Asignar {sinZona === 1 ? "el puesto" : `los ${sinZona} puestos`} a esta zona</button>
-            </form>
+          {lector && <div className="lg:col-span-12"><Link href="/admin" className="inline-flex items-center gap-1 text-sm font-medium text-[#0788ff]"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> Panel administrativo</Link><div className="mt-3"><SelectorSupervisor supervisores={supervisores} actual={actual} /></div>{filtro.tipo === "supervisor" && puedeEditar(perfil.rol) && (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#0788ff]/35 bg-[#0788ff]/8 px-4 py-3 text-sm">
+              <p className="text-slate-200">{sinSupervisor > 0 ? <>Hay <strong>{sinSupervisor}</strong> puesto{sinSupervisor === 1 ? "" : "s"} activo{sinSupervisor === 1 ? "" : "s"} que nadie supervisa.</> : <>Todos los puestos activos tienen supervisor.</>} Los puestos de <strong>{zonaNombre}</strong> se ajustan uno a uno en <Link href={`/operacion/usuarios/${filtro.id}`} className="font-semibold text-[#8ddaff]">su ficha de usuario</Link>.</p>
+              {sinSupervisor > 0 && <form action={asignarPuestosSinSupervisor}><input type="hidden" name="supervisor_id" value={filtro.id} /><button className="min-h-10 rounded-xl bg-gradient-to-r from-[#087ff0] to-[#02b9e8] px-4 text-sm font-semibold text-white transition active:scale-[0.98]">Asignar {sinSupervisor === 1 ? "ese puesto" : `los ${sinSupervisor} puestos`} a {zonaNombre}</button></form>}
+            </div>
           )}</div>}
 
           <section className="px-1 pt-1 lg:col-span-12">
@@ -119,14 +125,14 @@ export default async function PaginaSupervisor({ searchParams }: { searchParams:
           )}
 
           <section className="overflow-hidden rounded-2xl border border-[#27425e] bg-[#07172a]/95 lg:col-span-7">
-            <div className="flex items-center justify-between border-b border-[#20374e] px-4 py-3.5"><h2 className="text-lg font-semibold">Puestos de {zonaNombre}</h2><span className="text-xs text-slate-500">Actualizado {horaEcuador(ahoraIso)}</span></div>
-            {r.puestos.length === 0 ? <p className="px-4 py-8 text-center text-sm text-slate-400">{filtro.tipo === "zona" ? "Ningún puesto tiene asignada esta zona. Se asigna en Clientes → editar puesto → Zona de supervisión." : "No hay puestos activos."}</p> : (
+            <div className="flex items-center justify-between border-b border-[#20374e] px-4 py-3.5"><h2 className="text-lg font-semibold">{filtro.tipo === "supervisor" && lector ? `Puestos de ${zonaNombre}` : filtro.tipo === "supervisor" ? "Mis puestos" : `${zonaNombre[0].toUpperCase()}${zonaNombre.slice(1)}`}</h2><span className="text-xs text-slate-500">Actualizado {horaEcuador(ahoraIso)}</span></div>
+            {r.puestos.length === 0 ? <p className="px-4 py-8 text-center text-sm text-slate-400">{filtro.tipo === "supervisor" ? (lector ? "Este supervisor todavía no tiene puestos asignados. Usa el botón de arriba o su ficha en Usuarios y permisos." : "Todavía no tienes puestos asignados. Pide a la administración que te los asigne.") : filtro.tipo === "sin-supervisor" ? "Todos los puestos activos tienen supervisor." : "No hay puestos activos."}</p> : (
               <div className="divide-y divide-[#20374e]">{r.puestos.map((p) => <FilaPuesto key={p.id} puesto={p} />)}</div>
             )}
           </section>
 
           <section className="rounded-2xl border border-[#27425e] bg-[#07172a]/95 p-4 lg:col-span-5">
-            <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">Mapa de la zona</h2><span className="text-xs text-slate-500">{ubicados.length} de {r.puestos.length} ubicados</span></div>
+            <div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">Mapa</h2><span className="text-xs text-slate-500">{ubicados.length} de {r.puestos.length} ubicados</span></div>
             <div className="mt-3">{ubicados.length ? <MapaPuestos alto="h-72" puntos={ubicados.map((p) => ({ id: p.id, lat: p.lat!, lng: p.lng!, cliente: p.empresa, codigo: p.codigo, puesto: p.nombre, activo: true, color: COLOR_PIN[ES_ALARMA[p.estado]], detalle: `${ESTADOS[p.estado].texto}${p.agente ? ` · ${p.agente.nombre}` : ""}` }))} /> : <p className="rounded-xl border border-[#27425e] bg-[#041225] px-4 py-8 text-center text-sm text-slate-500">Los puestos aún no tienen coordenadas. Se cargan en Clientes → editar puesto → enlace de Google Maps.</p>}</div>
             <p className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500"><span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-emerald-400" />Cubierto</span><span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-amber-300" />Sin ronda</span><span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-red-400" />Sin abrir / sin cobertura</span><span><span className="mr-1 inline-block h-2.5 w-2.5 rounded-full bg-slate-400" />Sin turno</span></p>
           </section>
@@ -146,7 +152,7 @@ export default async function PaginaSupervisor({ searchParams }: { searchParams:
 
           <section className="overflow-hidden rounded-2xl border border-[#27425e] bg-[#07172a]/95 lg:col-span-5">
             <div className="flex items-center justify-between border-b border-[#20374e] px-4 py-3.5"><h2 className="text-lg font-semibold">Turnos de hoy <span className="text-sm font-normal text-slate-500">· {r.turnosHoy.length}</span></h2><Link href="/operacion/turnos" className="flex items-center gap-1 text-sm font-medium text-[#0788ff]">Cuadrante <IconoFlecha className="h-4 w-4" /></Link></div>
-            {r.turnosHoy.length === 0 ? <p className="px-4 py-8 text-center text-sm text-slate-400">No hay turnos cargados para hoy en esta zona.</p> : (
+            {r.turnosHoy.length === 0 ? <p className="px-4 py-8 text-center text-sm text-slate-400">No hay turnos cargados para hoy en estos puestos.</p> : (
               <div className="max-h-[32rem] divide-y divide-[#20374e] overflow-y-auto">{r.turnosHoy.map((t) => <FilaTurno key={t.id} turno={t} />)}</div>
             )}
           </section>
@@ -203,7 +209,7 @@ function FilaPuesto({ puesto: p }: { puesto: PuestoZona }) {
     <article className="grid gap-2 px-4 py-3.5 sm:grid-cols-[1fr_auto] sm:items-center">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2"><p className="font-medium">{p.empresa} · {p.codigo}</p><span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${e.clase}`}>{e.texto}</span></div>
-        <p className="mt-0.5 truncate text-sm text-slate-400">{p.nombre}{p.zona ? ` · ${p.zona}` : ""}</p>
+        <p className="mt-0.5 truncate text-sm text-slate-400">{p.nombre}{p.supervisores.length ? ` · supervisa ${p.supervisores.join(", ")}` : " · sin supervisor"}</p>
         {p.agente ? (
           <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-300">
             <Link href={p.agente.id ? `/operacion/personal/${p.agente.id}` : "/operacion/personal"} className="font-medium text-[#8ddaff]">{p.agente.nombre}</Link>

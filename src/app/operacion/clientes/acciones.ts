@@ -322,10 +322,10 @@ export async function actualizarPuesto(_: EstadoCliente, formData: FormData): Pr
   const destino = texto(formData, "puesto_destino", 200);
   const armado = formData.get("puesto_armado") === "on";
   const enlaceMaps = texto(formData, "puesto_google_maps", 500);
-  const zonaId = String(formData.get("puesto_zona_id") ?? "");
+  const supervisorId = String(formData.get("puesto_supervisor_id") ?? "");
 
   if (!UUID.test(id)) return { tipo: "error", mensaje: "Puesto no identificado." };
-  if (zonaId && !UUID.test(zonaId)) return { tipo: "error", mensaje: "Zona no válida." };
+  if (supervisorId && !UUID.test(supervisorId)) return { tipo: "error", mensaje: "Supervisor no válido." };
   if (!esTipoServicio(tipo)) return { tipo: "error", mensaje: "Selecciona el tipo de servicio." };
   const modalidad = servicio(tipo);
   if (modalidad.requiereRuta && (!origen || !destino)) return { tipo: "error", mensaje: "Una custodia armada necesita origen y destino." };
@@ -355,10 +355,20 @@ export async function actualizarPuesto(_: EstadoCliente, formData: FormData): Pr
       armado: armado || tipo === "custodia_armada",
       origen: modalidad.requiereRuta ? origen : null,
       destino: modalidad.requiereRuta ? destino : null,
-      zona_id: zonaId || null,
       ...(coordenadas ? { lat: coordenadas.lat, lng: coordenadas.lng } : {}),
     })
     .eq("id", id);
+
+  // Supervisor a cargo: el elegido reemplaza a los que hubiera. Si se quiere
+  // mas de uno, se marca desde la ficha del supervisor.
+  if (!error) {
+    const { data: actuales } = await supabase.from("supervision_puestos").select("supervisor_id").eq("puesto_id", id);
+    const ya = (actuales ?? []).map((a) => a.supervisor_id);
+    if (!(ya.length === 1 && ya[0] === supervisorId) && !(ya.length === 0 && !supervisorId)) {
+      await supabase.from("supervision_puestos").delete().eq("puesto_id", id);
+      if (supervisorId) await supabase.from("supervision_puestos").insert({ supervisor_id: supervisorId, puesto_id: id });
+    }
+  }
 
   if (error) {
     if (error.code === "23505") return { tipo: "error", mensaje: `Ese cliente ya tiene otro puesto ${codigo}.` };

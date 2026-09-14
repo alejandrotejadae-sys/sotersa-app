@@ -32,13 +32,16 @@ export default async function PaginaVerComo({ searchParams }: { searchParams: Pr
     supabase.from("guardias").select("perfil_id,credencial,puestos:puesto_habitual_id(codigo,nombre,tipo_servicio)").not("perfil_id", "is", null),
   ]);
   const perfiles = perfilesR.data ?? [];
+  const { data: supervisionR } = await supabase.from("supervision_puestos").select("supervisor_id");
+  const aCargo = new Map<string, number>();
+  for (const s of supervisionR ?? []) aCargo.set(s.supervisor_id, (aCargo.get(s.supervisor_id) ?? 0) + 1);
   const fichas = new Map((guardiasR.data ?? []).map((g) => [g.perfil_id as string, g]));
 
   const de = (rol: string): Cuenta[] => perfiles.filter((p) => p.rol === rol).map((p) => {
     const ficha = fichas.get(p.id);
     const puesto = ficha ? uno(ficha.puestos) : null;
     const detalle = p.rol === "cliente" ? (uno(p.empresas_cliente)?.nombre ?? "Sin empresa")
-      : p.rol === "supervisor" ? (uno(p.zonas)?.nombre ?? "Sin zona")
+      : p.rol === "supervisor" ? `${aCargo.get(p.id) ?? 0} puesto${(aCargo.get(p.id) ?? 0) === 1 ? "" : "s"} a cargo`
       : p.rol === "guardia" ? [ficha?.credencial, puesto ? `${puesto.codigo} · ${puesto.nombre}` : "Sin puesto"].filter(Boolean).join(" · ")
       : "Ve todo, no edita";
     return { id: p.id, nombre: p.nombre, detalle };
@@ -48,7 +51,7 @@ export default async function PaginaVerComo({ searchParams }: { searchParams: Pr
 
   const puertas: Array<{ titulo: string; detalle: string; icono: React.ReactNode; cuentas: Cuenta[]; destino: string; vacio: string }> = [
     { titulo: "Clientes", detalle: "Menú del cliente: Mi servicio, agentes, custodia, documentación y escuela.", icono: <IconoEscudoOk className="h-6 w-6" />, cuentas: de("cliente"), destino: "/", vacio: "Ningún cliente tiene cuenta todavía." },
-    { titulo: "Supervisor", detalle: "Panel de supervisión de su zona.", icono: <IconoPersona className="h-6 w-6" />, cuentas: de("supervisor"), destino: "/", vacio: "No hay supervisores con cuenta." },
+    { titulo: "Supervisor", detalle: "Panel de supervisión de sus puestos.", icono: <IconoPersona className="h-6 w-6" />, cuentas: de("supervisor"), destino: "/", vacio: "No hay supervisores con cuenta." },
     { titulo: "Custodias", detalle: "Custodia armada tal como la abre el agente.", icono: <IconoCamion className="h-6 w-6" />, cuentas: custodias.length ? custodias : agentes, destino: "/guardia/custodia", vacio: "No hay agentes con cuenta." },
     { titulo: "Operativos", detalle: "Panel completo en modo consulta.", icono: <IconoLista className="h-6 w-6" />, cuentas: de("operativo"), destino: "/", vacio: "No hay cuentas operativo. Créala en Usuarios y permisos." },
     { titulo: "Agente de seguridad", detalle: "Menú del agente: mi puesto, custodia y escuela.", icono: <IconoTurno className="h-6 w-6" />, cuentas: agentes, destino: "/", vacio: "No hay agentes con cuenta." },

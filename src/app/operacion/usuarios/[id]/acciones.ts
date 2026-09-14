@@ -42,10 +42,13 @@ export async function actualizarUsuario(_: EstadoUsuario, formData: FormData): P
     cambios.empresa_cliente_id = empresaId;
   }
   if (perfil.rol === "supervisor") {
-    if (!UUID.test(zonaId)) return { tipo: "error", mensaje: "Selecciona la zona del supervisor." };
-    const { data: zona } = await supabase.from("zonas").select("id").eq("id", zonaId).maybeSingle();
-    if (!zona) return { tipo: "error", mensaje: "Esa zona no existe." };
-    cambios.zona_id = zonaId;
+    // La zona es solo referencia: los puestos se asignan por supervisor.
+    if (zonaId && !UUID.test(zonaId)) return { tipo: "error", mensaje: "Zona no válida." };
+    if (zonaId) {
+      const { data: zona } = await supabase.from("zonas").select("id").eq("id", zonaId).maybeSingle();
+      if (!zona) return { tipo: "error", mensaje: "Esa zona no existe." };
+    }
+    cambios.zona_id = zonaId || null;
   }
 
   const administrador = crearClienteAdministrador();
@@ -57,7 +60,7 @@ export async function actualizarUsuario(_: EstadoUsuario, formData: FormData): P
   const { data: auth } = await administrador.auth.admin.getUserById(id);
   await administrador.auth.admin.updateUserById(id, {
     user_metadata: { ...(auth?.user?.user_metadata ?? {}), nombre },
-    app_metadata: { ...(auth?.user?.app_metadata ?? {}), ...(perfil.rol === "cliente" ? { empresa_cliente_id: empresaId } : {}), ...(perfil.rol === "supervisor" ? { zona_id: zonaId } : {}) },
+    app_metadata: { ...(auth?.user?.app_metadata ?? {}), ...(perfil.rol === "cliente" ? { empresa_cliente_id: empresaId } : {}), ...(perfil.rol === "supervisor" ? { zona_id: zonaId || null } : {}) },
   });
   // El agente lleva nombre y telefono tambien en su ficha operativa.
   if (perfil.rol === "guardia") await administrador.from("guardias").update({ nombre, telefono: telefono || null }).eq("perfil_id", id);
