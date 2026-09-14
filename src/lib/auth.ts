@@ -73,8 +73,10 @@ export function cedulaEsValida(cedula: string): boolean {
   const c = normalizarCedula(cedula);
   if (c.length !== 10) return false;
 
+  // 01-24 son las provincias; 30 es el codigo de las cedulas emitidas a
+  // ecuatorianos nacidos en el exterior y a extranjeros residentes.
   const provincia = Number(c.slice(0, 2));
-  if (provincia < 1 || provincia > 24) return false;
+  if ((provincia < 1 || provincia > 24) && provincia !== 30) return false;
   if (Number(c[2]) > 5) return false; // 6 y 7 no son cedulas de persona natural
 
   const coeficientes = [2, 1, 2, 1, 2, 1, 2, 1, 2];
