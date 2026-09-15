@@ -73,7 +73,7 @@ export default async function PaginaPortal({ searchParams }: { searchParams: Pro
               <p className="mt-3 text-sm text-gris-400">{OPERACION.detalle}</p>
             </div>
           </div>
-          <div className="border-t border-borde/60 pt-5 text-center sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0"><p className="text-sm text-gris-400">Cumplimiento SLA</p><p className="mt-2 text-5xl font-bold text-azul-400">{r.sla.puntaje}%</p><p className="mt-1 text-xs text-gris-500">{r.sla.medidos ? `${r.sla.cumplidos} de ${r.sla.medidos} avisos en ≤ 15 min` : "sin avisos que medir"} · 30 días</p></div>
+          <div className="border-t border-borde/60 pt-5 text-center sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0"><p className="text-sm text-gris-400">Cumplimiento SLA</p><p className="mt-2 text-5xl font-bold text-azul-400">{r.sla.medidos ? `${r.sla.puntaje}%` : "—"}</p><p className="mt-1 text-xs text-gris-500">{r.sla.medidos ? `${r.sla.cumplidos} de ${r.sla.medidos} avisos en ≤ 15 min · 30 días` : "Sin avisos medibles en los últimos 30 días"}</p></div>
         </section>
 
         {/* 1b. En este momento, por puesto */}
