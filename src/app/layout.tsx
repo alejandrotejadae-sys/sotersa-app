@@ -7,6 +7,7 @@ import { NotificadorOperativo } from "@/app/componentes/notificador-operativo";
 import { RegistroPwa } from "@/app/componentes/registro-pwa";
 import { BotonPanel } from "@/app/componentes/boton-panel";
 import { BarraVistaComo } from "@/app/componentes/barra-vista-como";
+import { ExperienciaAdmin } from "@/app/componentes/experiencia-admin";
 import { leerVistaComo } from "@/lib/vista-como";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
 import "./globals.css";
@@ -57,13 +58,17 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
 
   const vista = await leerVistaComo();
   let esAdmin = false;
+  let nombreAdmin = "Administración SOTERSA";
+  let rolAdmin = "administración";
   if (user) {
     const { data: perfil } = await supabase
       .from("perfiles")
-      .select("rol")
+      .select("rol,nombre")
       .eq("id", user.id)
       .maybeSingle();
     esAdmin = perfil?.rol === "admin" || perfil?.rol === "operativo";
+    nombreAdmin = perfil?.nombre ?? nombreAdmin;
+    rolAdmin = perfil?.rol ?? rolAdmin;
   }
 
   return (
@@ -78,7 +83,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <SincronizadorOperativo />
         <NotificadorOperativo />
         <RegistroPwa />
-        {children}
+        <ExperienciaAdmin activo={esAdmin && !vista} nombre={nombreAdmin} rol={rolAdmin}>
+          {children}
+        </ExperienciaAdmin>
         {esAdmin && !vista && <BotonPanel />}
       </body>
     </html>

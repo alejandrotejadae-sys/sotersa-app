@@ -6,7 +6,15 @@ import { usePathname } from "next/navigation";
 /** Atajo flotante al panel para admin y operativo. En el panel mismo no hace falta. */
 export function BotonPanel() {
   const ruta = usePathname();
-  if (ruta === "/admin" || ruta === "/acceso") return null;
+  if (
+    ruta === "/acceso" ||
+    ruta === "/admin" || ruta.startsWith("/admin/") ||
+    ruta === "/central" || ruta.startsWith("/central/") ||
+    ruta === "/supervisor" || ruta.startsWith("/supervisor/") ||
+    ruta === "/operacion" || ruta.startsWith("/operacion/") ||
+    ruta === "/configuracion" || ruta.startsWith("/configuracion/") ||
+    ruta === "/escuela" || ruta.startsWith("/escuela/")
+  ) return null;
   return (
     <Link
       href="/admin"
