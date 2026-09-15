@@ -58,7 +58,7 @@ export default async function PaginaReporte({ searchParams }: { searchParams: Pr
             <Cifra titulo="Turnos cubiertos" valor={pct(r.totales.turnosCubiertos, r.totales.turnosPlanificados)} detalle={`${r.totales.turnosCubiertos} de ${r.totales.turnosPlanificados}`} />
             <Cifra titulo="Turnos con ronda" valor={pct(r.totales.turnosConRonda, r.totales.turnosCubiertos)} detalle={`${r.totales.rondasRegistradas} rondas`} />
             <Cifra titulo="Apertura puntual" valor={pct(r.totales.aperturasPuntuales, r.totales.aperturasTotales)} detalle="dentro de 15 min" />
-            <Cifra titulo="SLA de aviso" valor={`${r.sla.puntaje} %`} detalle={r.sla.medidos ? `${r.sla.cumplidos} de ${r.sla.medidos} avisos` : "sin avisos que medir"} />
+            <Cifra titulo="SLA de aviso" valor={r.sla.medidos ? `${r.sla.puntaje} %` : "—"} detalle={r.sla.medidos ? `${r.sla.cumplidos} de ${r.sla.medidos} avisos` : "sin avisos medibles"} />
           </section>
 
           <section className="mt-7">
