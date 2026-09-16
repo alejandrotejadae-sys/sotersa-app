@@ -3,6 +3,7 @@ import { exigirPerfil } from "@/lib/sesion";
 import { esLector } from "@/lib/roles";
 import { Marca } from "@/app/componentes/marca";
 import { EstadoConexion } from "@/app/componentes/estado-conexion";
+import { EstadoSincronizacion } from "@/app/componentes/sincronizador-operativo";
 import { NavEscritorio } from "@/app/componentes/nav-inferior";
 import { CronometroTurno } from "@/app/componentes/cronometro-turno";
 import {
@@ -28,6 +29,18 @@ export const dynamic = "force-dynamic";
 
 function soloHora(iso: string) {
   return new Intl.DateTimeFormat("es-EC", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "America/Guayaquil",
+  }).format(new Date(iso));
+}
+
+function fechaTurno(iso: string) {
+  return new Intl.DateTimeFormat("es-EC", {
+    weekday: "long",
+    day: "2-digit",
+    month: "short",
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
@@ -84,31 +97,45 @@ export default async function PaginaGuardia() {
     // mano lo unico que sigue importando: la emergencia.
     const { data: proximo } = await supabase
       .from("turnos")
-      .select("inicio_programado, puesto_id")
+      .select("inicio_programado, fin_programado, puesto_id")
       .eq("guardia_id", guardia.id)
       .gt("inicio_programado", ahora)
       .order("inicio_programado")
       .limit(1)
       .maybeSingle();
 
+    const { data: proximoPuesto } = proximo
+      ? await supabase.from("puestos").select("codigo,nombre").eq("id", proximo.puesto_id).maybeSingle()
+      : { data: null };
+    const { data: proximosContactos } = proximo
+      ? await supabase.from("contactos_puesto").select("tipo,nombre,telefono").eq("puesto_id", proximo.puesto_id)
+      : { data: [] };
+    const supervisor = (proximosContactos ?? []).find((c) => c.tipo === "supervisor_zona");
+    const central = (proximosContactos ?? []).find((c) => c.tipo === "central_monitoreo");
+    const telefonoContacto = supervisor?.telefono ?? central?.telefono;
+
     return (
       <>
         <Cabecera />
-        <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-4 px-5 py-5">
+        <main className="guardia-render mx-auto flex w-full max-w-md flex-1 flex-col gap-3.5 px-4 py-4 md:max-w-3xl md:px-6 md:py-6">
           <Saludo nombre={primerNombre} />
-          <section className="tarjeta flex flex-col items-center gap-3 px-5 py-8 text-center">
-            <span className="grid h-16 w-16 place-items-center rounded-full border border-borde bg-gris-800/60 text-gris-500">
-              <IconoTurno className="h-8 w-8" />
-            </span>
-            <h2 className="text-lg font-semibold text-white">
-              Sin turno activo
-            </h2>
-            <p className="max-w-[15rem] text-sm leading-relaxed text-gris-400">
-              {proximo
-                ? `Tu próximo turno empieza a las ${soloHora(proximo.inicio_programado)}.`
-                : "No tienes un turno programado. Si crees que es un error, avisa a tu supervisor de zona."}
-            </p>
+          <section className="panel-operativo flex flex-col items-center gap-3 px-5 py-7 text-center">
+            <span className="grid h-16 w-16 place-items-center rounded-full border border-azul-700/50 bg-azul-500/[0.06] text-gris-400"><IconoTurno className="h-8 w-8" /></span>
+            <div><h2 className="text-xl font-bold text-white">Sin turno activo</h2><p className="mt-1 max-w-[18rem] text-sm leading-relaxed text-gris-400">Mantente preparado. La seguridad también se construye en la espera.</p></div>
           </section>
+
+          <section className="tarjeta overflow-hidden">
+            <div className="flex items-start gap-3 p-4">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-azul-500/12 text-azul-300"><IconoTurno className="h-6 w-6" /></span>
+              <div className="min-w-0 flex-1"><p className="text-xs font-medium text-gris-500">Próximo turno</p><p className="mt-1 text-lg font-bold capitalize text-white">{proximo ? fechaTurno(proximo.inicio_programado) : "Sin programación"}</p><p className="mt-1 text-sm text-gris-400">{proximoPuesto ? `${proximoPuesto.codigo} · ${proximoPuesto.nombre}` : "Operaciones todavía no ha asignado un puesto."}</p></div>
+            </div>
+          </section>
+
+          <section id="contactos" className="grid gap-3">
+            {telefonoContacto ? <a href={`tel:${telefonoContacto.replace(/\s/g, "")}`} className="boton-primario flex min-h-14 items-center justify-center gap-2 rounded-xl px-4 font-semibold text-white"><IconoTelefono className="h-5 w-5" /> Llamar al supervisor</a> : <div className="tarjeta px-4 py-3 text-center text-sm text-gris-400">Contacto de supervisión pendiente de asignar</div>}
+            <Link href="/guardia/emergencia" className="tarjeta flex min-h-14 items-center gap-3 px-4 py-3 font-semibold text-white"><IconoLibro className="h-5 w-5 text-azul-300" /><span className="flex-1">Protocolos operativos</span><IconoFlecha className="h-5 w-5 text-azul-300" /></Link>
+          </section>
+          <EstadoSincronizacion />
           <BotonSOS />
         </main>
       </>
@@ -351,7 +378,7 @@ export default async function PaginaGuardia() {
         <div className="flex flex-col gap-3.5">
 
         {/* ---------------- Mi puesto asignado ---------------- */}
-        <section className="tarjeta overflow-hidden">
+        <section id="contactos" className="tarjeta scroll-mt-28 overflow-hidden">
           <h2 className="flex items-center gap-2.5 px-5 pb-2 pt-4 text-xl font-semibold text-white">
             <IconoEscudoOk className="h-6 w-6 text-azul-400" />
             Mi puesto asignado
@@ -384,6 +411,8 @@ export default async function PaginaGuardia() {
             </div>
           </div>
         </section>
+
+        <EstadoSincronizacion />
 
         {/* ---------------- Acciones ---------------- */}
         {puesto?.armado && (

@@ -6,24 +6,21 @@ import {
   IconoAlerta,
   IconoCasa,
   IconoCiclo,
-  IconoMensaje,
+  IconoTelefono,
   IconoPersona,
 } from "./iconos";
 
 /**
  * Navegacion inferior de la app del guardia.
  *
- * Los destinos que todavia no existen se muestran apagados y NO son enlaces.
- * Un guardia que toca algo y no pasa nada deja de confiar en la app entera.
- *
- * "Mensajes" todavía no tiene destino funcional, pero se conserva porque es
- * parte de la navegación aprobada. Se muestra desactivado sin engañar al usuario.
+ * Contactos vuelve siempre al bloque real de supervisor y central. No se
+ * muestra una mensajería ficticia mientras esa función no exista.
  */
 const ENTRADAS = [
   { href: "/guardia", etiqueta: "Inicio", Icono: IconoCasa },
   { href: "/guardia/ronda", etiqueta: "Ronda", Icono: IconoCiclo },
   { href: "/guardia/reportar", etiqueta: "Reportar", Icono: IconoAlerta },
-  { href: null, etiqueta: "Mensajes", Icono: IconoMensaje },
+  { href: "/guardia#contactos", etiqueta: "Contactos", Icono: IconoTelefono },
   { href: "/mi-perfil", etiqueta: "Perfil", Icono: IconoPersona },
 ] as const;
 
@@ -34,7 +31,7 @@ export function NavInferior() {
     <nav aria-label="Navegación móvil" className="sticky bottom-0 z-20 border-t border-borde/70 bg-[#020b18]/92 backdrop-blur-xl md:hidden">
       <ul className="mx-auto flex w-full max-w-md items-stretch justify-between px-2 pb-[env(safe-area-inset-bottom)]">
         {ENTRADAS.map(({ href, etiqueta, Icono }) => {
-          const activo = href === ruta;
+          const activo = !href.includes("#") && href === ruta;
           const contenido = (
             <>
               <Icono className="h-7 w-7" />
@@ -44,30 +41,14 @@ export function NavInferior() {
           const clases = `flex min-h-[66px] flex-1 flex-col items-center justify-center gap-1.5 py-2 ${
             activo
               ? "text-azul-400"
-              : href
-                ? "text-gris-400"
-                : "text-gris-600 opacity-45"
+              : "text-gris-400"
           }`;
 
           return (
             <li key={etiqueta} className="flex flex-1">
-              {href ? (
-                <Link
-                  href={href}
-                  aria-current={activo ? "page" : undefined}
-                  className={clases}
-                >
-                  {contenido}
-                </Link>
-              ) : (
-                <span
-                  aria-disabled="true"
-                  title="En construcción"
-                  className={clases}
-                >
-                  {contenido}
-                </span>
-              )}
+              <Link href={href} aria-current={activo ? "page" : undefined} className={clases}>
+                {contenido}
+              </Link>
             </li>
           );
         })}
@@ -89,23 +70,13 @@ export function NavEscritorio() {
   return (
     <nav aria-label="Navegación principal" className="hidden gap-1 md:flex">
       {ENTRADAS.map(({ href, etiqueta }) => {
-        const activo = href === ruta;
+        const activo = !href.includes("#") && href === ruta;
         const clases = `rounded-full px-3.5 py-2 text-sm font-semibold transition ${
           activo
             ? "bg-azul-500/15 text-azul-300"
-            : href
-              ? "text-gris-400 hover:bg-white/5 hover:text-white"
-              : "cursor-default text-gris-600 opacity-45"
+            : "text-gris-400 hover:bg-white/5 hover:text-white"
         }`;
-        return href ? (
-          <Link key={etiqueta} href={href} aria-current={activo ? "page" : undefined} className={clases}>
-            {etiqueta}
-          </Link>
-        ) : (
-          <span key={etiqueta} aria-disabled="true" title="En construcción" className={clases}>
-            {etiqueta}
-          </span>
-        );
+        return <Link key={etiqueta} href={href} aria-current={activo ? "page" : undefined} className={clases}>{etiqueta}</Link>;
       })}
     </nav>
   );

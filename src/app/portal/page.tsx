@@ -5,6 +5,7 @@ import { IconoAlerta, IconoEscudoOk, IconoFlecha, IconoLista, IconoRonda, IconoT
 import { exigirPerfil, fechaHoraEcuador, horaEcuador } from "@/lib/sesion";
 import { esLector } from "@/lib/roles";
 import { SelectorEmpresa } from "./selector-empresa";
+import { NavCliente } from "./nav-cliente";
 import { enlaceWhatsapp, resumenDeEmpresa, telefonoLimpio, type Contacto, type EstadoPuesto, type PuestoAhora } from "./datos";
 
 export const metadata = { title: "Mi servicio — SOTERSA" };
@@ -37,6 +38,7 @@ export default async function PaginaPortal({ searchParams }: { searchParams: Pro
   const pctRondas = r.semana.turnosCubiertos ? Math.round((r.semana.turnosConRonda / r.semana.turnosCubiertos) * 100) : null;
   const pctPuntualidad = r.semana.aperturasTotales ? Math.round((r.semana.aperturasPuntuales / r.semana.aperturasTotales) * 100) : null;
   const contactos: Contacto[] = [...r.supervisores, ...(r.central ? [r.central] : []), ...(r.jefeOperaciones ? [r.jefeOperaciones] : [])];
+  const contactoPrincipal = r.central ?? r.supervisores[0] ?? r.jefeOperaciones;
   const ahoraIso = new Date().toISOString();
 
   const OPERACION = {
@@ -46,16 +48,16 @@ export default async function PaginaPortal({ searchParams }: { searchParams: Pro
   }[r.operacion];
 
   return (
-    <div className="min-h-dvh pb-12">
+    <div className="min-h-dvh pb-24 md:pb-12">
       <CabeceraPanel rol="cliente" nombre={perfil.nombre} />
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-5 py-6">
-        <Link href={lector ? "/admin" : "/perfiles"} className="inline-flex items-center gap-1 self-start text-sm font-medium text-azul-400"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> {lector ? "Panel administrativo" : "Menú principal"}</Link>
+      <main className="portal-cliente mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-5 sm:gap-5 sm:px-5 sm:py-6">
+        <Link href={lector ? "/admin" : "/perfiles"} className="hidden items-center gap-1 self-start text-sm font-medium text-azul-400 md:inline-flex"><span className="rotate-180"><IconoFlecha className="h-4 w-4" /></span> {lector ? "Panel administrativo" : "Menú principal"}</Link>
         {lector && <SelectorEmpresa empresas={todas} actual={empresaId} />}
 
-        <section>
-          <p className="text-sm font-medium text-azul-400">Mi servicio</p>
-          <h1 className="mt-1 text-3xl font-bold text-white">{saludo()}, {perfil.nombre.split(" ")[0]}</h1>
-          <p className="mt-1 text-sm text-gris-400">{r.empresa?.nombre ?? "Cuenta corporativa"} · {fechaHoraEcuador(ahoraIso)}</p>
+        <section className="px-1">
+          <p className="hidden text-sm font-medium text-azul-400 sm:block">Mi servicio</p>
+          <h1 className="mt-1 text-[1.75rem] font-bold tracking-tight text-white sm:text-3xl">{saludo()}, {perfil.nombre.split(" ")[0]}</h1>
+          <p className="mt-1 text-base text-gris-400 sm:text-sm">{r.empresa?.nombre ?? "Cuenta corporativa"}<span className="hidden sm:inline"> · {fechaHoraEcuador(ahoraIso)}</span></p>
           {lector && empresaId && <div className="mt-3 flex flex-wrap gap-2">
             <Link href={`/portal/agentes${sufijo}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-azul-500/40 bg-azul-500/10 px-4 text-sm font-semibold text-azul-300">Agentes de seguridad <IconoFlecha className="h-4 w-4" /></Link>
             <Link href={`/portal/documentos${sufijo}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-borde/60 bg-white/[0.03] px-4 text-sm font-medium text-gris-300">Documentación habilitante</Link>
@@ -64,16 +66,18 @@ export default async function PaginaPortal({ searchParams }: { searchParams: Pro
         </section>
 
         {/* 1. Estado real, calculado */}
-        <section className="panel-operativo grid gap-6 p-6 sm:grid-cols-[1fr_auto] sm:items-center sm:p-8">
+        <section className={`panel-operativo grid gap-5 p-5 sm:grid-cols-[1fr_auto] sm:items-center sm:p-8 ${r.operacion === "critica" ? "ring-1 ring-red-500/45" : ""}`}>
           <div className="flex items-start gap-4">
             <span className={`grid h-16 w-16 shrink-0 place-items-center rounded-full border ${r.operacion === "normal" ? "border-azul-500/50 bg-azul-500/10 text-azul-400" : r.operacion === "atencion" ? "border-amber-400/50 bg-amber-400/10 text-amber-300" : "border-red-500/50 bg-red-500/10 text-red-300"}`}>{r.operacion === "normal" ? <IconoEscudoOk className="h-9 w-9" /> : <IconoAlerta className="h-9 w-9" />}</span>
             <div>
-              <h2 className="text-2xl font-bold text-white">{enApp === 0 ? `${r.puestos.length} puesto${r.puestos.length === 1 ? "" : "s"} bajo supervisión` : `${cubiertos} de ${enApp} puesto${enApp === 1 ? "" : "s"} con agente ahora`}</h2>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-gris-400">Estado de tu servicio</p>
+              <h2 className={`mt-1 text-2xl font-bold ${r.operacion === "critica" ? "text-red-300" : r.operacion === "atencion" ? "text-amber-200" : "text-white"}`}>{enApp === 0 ? `${r.puestos.length} puesto${r.puestos.length === 1 ? "" : "s"} bajo supervisión` : `${cubiertos} de ${enApp} puesto${enApp === 1 ? "" : "s"} con agente ahora`}</h2>
               <span className={`mt-3 inline-flex rounded-full border px-3 py-1.5 text-sm font-medium ${OPERACION.clase}`}>{OPERACION.texto}</span>
               <p className="mt-3 text-sm text-gris-400">{OPERACION.detalle}</p>
             </div>
           </div>
-          <div className="border-t border-borde/60 pt-5 text-center sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0"><p className="text-sm text-gris-400">Cumplimiento SLA</p><p className="mt-2 text-5xl font-bold text-azul-400">{r.sla.medidos ? `${r.sla.puntaje}%` : "—"}</p><p className="mt-1 text-xs text-gris-500">{r.sla.medidos ? `${r.sla.cumplidos} de ${r.sla.medidos} avisos en ≤ 15 min · 30 días` : "Sin avisos medibles en los últimos 30 días"}</p></div>
+          <div className="border-t border-borde/60 pt-5 text-center sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0"><p className="text-sm text-gris-400">Cumplimiento SLA</p><p className="mt-2 text-4xl font-bold text-azul-400 sm:text-5xl">{r.sla.medidos ? `${r.sla.puntaje}%` : "—"}</p><p className="mt-1 text-xs text-gris-500">{r.sla.medidos ? `${r.sla.cumplidos} de ${r.sla.medidos} avisos en ≤ 15 min · 30 días` : "Sin datos medibles todavía"}</p></div>
+          {contactoPrincipal && <a href={`tel:${telefonoLimpio(contactoPrincipal.telefono)}`} className="boton-primario col-span-full inline-flex min-h-14 items-center justify-center gap-2 rounded-xl px-5 text-base font-bold text-white sm:hidden"><IconoTelefono className="h-5 w-5" /> Contactar a SOTERSA</a>}
         </section>
 
         {/* 1b. En este momento, por puesto */}
@@ -172,6 +176,7 @@ export default async function PaginaPortal({ searchParams }: { searchParams: Pro
           <p className="mt-2 text-sm leading-relaxed text-gris-400">Un puesto está <strong className="text-gris-200">cubierto</strong> cuando el agente abrió su turno desde la app con checklist y hora. El <strong className="text-gris-200">SLA</strong> mide el tiempo entre que se registra una novedad y SOTERSA la notifica; el compromiso es 15 minutos. Solo ves registros validados y autorizados para tu empresa.{r.sla.ultimo ? ` Último aviso medido: ${fechaHoraEcuador(r.sla.ultimo)}.` : ""}</p>
         </section>
       </main>
+      <NavCliente sufijo={sufijo} />
     </div>
   );
 }
