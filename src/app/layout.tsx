@@ -46,8 +46,6 @@ export const viewport: Viewport = {
   // La app del guardia se usa de noche. El tema claro deslumbra y delata la
   // posicion de quien la mira.
   themeColor: "#020b18",
-  // Sin zoom accidental: el guardia opera con una mano y a veces con guantes.
-  maximumScale: 1,
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
