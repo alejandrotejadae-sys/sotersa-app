@@ -29,6 +29,7 @@ const RUTAS_SHELL = ["/admin", "/central", "/supervisor", "/operacion", "/config
 const NAVEGACION = [
   { href: "/admin", texto: "Panel general", icono: IconoCasa },
   { href: "/operacion/clientes", texto: "Clientes", icono: IconoPersona },
+  { href: "/operacion/usuarios", texto: "Usuarios y permisos", icono: IconoLista },
   { href: "/operacion/personal", texto: "Agentes", icono: IconoEscudoOk },
   { href: "/operacion/turnos", texto: "Turnos", icono: IconoTurno },
   { href: "/operacion/rondas", texto: "Rondas", icono: IconoCiclo },
