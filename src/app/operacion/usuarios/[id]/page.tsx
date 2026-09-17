@@ -50,7 +50,7 @@ export default async function PaginaUsuario({ params }: { params: Promise<{ id: 
   const ultimoIngreso = auth?.user?.last_sign_in_at ?? null;
   const consentimiento = consentimientoR.data && !consentimientoR.data.retirado_en ? consentimientoR.data.aceptado_en : null;
 
-  const cuenta: Cuenta = { id: perfil.id, rol: perfil.rol as Cuenta["rol"], nombre: perfil.nombre, telefono: perfil.telefono, activo: perfil.activo && !bloqueadaAuth, empresa_cliente_id: perfil.empresa_cliente_id, zona_id: perfil.zona_id, esPropia: perfil.id === user.id };
+  const cuenta: Cuenta = { id: perfil.id, rol: perfil.rol as Cuenta["rol"], nombre: perfil.nombre, correo, telefono: perfil.telefono, activo: perfil.activo && !bloqueadaAuth, empresa_cliente_id: perfil.empresa_cliente_id, zona_id: perfil.zona_id, esPropia: perfil.id === user.id };
 
   return (
     <main className="min-h-dvh bg-[#020b18] text-white">
@@ -106,7 +106,7 @@ export default async function PaginaUsuario({ params }: { params: Promise<{ id: 
         )}
         {!editable && <p className="mt-5 rounded-xl border border-[#27425e] bg-[#041225] px-4 py-3 text-sm text-slate-400">Vista de consulta. Editar datos, restablecer claves y bloquear cuentas es exclusivo del administrador.</p>}
         {editable && <div className="mt-5 grid gap-5 lg:grid-cols-2">
-          <Panel titulo="Datos de la cuenta" detalle="Nombre, teléfono y vínculo. El rol no se cambia: para otro rol se crea otra cuenta.">
+          <Panel titulo="Datos de la cuenta" detalle="Nombre, correo de ingreso, teléfono y vínculo. El rol no se cambia: para otro rol se crea otra cuenta.">
             <EditorUsuario cuenta={cuenta} empresas={empresasR.data ?? []} zonas={zonasR.data ?? []} />
           </Panel>
           <div className="space-y-5">
