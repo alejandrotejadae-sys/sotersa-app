@@ -10,6 +10,7 @@ export type Cuenta = {
   id: string;
   rol: "admin" | "supervisor" | "guardia" | "cliente";
   nombre: string;
+  correo: string;
   telefono: string | null;
   activo: boolean;
   empresa_cliente_id: string | null;
@@ -23,6 +24,7 @@ export function EditorUsuario({ cuenta, empresas, zonas }: { cuenta: Cuenta; emp
     <form action={accion} className="space-y-3">
       <input type="hidden" name="perfil_id" value={cuenta.id} />
       <Campo etiqueta="Nombre completo"><input name="nombre" required minLength={3} maxLength={100} defaultValue={cuenta.nombre} className={control} /></Campo>
+      {cuenta.rol === "cliente" && <Campo etiqueta="Correo de ingreso"><input name="correo" type="email" required maxLength={160} defaultValue={cuenta.correo} autoComplete="email" className={control} /></Campo>}
       <Campo etiqueta="Teléfono" ayuda="opcional"><input name="telefono" inputMode="tel" maxLength={20} defaultValue={cuenta.telefono ?? ""} className={control} /></Campo>
       {cuenta.rol === "cliente" && (
         <Campo etiqueta="Empresa">
