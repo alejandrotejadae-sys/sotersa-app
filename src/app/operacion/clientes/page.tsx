@@ -7,7 +7,7 @@ import { FormularioContacto } from "./formulario-contacto";
 import { AccionesCliente } from "./acciones-cliente";
 import { ServiciosCliente } from "./servicios-cliente";
 import { MapaPuestos } from "@/app/componentes/mapa-puestos";
-import { DocumentosAdmin } from "./documentos-admin";
+import { ArchivosCliente, DocumentosAdmin } from "./documentos-admin";
 import { documentosParaAdmin, tamanoLegible } from "@/lib/documentos";
 import { fechaHoraEcuador } from "@/lib/sesion";
 import { puedeEditar } from "@/lib/roles";
@@ -88,8 +88,8 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
           <FormularioContacto puestos={puestosActivos.map(({ id, codigo, nombre }) => ({ id, codigo, nombre }))}/>
         </Desplegable>}
 
-        {editable && <Desplegable titulo="Documentación habilitante" detalle="Permisos, RUC, BASC, pólizas. Lo general lo ven todos los clientes en su portal; lo específico, solo ese cliente." pendiente={documentos.generales.length === 0 ? "sin documentos" : undefined}>
-          <DocumentosAdmin empresas={empresas.filter((e) => e.activo).map((e) => ({ id: e.id, nombre: e.nombre }))} generales={documentos.generales.map(aDocAdmin)} porCliente={documentos.porCliente.map((c) => ({ empresa: c.empresa, documentos: c.documentos.map(aDocAdmin) }))} />
+        {editable && <Desplegable titulo="Documentación general de SOTERSA" detalle="Permisos, RUC, BASC y pólizas que pueden consultar todos los clientes desde su portal." pendiente={documentos.generales.length === 0 ? "sin documentos" : undefined}>
+          <DocumentosAdmin generales={documentos.generales.map(aDocAdmin)} />
         </Desplegable>}
 
         {editable && <Desplegable titulo="Registrar cliente o puesto" detalle="Alta de un cliente nuevo con su primer puesto, o de un puesto para un cliente existente.">
@@ -111,6 +111,7 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
               const pendientes = reportes.filter((novedad) => novedad.estado === "registrada").length;
               const cuentas = perfiles.filter((perfil) => perfil.empresa_cliente_id === empresa.id);
               const faltantes = faltantesEmpresa(empresa);
+              const archivos = documentos.porCliente.find((grupo) => grupo.empresa.id === empresa.id)?.documentos ?? [];
               return (
                 <article key={empresa.id} className="overflow-hidden rounded-2xl border border-[#27425e] bg-[#07172a]/95">
                   <div className="flex items-start justify-between gap-4 border-b border-[#20374e] px-4 py-4">
@@ -134,6 +135,8 @@ export default async function PaginaClientes({ searchParams }: { searchParams: P
                       supervisores={supervisoresR.data ?? []}
                       soloLectura={!editable}
                     />
+
+                    {editable && <ArchivosCliente empresa={{ id: empresa.id, nombre: empresa.nombre }} documentos={archivos.map(aDocAdmin)} />}
 
                     <Link href={`/portal?empresa=${empresa.id}`} className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#087ff0] to-[#02b9e8] px-4 text-sm font-semibold text-white shadow-lg shadow-blue-950/30">Ver portal del cliente <IconoFlecha className="h-4 w-4" /></Link>
                   </div>
