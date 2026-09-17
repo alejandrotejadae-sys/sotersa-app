@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Marca, Pulso } from "@/app/componentes/marca";
 import { IconoAlerta, IconoCiclo, IconoEscudoOk, IconoLista, IconoPersona, IconoTurno } from "@/app/componentes/iconos";
 import { ahoraConDesfase, exigirPerfil, horaEcuador, uno } from "@/lib/sesion";
+import { ActualizadorCentral } from "./actualizador-central";
 
 export const metadata = { title: "Central operativa — SOTERSA" };
 export const dynamic = "force-dynamic";
@@ -25,6 +26,7 @@ export default async function PaginaCentral() {
 
   return (
     <main className="min-h-dvh bg-[#020b18] text-white">
+      <ActualizadorCentral />
       <div className="mx-auto min-h-dvh w-full max-w-[1440px] px-4 pb-10 pt-[max(1rem,env(safe-area-inset-top))] lg:px-8">
         <header className="flex items-center justify-between gap-4"><Marca tamano="panel" /><div className="flex items-center gap-2"><span className="flex items-center gap-2 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300"><Pulso /> En línea</span><Link href="/admin" className="rounded-xl border border-[#27425e] bg-[#07172a] px-3 py-2 text-sm text-[#8ddaff]">Panel admin</Link></div></header>
 
