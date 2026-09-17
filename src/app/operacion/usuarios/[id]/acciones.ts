@@ -13,6 +13,7 @@ import { crearClienteAdministrador } from "@/lib/supabase/administrador";
 export type EstadoUsuario = { tipo: "inicial" | "error" | "exito"; mensaje: string; usuario?: string; claveTemporal?: string };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const texto = (fd: FormData, campo: string, max: number) => String(fd.get(campo) ?? "").trim().replace(/\s+/g, " ").slice(0, max);
 
 function refrescar(id: string) {
@@ -24,6 +25,7 @@ export async function actualizarUsuario(_: EstadoUsuario, formData: FormData): P
   const id = String(formData.get("perfil_id") ?? "");
   const nombre = texto(formData, "nombre", 100);
   const telefono = String(formData.get("telefono") ?? "").trim().replace(/[^\d+ ]/g, "").slice(0, 20);
+  const correo = String(formData.get("correo") ?? "").trim().toLowerCase();
   const empresaId = String(formData.get("empresa_id") ?? "");
   const zonaId = String(formData.get("zona_id") ?? "");
 
@@ -36,6 +38,7 @@ export async function actualizarUsuario(_: EstadoUsuario, formData: FormData): P
 
   const cambios: Record<string, unknown> = { nombre, telefono: telefono || null };
   if (perfil.rol === "cliente") {
+    if (!CORREO.test(correo)) return { tipo: "error", mensaje: "Escribe un correo electrónico válido." };
     if (!UUID.test(empresaId)) return { tipo: "error", mensaje: "Selecciona la empresa del cliente." };
     const { data: empresa } = await supabase.from("empresas_cliente").select("id").eq("id", empresaId).maybeSingle();
     if (!empresa) return { tipo: "error", mensaje: "Esa empresa no existe." };
@@ -58,10 +61,19 @@ export async function actualizarUsuario(_: EstadoUsuario, formData: FormData): P
   // La copia en Auth (nombre en user_metadata, empresa/zona en app_metadata)
   // se mantiene igual para que la sesion del usuario refleje el cambio.
   const { data: auth } = await administrador.auth.admin.getUserById(id);
-  await administrador.auth.admin.updateUserById(id, {
+  const { error: errorAuth } = await administrador.auth.admin.updateUserById(id, {
+    ...(perfil.rol === "cliente" ? { email: correo, email_confirm: true } : {}),
     user_metadata: { ...(auth?.user?.user_metadata ?? {}), nombre },
     app_metadata: { ...(auth?.user?.app_metadata ?? {}), ...(perfil.rol === "cliente" ? { empresa_cliente_id: empresaId } : {}), ...(perfil.rol === "supervisor" ? { zona_id: zonaId || null } : {}) },
   });
+  if (errorAuth) {
+    return {
+      tipo: "error",
+      mensaje: errorAuth.message.toLowerCase().includes("registered") || errorAuth.message.toLowerCase().includes("exists")
+        ? "Ese correo ya está registrado en otra cuenta."
+        : "Los datos se guardaron, pero no fue posible actualizar el correo de ingreso.",
+    };
+  }
   // El agente lleva nombre y telefono tambien en su ficha operativa.
   if (perfil.rol === "guardia") await administrador.from("guardias").update({ nombre, telefono: telefono || null }).eq("perfil_id", id);
 
