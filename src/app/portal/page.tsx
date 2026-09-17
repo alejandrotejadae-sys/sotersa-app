@@ -6,6 +6,7 @@ import { exigirPerfil, fechaHoraEcuador, horaEcuador } from "@/lib/sesion";
 import { esLector } from "@/lib/roles";
 import { SelectorEmpresa } from "./selector-empresa";
 import { NavCliente } from "./nav-cliente";
+import { BotonPanico } from "./boton-panico";
 import { enlaceWhatsapp, resumenDeEmpresa, telefonoLimpio, type Contacto, type EstadoPuesto, type PuestoAhora } from "./datos";
 
 export const metadata = { title: "Mi servicio — SOTERSA" };
@@ -64,6 +65,8 @@ export default async function PaginaPortal({ searchParams }: { searchParams: Pro
             <Link href={`/portal/custodia${sufijo}`} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-borde/60 bg-white/[0.03] px-4 text-sm font-medium text-gris-300">Custodia armada</Link>
           </div>}
         </section>
+
+        <BotonPanico puestos={r.puestos.map((puesto) => ({ id: puesto.id, codigo: puesto.codigo, nombre: puesto.nombre }))} />
 
         {/* 1. Estado real, calculado */}
         <section className={`panel-operativo grid gap-5 p-5 sm:grid-cols-[1fr_auto] sm:items-center sm:p-8 ${r.operacion === "critica" ? "ring-1 ring-red-500/45" : ""}`}>
