@@ -64,6 +64,12 @@ export function FormularioCarga() {
                 : "sin correcciones automáticas"}
             </p>
           )}
+          {estado.resumen?.fichasNuevas ? (
+            <p className="mt-2 text-xs opacity-90">
+              Las {estado.resumen.fichasNuevas} fichas nuevas se crearán sin
+              cédula ni acceso. Podrás completar sus datos después en Agentes.
+            </p>
+          ) : null}
           {estado.errores && estado.errores.length > 0 && (
             <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto text-xs opacity-90">
               {estado.errores.map((e, i) => (

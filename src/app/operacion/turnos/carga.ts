@@ -14,6 +14,8 @@ import { crearClienteAdministrador } from "@/lib/supabase/administrador";
 import {
   convertirCuadroMensual,
   elegirHojaMensual,
+  type AgentePendiente,
+  type AgentePorReactivar,
   type TurnoImportado,
 } from "./cuadro-mensual";
 import { puestosQuePuedeProgramar } from "./permisos";
@@ -30,6 +32,8 @@ export type EstadoCarga = {
     bloques?: number;
     ajustes?: number;
     hoja?: string;
+    fichasNuevas?: number;
+    fichasReactivadas?: number;
   };
 };
 
@@ -79,11 +83,14 @@ export async function cargarTurnos(
   }
 
   const [{ data: guardias }, puestos] = await Promise.all([
-    supabase.from("guardias").select("id,nombre,cedula").eq("activo", true),
+    supabase.from("guardias").select("id,nombre,cedula,activo"),
     puestosQuePuedeProgramar(supabase, perfil),
   ]);
+  const guardiasActivos = (guardias ?? []).filter((g) => g.activo);
 
   let nuevos: TurnoImportado[] = [];
+  let agentesFaltantes: AgentePendiente[] = [];
+  let agentesPorReactivar: AgentePorReactivar[] = [];
   let origen: NonNullable<EstadoCarga["resumen"]> = {
     creados: 0,
     saltados: 0,
@@ -104,6 +111,8 @@ export async function cargarTurnos(
       };
     }
     nuevos = resultado.turnos;
+    agentesFaltantes = resultado.agentesFaltantes;
+    agentesPorReactivar = resultado.agentesPorReactivar;
     origen = {
       creados: 0,
       saltados: 0,
@@ -112,6 +121,8 @@ export async function cargarTurnos(
       libres: resultado.libres,
       bloques: resultado.bloques,
       ajustes: resultado.ajustes,
+      fichasNuevas: agentesFaltantes.length,
+      fichasReactivadas: agentesPorReactivar.length,
     };
   } else {
     filas = (filas ?? []).filter((f) => f.some((c) => String(c ?? "").trim()));
@@ -155,12 +166,12 @@ export async function cargarTurnos(
       };
 
     const porCedula = new Map(
-      (guardias ?? [])
+      guardiasActivos
         .filter((g) => g.cedula)
         .map((g) => [g.cedula!.replace(/\D/g, ""), g]),
     );
     const porNombre = new Map(
-      (guardias ?? []).map((g) => [normalizar(g.nombre), g]),
+      guardiasActivos.map((g) => [normalizar(g.nombre), g]),
     );
     const errores: string[] = [];
 
@@ -302,7 +313,8 @@ export async function cargarTurnos(
     .map((x) => x.fin_programado)
     .sort()
     .at(-1)!;
-  const { data: existentes } = await crearClienteAdministrador()
+  const administrador = crearClienteAdministrador();
+  const { data: existentes } = await administrador
     .from("turnos")
     .select("guardia_id,puesto_id,inicio_programado,fin_programado")
     .neq("estado", "ausente")
@@ -337,28 +349,110 @@ export async function cargarTurnos(
     filas: nuevos.length,
   };
   const detalleOrigen = origen.hoja ? ` de la hoja «${origen.hoja}»` : "";
+  const detallePersonal = [
+    agentesFaltantes.length
+      ? `${agentesFaltantes.length} ficha${agentesFaltantes.length === 1 ? " nueva" : "s nuevas"}`
+      : "",
+    agentesPorReactivar.length
+      ? `${agentesPorReactivar.length} ficha${agentesPorReactivar.length === 1 ? " por reactivar" : "s por reactivar"}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" y ");
   if (accion === "validar") {
     return {
       tipo: "vista_previa",
-      mensaje: `Validación lista${detalleOrigen}: ${aInsertar.length} turno${aInsertar.length === 1 ? "" : "s"} por crear${saltados.length ? ` y ${saltados.length} ya cubierto${saltados.length === 1 ? "" : "s"}` : ""}. Aún no se guardó nada.`,
+      mensaje: `Validación lista${detalleOrigen}: ${aInsertar.length} turno${aInsertar.length === 1 ? "" : "s"} por crear${saltados.length ? ` y ${saltados.length} ya cubierto${saltados.length === 1 ? "" : "s"}` : ""}${detallePersonal ? ` · ${detallePersonal}` : ""}. Aún no se guardó nada.`,
       errores: saltados.slice(0, 40),
       resumen,
     };
   }
 
-  if (aInsertar.length) {
-    const { error } = await supabase
-      .from("turnos")
+  if (
+    perfil.rol !== "admin" &&
+    (agentesFaltantes.length > 0 || agentesPorReactivar.length > 0)
+  ) {
+    return {
+      tipo: "error",
+      mensaje:
+        "El cuadro incluye personal sin ficha activa. Un administrador debe realizar esta carga para poder crear o reactivar esas fichas.",
+      errores: [
+        ...agentesFaltantes.map((a) => `Ficha nueva: ${a.nombre}`),
+        ...agentesPorReactivar.map((a) => `Ficha por reactivar: ${a.nombre}`),
+      ].slice(0, 40),
+    };
+  }
+
+  let fichasCreadas = 0;
+  let fichasReactivadas = 0;
+  if (agentesFaltantes.length) {
+    const { data: creados, error } = await administrador
+      .from("guardias")
       .insert(
-        aInsertar.map((t) => ({
-          puesto_id: t.puesto_id,
-          guardia_id: t.guardia_id,
-          tipo: t.tipo,
-          inicio_programado: t.inicio_programado,
-          fin_programado: t.fin_programado,
-          estado: t.estado,
+        agentesFaltantes.map((agente) => ({
+          nombre: agente.nombre,
+          cedula: null,
+          activo: true,
+          puesto_habitual_id: agente.puesto_habitual_id,
+          es_relevo: agente.es_relevo,
         })),
+      )
+      .select("id,nombre");
+    if (error || !creados || creados.length !== agentesFaltantes.length)
+      return {
+        tipo: "error",
+        mensaje:
+          "No pude crear todas las fichas del personal faltante. No se cargaron turnos.",
+        errores: error ? [error.message] : undefined,
+      };
+    const ids = new Map(
+      creados.map((agente) => [normalizar(agente.nombre), agente.id]),
+    );
+    for (const turno of aInsertar) {
+      const pendiente = agentesFaltantes.find(
+        (agente) => agente.idTemporal === turno.guardia_id,
       );
+      if (!pendiente) continue;
+      const id = ids.get(normalizar(pendiente.nombre));
+      if (!id)
+        return {
+          tipo: "error",
+          mensaje: `Se creó la ficha de ${pendiente.nombre}, pero no pude asociarla a sus turnos. Los turnos no se cargaron.`,
+        };
+      turno.guardia_id = id;
+    }
+    fichasCreadas = creados.length;
+  }
+
+  for (const agente of agentesPorReactivar) {
+    const { error } = await administrador
+      .from("guardias")
+      .update({
+        activo: true,
+        puesto_habitual_id: agente.puesto_habitual_id,
+        es_relevo: agente.es_relevo,
+      })
+      .eq("id", agente.id);
+    if (error)
+      return {
+        tipo: "error",
+        mensaje: `No pude reactivar la ficha de ${agente.nombre}. Los turnos no se cargaron.`,
+        errores: [error.message],
+      };
+    fichasReactivadas++;
+  }
+
+  if (aInsertar.length) {
+    const { error } = await supabase.from("turnos").insert(
+      aInsertar.map((t) => ({
+        puesto_id: t.puesto_id,
+        guardia_id: t.guardia_id,
+        tipo: t.tipo,
+        inicio_programado: t.inicio_programado,
+        fin_programado: t.fin_programado,
+        estado: t.estado,
+      })),
+    );
     if (error)
       return {
         tipo: "error",
@@ -369,6 +463,8 @@ export async function cargarTurnos(
 
   for (const ruta of [
     "/operacion/turnos",
+    "/operacion/personal",
+    "/operacion/usuarios",
     "/operacion/dotacion",
     "/admin",
     "/supervisor",
@@ -378,7 +474,7 @@ export async function cargarTurnos(
     revalidatePath(ruta);
   return {
     tipo: "exito",
-    mensaje: `${aInsertar.length} turno${aInsertar.length === 1 ? "" : "s"} creado${aInsertar.length === 1 ? "" : "s"}${detalleOrigen}${saltados.length ? ` · ${saltados.length} ya estaban cubiertos y se saltaron` : ""}.`,
+    mensaje: `${aInsertar.length} turno${aInsertar.length === 1 ? "" : "s"} creado${aInsertar.length === 1 ? "" : "s"}${detalleOrigen}${saltados.length ? ` · ${saltados.length} ya estaban cubiertos y se saltaron` : ""}${fichasCreadas ? ` · ${fichasCreadas} ficha${fichasCreadas === 1 ? " nueva" : "s nuevas"}` : ""}${fichasReactivadas ? ` · ${fichasReactivadas} ficha${fichasReactivadas === 1 ? " reactivada" : "s reactivadas"}` : ""}.`,
     errores: saltados.slice(0, 40),
     resumen,
   };

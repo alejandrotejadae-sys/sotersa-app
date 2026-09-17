@@ -6,6 +6,19 @@ export type AgenteImportable = {
   id: string;
   nombre: string;
   cedula?: string | null;
+  activo?: boolean;
+};
+export type AgentePendiente = {
+  idTemporal: string;
+  nombre: string;
+  puesto_habitual_id: string | null;
+  es_relevo: boolean;
+};
+export type AgentePorReactivar = {
+  id: string;
+  nombre: string;
+  puesto_habitual_id: string | null;
+  es_relevo: boolean;
 };
 export type TurnoImportado = {
   fila: number;
@@ -25,6 +38,8 @@ export type ResultadoCuadro = {
   bloques: number;
   libres: number;
   ajustes: number;
+  agentesFaltantes: AgentePendiente[];
+  agentesPorReactivar: AgentePorReactivar[];
 };
 
 const ZONA = "-05:00";
@@ -45,16 +60,16 @@ const MESES: [RegExp, number][] = [
   [/\b(?:DIC|DICIEMBRE)\b/, 12],
 ];
 
-const ALIAS_PUESTOS: Record<string, { cliente: string; ordinal: number }> = {
-  "20": { cliente: "boreal", ordinal: 1 },
-  "60": { cliente: "marfil", ordinal: 1 },
-  "70": { cliente: "colina", ordinal: 1 },
-  "80": { cliente: "napoles", ordinal: 1 },
-  "110": { cliente: "hospital americano", ordinal: 1 },
-  "120": { cliente: "unib e", ordinal: 1 },
-  "130": { cliente: "unib e", ordinal: 2 },
-  "140": { cliente: "unib e", ordinal: 3 },
-  "45-55": { cliente: "la selva", ordinal: 1 },
+const ALIAS_PUESTOS: Record<string, { clientes: string[]; ordinal: number }> = {
+  "20": { clientes: ["boreal"], ordinal: 1 },
+  "60": { clientes: ["marfil"], ordinal: 1 },
+  "70": { clientes: ["colina"], ordinal: 1 },
+  "80": { clientes: ["napoles"], ordinal: 1 },
+  "110": { clientes: ["hospital americano", "metahospitales"], ordinal: 1 },
+  "120": { clientes: ["unib e"], ordinal: 1 },
+  "130": { clientes: ["unib e"], ordinal: 2 },
+  "140": { clientes: ["unib e"], ordinal: 3 },
+  "45-55": { clientes: ["la selva"], ordinal: 1 },
 };
 
 const CORRECCIONES_CONOCIDAS: Record<string, string> = {
@@ -101,6 +116,8 @@ export function convertirCuadroMensual(
       bloques: 0,
       libres: 0,
       ajustes: 0,
+      agentesFaltantes: [],
+      agentesPorReactivar: [],
     };
 
   const errores: string[] = [];
@@ -108,6 +125,14 @@ export function convertirCuadroMensual(
   let bloques = 0;
   let libres = 0;
   let ajustes = 0;
+  const faltantes = new Map<
+    string,
+    { idTemporal: string; nombre: string; puestos: Set<string> }
+  >();
+  const inactivos = new Map<
+    string,
+    { id: string; nombre: string; puestos: Set<string> }
+  >();
 
   for (let r = 0; r < hoja.filas.length; r++) {
     const rotulo = String(hoja.filas[r]?.[0] ?? "").trim();
@@ -130,11 +155,34 @@ export function convertirCuadroMensual(
       const nombre = String(fila[0] ?? "").trim();
       if (!nombre || /^soter\b/i.test(nombre)) break;
       const agente = resolverAgente(nombre, agentes);
-      if (!agente.ok) {
+      if (!agente.ok && agente.razon === "ambiguo") {
         errores.push(`Fila ${rr + 1}: ${agente.error}`);
         continue;
       }
       if (!puesto.ok) continue;
+
+      const idAgente = agente.ok
+        ? agente.valor.id
+        : `pendiente:${normalizar(nombre)}`;
+      const nombreAgente = agente.ok ? agente.valor.nombre : nombre;
+      if (!agente.ok) {
+        const clave = normalizar(nombre);
+        const pendiente = faltantes.get(clave) ?? {
+          idTemporal: idAgente,
+          nombre,
+          puestos: new Set<string>(),
+        };
+        pendiente.puestos.add(puesto.valor.id);
+        faltantes.set(clave, pendiente);
+      } else if (agente.valor.activo === false) {
+        const pendiente = inactivos.get(agente.valor.id) ?? {
+          id: agente.valor.id,
+          nombre: agente.valor.nombre,
+          puestos: new Set<string>(),
+        };
+        pendiente.puestos.add(puesto.valor.id);
+        inactivos.set(agente.valor.id, pendiente);
+      }
 
       for (const { columna, dia } of columnasDia) {
         const codigoOriginal = normalizarCodigo(fila[columna]);
@@ -173,12 +221,12 @@ export function convertirCuadroMensual(
         turnos.push({
           fila: rr + 1,
           puesto_id: puesto.valor.id,
-          guardia_id: agente.valor.id,
+          guardia_id: idAgente,
           tipo: nocturno ? "fijo_noche" : "fijo_dia",
           inicio_programado: inicio.toISOString(),
           fin_programado: fin.toISOString(),
           estado: "programado",
-          etiqueta: `${agente.valor.nombre} · ${puesto.valor.empresa} ${puesto.valor.codigo} · ${fecha} ${codigo}`,
+          etiqueta: `${nombreAgente} · ${puesto.valor.empresa} ${puesto.valor.codigo} · ${fecha} ${codigo}`,
         });
       }
     }
@@ -195,6 +243,20 @@ export function convertirCuadroMensual(
     bloques,
     libres,
     ajustes,
+    agentesFaltantes: [...faltantes.values()].map((agente) => ({
+      idTemporal: agente.idTemporal,
+      nombre: agente.nombre,
+      puesto_habitual_id:
+        agente.puestos.size === 1 ? [...agente.puestos][0] : null,
+      es_relevo: agente.puestos.size > 1,
+    })),
+    agentesPorReactivar: [...inactivos.values()].map((agente) => ({
+      id: agente.id,
+      nombre: agente.nombre,
+      puesto_habitual_id:
+        agente.puestos.size === 1 ? [...agente.puestos][0] : null,
+      es_relevo: agente.puestos.size > 1,
+    })),
   };
 }
 
@@ -233,7 +295,11 @@ function resolverPuesto(
   const alias = ALIAS_PUESTOS[numero];
   if (alias) {
     const candidatos = puestos
-      .filter((p) => parecido(normalizar(p.empresa), alias.cliente))
+      .filter((p) =>
+        alias.clientes.some((cliente) =>
+          parecido(normalizar(p.empresa), cliente),
+        ),
+      )
       .sort((a, b) =>
         a.codigo.localeCompare(b.codigo, "es", { numeric: true }),
       );
@@ -241,7 +307,7 @@ function resolverPuesto(
     if (elegido) return { ok: true, valor: elegido };
     return {
       ok: false,
-      error: `no encuentro el puesto ${alias.ordinal} de ${alias.cliente} entre los puestos disponibles.`,
+      error: `no encuentro el puesto ${alias.ordinal} de ${alias.clientes.join(" / ")} entre los puestos disponibles.`,
     };
   }
 
@@ -264,9 +330,14 @@ function resolverPuesto(
 function resolverAgente(
   nombre: string,
   agentes: AgenteImportable[],
-): { ok: true; valor: AgenteImportable } | { ok: false; error: string } {
+):
+  | { ok: true; valor: AgenteImportable }
+  | { ok: false; razon: "no_encontrado" | "ambiguo"; error: string } {
   const buscado = normalizar(nombre);
   const exactos = agentes.filter((g) => normalizar(g.nombre) === buscado);
+  const exactosActivos = exactos.filter((g) => g.activo !== false);
+  if (exactosActivos.length === 1)
+    return { ok: true, valor: exactosActivos[0] };
   if (exactos.length === 1) return { ok: true, valor: exactos[0] };
   const tokens = buscado.split(" ").filter((t) => t.length > 1);
   const candidatos = agentes.filter((g) => {
@@ -279,11 +350,19 @@ function resolverAgente(
       ),
     );
   });
+  const candidatosActivos = candidatos.filter((g) => g.activo !== false);
+  if (candidatosActivos.length === 1)
+    return { ok: true, valor: candidatosActivos[0] };
   if (candidatos.length === 1) return { ok: true, valor: candidatos[0] };
   if (candidatos.length === 0)
-    return { ok: false, error: `no encuentro al agente activo «${nombre}».` };
+    return {
+      ok: false,
+      razon: "no_encontrado",
+      error: `no encuentro al agente activo «${nombre}».`,
+    };
   return {
     ok: false,
+    razon: "ambiguo",
     error: `«${nombre}» coincide con ${candidatos.length} agentes; usa un nombre más completo.`,
   };
 }
