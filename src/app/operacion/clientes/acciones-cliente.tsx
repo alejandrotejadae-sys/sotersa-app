@@ -3,8 +3,10 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import { actualizarCliente, cambiarEstadoCliente, type EstadoCliente } from "./acciones";
+import { crearCuenta, type EstadoAlta } from "../usuarios/acciones";
 
 const INICIAL: EstadoCliente = { tipo: "inicial", mensaje: "" };
+const INICIAL_ALTA: EstadoAlta = { tipo: "inicial", mensaje: "" };
 const control = "mt-2 min-h-11 w-full rounded-xl border border-[#27425e] bg-[#041225] px-3 text-sm text-white outline-none focus:border-[#0788ff]";
 
 type Empresa = {
@@ -18,7 +20,7 @@ type Empresa = {
   activo: boolean;
 };
 
-type Panel = "editar" | null;
+type Panel = "editar" | "usuario" | null;
 export type CuentaCliente = { id: string; nombre: string; activo: boolean };
 
 /**
@@ -34,19 +36,11 @@ export function AccionesCliente({ empresa, cuentas, soloLectura = false }: { emp
     return cuentas.length > 0 ? <ul className="mt-4 space-y-2">{cuentas.map((cuenta) => <Cuenta key={cuenta.id} cuenta={cuenta} />)}</ul> : null;
   }
 
-  if (soloLectura) {
-    return cuentas.length > 0 ? <ul className="mt-4 space-y-2">{cuentas.map((cuenta) => <Cuenta key={cuenta.id} cuenta={cuenta} />)}</ul> : null;
-  }
-
   return (
     <div className="mt-4">
       <div className="flex flex-wrap gap-2">
         <Boton activo={panel === "editar"} onClick={() => alternar("editar")}>Editar datos</Boton>
-        {empresa.activo && (
-          <Link href="/operacion/usuarios?rol=cliente" className={`inline-flex min-h-10 items-center rounded-full border px-4 text-sm font-medium transition ${cuentas.length === 0 ? "border-amber-400/40 bg-amber-500/10 text-amber-200" : "border-[#27425e] bg-[#041225] text-slate-300"}`}>
-            {cuentas.length === 0 ? "Crear acceso en Usuarios y permisos" : "Gestionar accesos"}
-          </Link>
-        )}
+        {empresa.activo && <Boton activo={panel === "usuario"} destacado={cuentas.length === 0} onClick={() => alternar("usuario")}>{cuentas.length === 0 ? "Crear primer usuario" : "Agregar usuario"}</Boton>}
         <form action={cambiarEstadoCliente} className="ml-auto">
           <input type="hidden" name="empresa_id" value={empresa.id} />
           <input type="hidden" name="activar" value={empresa.activo ? "0" : "1"} />
@@ -55,6 +49,7 @@ export function AccionesCliente({ empresa, cuentas, soloLectura = false }: { emp
       </div>
 
       {panel === "editar" && <FormularioEditar empresa={empresa} alCerrar={() => setPanel(null)} />}
+      {panel === "usuario" && <FormularioNuevoUsuario empresa={empresa} alCerrar={() => setPanel(null)} />}
 
       {cuentas.length > 0 && (
         <ul className="mt-3 space-y-2">
@@ -62,6 +57,42 @@ export function AccionesCliente({ empresa, cuentas, soloLectura = false }: { emp
         </ul>
       )}
     </div>
+  );
+}
+
+function FormularioNuevoUsuario({ empresa, alCerrar }: { empresa: Empresa; alCerrar: () => void }) {
+  const [estado, accion, pendiente] = useActionState(crearCuenta, INICIAL_ALTA);
+  const [copiado, setCopiado] = useState(false);
+
+  async function copiarCredenciales() {
+    if (!estado.usuario || !estado.claveTemporal) return;
+    await navigator.clipboard.writeText(`Usuario: ${estado.usuario}\nContraseña temporal: ${estado.claveTemporal}`);
+    setCopiado(true);
+  }
+
+  if (estado.tipo === "exito") {
+    return (
+      <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/8 p-3">
+        <p className="font-semibold text-emerald-300">Usuario creado para {empresa.nombre}</p>
+        <p className="mt-1 text-xs leading-5 text-slate-400">Este acceso ve únicamente la información y los servicios de este cliente.</p>
+        <div className="mt-3 space-y-1 rounded-lg bg-[#020b18] p-3 font-mono text-sm"><p><span className="text-slate-500">Usuario:</span> {estado.usuario}</p><p><span className="text-slate-500">Clave:</span> {estado.claveTemporal}</p></div>
+        <div className="mt-3 flex gap-2"><button type="button" onClick={copiarCredenciales} className="min-h-10 flex-1 rounded-xl bg-emerald-500/15 px-3 text-sm font-semibold text-emerald-200">{copiado ? "Credenciales copiadas" : "Copiar credenciales"}</button><button type="button" onClick={alCerrar} className="min-h-10 rounded-xl border border-[#27425e] px-3 text-sm text-slate-300">Cerrar</button></div>
+      </div>
+    );
+  }
+
+  return (
+    <form action={accion} className="mt-3 space-y-3 rounded-xl border border-[#0788ff]/35 bg-[#041225] p-3">
+      <input type="hidden" name="rol" value="cliente" />
+      <input type="hidden" name="empresa_id" value={empresa.id} />
+      <div><p className="text-sm font-semibold text-[#65c8ff]">Nuevo usuario de {empresa.nombre}</p><p className="mt-1 text-xs leading-5 text-slate-500">Puedes crear todos los accesos que el cliente necesite. Cada persona tendrá su propia contraseña.</p></div>
+      <Campo etiqueta="Nombre completo"><input name="nombre" required minLength={3} maxLength={100} className={control} placeholder="Nombre del usuario" /></Campo>
+      <Campo etiqueta="Correo electrónico"><input name="correo" type="email" required className={control} placeholder="usuario@empresa.com" /></Campo>
+      <Campo etiqueta="Clave temporal" ayuda="opcional · mínimo 8 caracteres"><input name="clave_temporal" minLength={8} maxLength={64} autoComplete="new-password" className={control} placeholder="Vacío = se genera una segura" /></Campo>
+      {estado.mensaje && <p role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-200">{estado.mensaje}</p>}
+      <p className="text-xs leading-5 text-slate-500">La clave se mostrará una sola vez. El usuario deberá cambiarla en su primer ingreso.</p>
+      <div className="flex gap-2"><button disabled={pendiente} className="min-h-11 flex-1 rounded-xl bg-gradient-to-r from-[#087ff0] to-[#02b9e8] px-4 text-sm font-semibold text-white disabled:opacity-50">{pendiente ? "Creando…" : "Crear usuario"}</button><button type="button" onClick={alCerrar} className="min-h-11 rounded-xl border border-[#27425e] px-4 text-sm text-slate-300">Cancelar</button></div>
+    </form>
   );
 }
 
