@@ -13,7 +13,7 @@ export default async function PaginaCierre() {
   if (!agente) redirect("/guardia");
   const limite = ahoraConDesfase(-6);
   const { data: turnos } = await supabase.from("turnos").select("id,puesto_id,inicio_programado,fin_programado,estado,puestos(codigo,nombre),aperturas_turno(id)").eq("guardia_id", agente.id).gte("fin_programado", limite).neq("estado", "cerrado").order("inicio_programado", { ascending: false }).limit(4);
-  const turno = (turnos ?? []).find((item) => (item.aperturas_turno?.length ?? 0) > 0);
+  const turno = (turnos ?? []).find((item) => item.estado === "abierto" || item.estado === "programado");
   if (!turno) redirect("/guardia");
   const puesto = Array.isArray(turno.puestos) ? turno.puestos[0] : turno.puestos;
 
