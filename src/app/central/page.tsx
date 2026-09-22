@@ -12,17 +12,16 @@ export default async function PaginaCentral() {
   const desde = ahoraConDesfase(-24);
   const ahora = new Date().toISOString();
 
-  const [guardiasR, puestosR, rondasR, novedadesR, turnosR, vaciosR] = await Promise.all([
+  const [guardiasR, puestosR, rondasR, novedadesR, turnosR] = await Promise.all([
     supabase.from("guardias").select("id", { count: "exact", head: true }).eq("activo", true),
     supabase.from("puestos").select("id", { count: "exact", head: true }).eq("activo", true),
     supabase.from("rondas").select("id", { count: "exact", head: true }).gte("hora_captura", desde),
     supabase.from("novedades").select("id,tipo,severidad,hora_captura,estado,puestos(codigo),guardias(nombre)").order("hora_captura", { ascending: false }).limit(8),
     supabase.from("turnos").select("id", { count: "exact", head: true }).lte("inicio_programado", ahora).gte("fin_programado", ahora).neq("estado", "ausente"),
-    supabase.from("v_puestos_sin_apertura").select("turno_id", { count: "exact", head: true }),
   ]);
 
   const novedades = novedadesR.data ?? [];
-  const alertas = (vaciosR.count ?? 0) + novedades.filter((n) => n.estado === "registrada").length;
+  const alertas = novedades.filter((n) => n.estado === "registrada").length;
 
   return (
     <main className="min-h-dvh bg-[#020b18] text-white">
