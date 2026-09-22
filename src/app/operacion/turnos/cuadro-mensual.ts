@@ -27,7 +27,7 @@ export type TurnoImportado = {
   tipo: TipoTurno;
   inicio_programado: string;
   fin_programado: string;
-  estado: "programado";
+  estado: "abierto";
   etiqueta: string;
 };
 
@@ -225,7 +225,7 @@ export function convertirCuadroMensual(
           tipo: nocturno ? "fijo_noche" : "fijo_dia",
           inicio_programado: inicio.toISOString(),
           fin_programado: fin.toISOString(),
-          estado: "programado",
+          estado: "abierto",
           etiqueta: `${nombreAgente} · ${puesto.valor.empresa} ${puesto.valor.codigo} · ${fecha} ${codigo}`,
         });
       }

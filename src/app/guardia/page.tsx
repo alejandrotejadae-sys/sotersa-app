@@ -82,7 +82,7 @@ export default async function PaginaGuardia() {
   const ahora = new Date().toISOString();
   const { data: turno } = await supabase
     .from("turnos")
-    .select("id, inicio_programado, fin_programado, puesto_id")
+    .select("id, inicio_programado, fin_programado, puesto_id, estado")
     .eq("guardia_id", guardia.id)
     .lte("inicio_programado", ahora)
     .gte("fin_programado", ahora)
@@ -187,6 +187,10 @@ export default async function PaginaGuardia() {
         .filter(([, ok]) => !ok)
         .map(([clave]) => clave)
     : [];
+  // La programación ya habilita el turno. El agente no debe repetir una
+  // apertura manual para poder empezar sus rondas y reportes; los turnos
+  // antiguos que aún estén programados también se consideran habilitados.
+  const turnoHabilitado = turno.estado !== "cerrado";
 
   return (
     <>
@@ -209,14 +213,14 @@ export default async function PaginaGuardia() {
               <span
                 aria-hidden
                 className={`absolute bottom-1 right-1 h-3 w-3 rounded-full ring-4 ring-[#07182b] ${
-                  apertura ? "bg-normal" : "bg-novedad"
+                  turnoHabilitado ? "bg-normal" : "bg-novedad"
                 }`}
               />
             </span>
 
             <div className="min-w-0 flex-1">
               <h2 className="text-[1.65rem] font-bold leading-tight text-white">
-                {apertura ? "Turno activo" : "Turno por abrir"}
+                {turnoHabilitado ? "Turno activo" : "Turno no habilitado"}
               </h2>
               <p className="mt-1 truncate text-base text-gris-400">
                 {puesto?.nombre}
@@ -229,7 +233,7 @@ export default async function PaginaGuardia() {
 
             <div className="shrink-0 border-l border-borde/70 pl-3 text-right">
               <p className="text-xs leading-tight text-gris-400">
-                {apertura ? "Tiempo transcurrido" : "Puesto"}
+                {apertura ? "Tiempo transcurrido" : "Turno"}
               </p>
               {apertura ? (
                 <>
@@ -245,9 +249,7 @@ export default async function PaginaGuardia() {
                   </span>
                 </>
               ) : (
-                <p className="mt-1 font-mono text-2xl font-bold leading-none text-azul-300">
-                  {puesto?.codigo}
-                </p>
+                <><p className="mt-1 text-sm font-semibold leading-none text-green-300">Habilitado</p><span className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-normal bg-normal/10 px-3 py-1.5 text-xs font-medium text-green-300"><span aria-hidden className="h-1.5 w-1.5 rounded-full bg-normal" />Listo para trabajar</span></>
               )}
               {puesto?.armado && (
                 <span className="mt-2 block rounded-full border border-novedad/50 bg-novedad/10 px-2.5 py-1 text-xs font-medium text-amber-200">
@@ -277,19 +279,12 @@ export default async function PaginaGuardia() {
               </span>
             </div>
           ) : (
-            <Link
-              href="/guardia/apertura"
-              className="boton-primario flex min-h-[88px] items-center gap-3 rounded-2xl px-4 py-4 text-white transition active:scale-[0.99]"
-            >
+            <div className="boton-primario flex min-h-[88px] items-center gap-3 rounded-2xl px-4 py-4 text-white">
               <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border border-white/25 bg-white/10">
                 <IconoHuella className="h-8 w-8" />
               </span>
-              <span className="text-lg font-bold leading-tight">
-                Marcar
-                <br />
-                asistencia
-              </span>
-            </Link>
+              <span className="min-w-0"><span className="block text-base font-bold leading-tight">Turno listo<br />para trabajar</span><span className="font-mono text-xs text-blue-100/80">Inicio {soloHora(turno.inicio_programado)}</span></span>
+            </div>
           )}
 
           <Link href="/guardia/ronda" className="tarjeta flex min-h-[88px] items-center gap-3 rounded-2xl px-4 py-4 transition active:scale-[0.99]">
@@ -460,7 +455,7 @@ export default async function PaginaGuardia() {
           </Link>
         </div>
 
-        {apertura && <Link href="/guardia/cierre" className="tarjeta flex min-h-16 items-center gap-3 border-azul-500/35 px-4 py-3 text-white transition active:scale-[0.99]"><span className="grid h-11 w-11 place-items-center rounded-xl bg-azul-500/12 text-azul-300"><IconoSalir className="h-6 w-6" /></span><span className="min-w-0 flex-1"><span className="block font-semibold">Cerrar y entregar turno</span><span className="mt-0.5 block text-xs text-gris-500">Estado final y firma de entrega</span></span><IconoFlecha className="h-5 w-5 text-azul-400" /></Link>}
+        {turnoHabilitado && <Link href="/guardia/cierre" className="tarjeta flex min-h-16 items-center gap-3 border-azul-500/35 px-4 py-3 text-white transition active:scale-[0.99]"><span className="grid h-11 w-11 place-items-center rounded-xl bg-azul-500/12 text-azul-300"><IconoSalir className="h-6 w-6" /></span><span className="min-w-0 flex-1"><span className="block font-semibold">Cerrar y entregar turno</span><span className="mt-0.5 block text-xs text-gris-500">Estado final y firma de entrega</span></span><IconoFlecha className="h-5 w-5 text-azul-400" /></Link>}
 
         <BotonSOS />
 

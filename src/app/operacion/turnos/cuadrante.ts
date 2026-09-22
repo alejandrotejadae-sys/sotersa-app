@@ -83,7 +83,7 @@ export async function generarCuadrante(_: EstadoCuadrante, formData: FormData): 
   return { tipo: "exito", mensaje: `${totalCreados} turnos creados para ${titulo}${objetivo.length > 1 ? ` en ${objetivo.length} puestos` : ""}.`, detalle: objetivo.length > 1 ? detalle : [] };
 }
 
-type Nuevo = { puesto_id: string; guardia_id: string; tipo: TipoTurno; inicio_programado: string; fin_programado: string; estado: "programado" };
+type Nuevo = { puesto_id: string; guardia_id: string; tipo: TipoTurno; inicio_programado: string; fin_programado: string; estado: "abierto" };
 
 async function generarParaPuesto(supabase: SupabaseClient, puesto: PuestoProgramable, desde: string, dias: number, horaInicio: string, rotarSemanal: boolean): Promise<{ creados: number; mensaje: string }> {
   const modalidad = servicio(puesto.tipo_servicio);
@@ -110,11 +110,11 @@ async function generarParaPuesto(supabase: SupabaseClient, puesto: PuestoProgram
       for (let franja = 0; franja < 2; franja++) {
         const agente = agentes[(franja + desplazamiento) % agentes.length];
         const inicio = new Date(arranque.getTime() + franja * 12 * MS_HORA);
-        nuevos.push({ puesto_id: puesto.id, guardia_id: agente.id, tipo: franja === 0 ? "fijo_dia" : "fijo_noche", inicio_programado: inicio.toISOString(), fin_programado: new Date(inicio.getTime() + 12 * MS_HORA).toISOString(), estado: "programado" });
+        nuevos.push({ puesto_id: puesto.id, guardia_id: agente.id, tipo: franja === 0 ? "fijo_dia" : "fijo_noche", inicio_programado: inicio.toISOString(), fin_programado: new Date(inicio.getTime() + 12 * MS_HORA).toISOString(), estado: "abierto" });
       }
     } else {
       const agente = agentes[desplazamiento % agentes.length];
-      nuevos.push({ puesto_id: puesto.id, guardia_id: agente.id, tipo: puesto.tipo_servicio === "punto_12_nocturno" ? "fijo_noche" : "fijo_dia", inicio_programado: arranque.toISOString(), fin_programado: new Date(arranque.getTime() + modalidad.horas * MS_HORA).toISOString(), estado: "programado" });
+      nuevos.push({ puesto_id: puesto.id, guardia_id: agente.id, tipo: puesto.tipo_servicio === "punto_12_nocturno" ? "fijo_noche" : "fijo_dia", inicio_programado: arranque.toISOString(), fin_programado: new Date(arranque.getTime() + modalidad.horas * MS_HORA).toISOString(), estado: "abierto" });
     }
   }
   if (nuevos.length === 0) return { creados: 0, mensaje: "no hay días que programar en ese rango." };

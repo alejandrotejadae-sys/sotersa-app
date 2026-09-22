@@ -257,7 +257,7 @@ export async function cargarTurnos(
         tipo,
         inicio_programado: inicio.toISOString(),
         fin_programado: fin.toISOString(),
-        estado: "programado",
+        estado: "abierto",
         etiqueta: `${agente.nombre} · ${puesto.empresa} ${puesto.codigo} · ${fecha} ${hInicio}`,
       });
     }

@@ -67,7 +67,7 @@ export default async function PaginaTurnos() {
       new Date(turno.fin_programado) > inicioHoy,
   );
   const abiertos = turnosHoy.filter(
-    (turno) => (turno.aperturas_turno?.length ?? 0) > 0,
+    (turno) => (turno.aperturas_turno?.length ?? 0) > 0 || turno.estado === "abierto",
   );
   const pendientes = turnosHoy.filter(
     (turno) =>
