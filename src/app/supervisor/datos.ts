@@ -106,7 +106,7 @@ export async function resumenDeZona(filtro: FiltroSupervision): Promise<ResumenZ
       const fin = new Date(t.fin_programado).getTime();
       let situacion: TurnoHoy["situacion"];
       if (t.estado === "cerrado") situacion = "cerrado";
-      else if (apertura || t.estado === "abierto") situacion = "en_puesto";
+      else if (apertura || t.estado === "abierto" || t.estado === "programado") situacion = "en_puesto";
       else if (inicio > ms) situacion = "programado";
       else if (fin < ms) situacion = "sin_abrir";
       else situacion = ms - inicio > 15 * 60000 ? "sin_apertura" : "programado";
