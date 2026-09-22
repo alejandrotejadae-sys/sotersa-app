@@ -188,7 +188,8 @@ export default async function PaginaGuardia() {
         .map(([clave]) => clave)
     : [];
   // La programación ya habilita el turno. El agente no debe repetir una
-  // apertura manual para poder empezar sus rondas y reportes.
+  // apertura manual para poder empezar sus rondas y reportes; los turnos
+  // antiguos que aún estén programados también se consideran habilitados.
   const turnoHabilitado = turno.estado !== "cerrado";
 
   return (
