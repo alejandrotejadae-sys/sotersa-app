@@ -23,8 +23,13 @@ export async function cerrarTurno(_: EstadoCierre, formData: FormData): Promise<
   const { data: turno } = await administrador.from("turnos").select("id,puesto_id,guardia_id,estado").eq("id", turnoId).eq("guardia_id", agente.id).maybeSingle();
   if (!turno) return fallo("Este turno no pertenece a tu cuenta.");
   if (turno.estado === "cerrado") return fallo("Este turno ya fue cerrado.");
-  const { data: apertura } = await administrador.from("aperturas_turno").select("id").eq("turno_id", turnoId).maybeSingle();
-  if (!apertura) return fallo("Debes abrir el turno antes de cerrarlo.");
+  let { data: apertura } = await administrador.from("aperturas_turno").select("id").eq("turno_id", turnoId).maybeSingle();
+  const ahora = new Date();
+  if (!apertura) {
+    const creada = await administrador.from("aperturas_turno").insert({ turno_id: turnoId, hora_captura: ahora.toISOString(), checklist: {}, estado_puesto: "Apertura automática por programación", observacion: "El turno fue habilitado al cargar la programación." }).select("id").single();
+    if (creada.error || !creada.data) return fallo("No fue posible preparar el registro de entrega del turno.");
+    apertura = creada.data;
+  }
 
   const contenedor = "firmas-turno";
   const { error: sinContenedor } = await administrador.storage.getBucket(contenedor);
@@ -32,7 +37,6 @@ export async function cerrarTurno(_: EstadoCierre, formData: FormData): Promise<
     const { error } = await administrador.storage.createBucket(contenedor, { public: false, allowedMimeTypes: ["image/png"], fileSizeLimit: 1024 * 1024 });
     if (error && !error.message.toLowerCase().includes("already")) return fallo("No fue posible preparar el almacenamiento de firmas.");
   }
-  const ahora = new Date();
   const rutaFirma = `${agente.id}/${turnoId}-salida-${ahora.getTime()}.png`;
   const { error: errorFirma } = await administrador.storage.from(contenedor).upload(rutaFirma, imagen, { contentType: "image/png", cacheControl: "3600" });
   if (errorFirma) return fallo("No fue posible guardar la firma.");
