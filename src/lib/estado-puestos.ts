@@ -7,8 +7,8 @@ import { uno } from "@/lib/sesion";
  * una funcion pura: recibe puestos y turnos ya consultados, devuelve estados.
  *
  * Reglas:
- *  - cubierto:       hay turno en curso y el agente lo abrio desde la app.
- *  - sin_apertura:   el turno empezo hace mas de 15 min y nadie lo abrio.
+ *  - cubierto:       hay turno en curso asignado al agente. La programación
+ *                    mensual lo habilita automáticamente.
  *  - sin_ronda:      abierto, con puntos QR, y sin ronda en las ultimas 2 h.
  *  - por_cerrar:     abierto y faltan menos de 30 min para el relevo.
  *  - sin_cobertura:  no hay turno ahora, pero si hubo turnos cargados.
@@ -117,8 +117,7 @@ export function estadoDePuestos(puestosBase: PuestoBase[], turnos: TurnoBase[], 
     const inicio = new Date(actual.inicio_programado).getTime();
     const fin = new Date(actual.fin_programado).getTime();
     let estado: EstadoPuesto = "cubierto";
-    if (!apertura && actual.estado !== "abierto") estado = ms - inicio > MINUTOS_TOLERANCIA_APERTURA * 60000 ? "sin_apertura" : "cubierto";
-    else if (fin - ms < MINUTOS_POR_CERRAR * 60000) estado = "por_cerrar";
+    if (fin - ms < MINUTOS_POR_CERRAR * 60000) estado = "por_cerrar";
     else if (tienePuntosRonda && ms - inicio > MINUTOS_SIN_RONDA * 60000 && (!ultimaRonda || ms - new Date(ultimaRonda).getTime() > MINUTOS_SIN_RONDA * 60000)) estado = "sin_ronda";
 
     return { ...base, estado, turnoId: actual.id, agente: g, inicioTurno: actual.inicio_programado, finTurno: actual.fin_programado, apertura, ultimaRonda, rondasEnTurno: rondas.length };
@@ -132,7 +131,9 @@ export function acumularCobertura(turnos: TurnoBase[], desdeIso: string, ms = Da
     const inicio = new Date(t.inicio_programado).getTime();
     if (inicio > ms || t.inicio_programado < desdeIso) continue;
     const apertura = uno(t.aperturas_turno)?.hora_captura ?? null;
-    const cubierto = Boolean(apertura) || t.estado === "abierto" || t.estado === "cerrado";
+    // Los turnos heredados como "programado" ya tienen agente y se tratan
+    // igual que los nuevos turnos abiertos automáticamente.
+    const cubierto = Boolean(apertura) || t.estado === "programado" || t.estado === "abierto" || t.estado === "cerrado";
     const rondas = t.rondas?.length ?? 0;
     const destinos = [total];
     if (porPuesto) { const r = porPuesto.get(t.puesto_id) ?? { ...COBERTURA_VACIA }; porPuesto.set(t.puesto_id, r); destinos.push(r); }
