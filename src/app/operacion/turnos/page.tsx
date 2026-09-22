@@ -29,7 +29,7 @@ export default async function PaginaTurnos() {
   const finPeriodo = new Date(inicioHoy.getTime() + 8 * 24 * 60 * 60 * 1000);
 
   const programa = perfil.rol === "admin" || perfil.rol === "supervisor";
-  const [guardiasR, programables, turnosR, vaciosR] = await Promise.all([
+  const [guardiasR, programables, turnosR] = await Promise.all([
     supabase
       .from("guardias")
       .select("id,nombre")
@@ -44,12 +44,6 @@ export default async function PaginaTurnos() {
       .lt("inicio_programado", finPeriodo.toISOString())
       .gt("fin_programado", inicioHoy.toISOString())
       .order("inicio_programado"),
-    supabase
-      .from("v_puestos_sin_apertura")
-      .select(
-        "turno_id,puesto_codigo,puesto_nombre,guardia_nombre,minutos_de_retraso",
-      )
-      .order("minutos_de_retraso", { ascending: false }),
   ]);
 
   const guardias = guardiasR.data ?? [];
@@ -60,19 +54,17 @@ export default async function PaginaTurnos() {
     nombre: `${p.empresa} · ${p.nombre}`,
   }));
   const turnos = turnosR.data ?? [];
-  const vacios = vaciosR.data ?? [];
+  const vacios: { turno_id: string; puesto_codigo: string; puesto_nombre: string; guardia_nombre: string; minutos_de_retraso: number }[] = [];
   const turnosHoy = turnos.filter(
     (turno) =>
       new Date(turno.inicio_programado) < finHoy &&
       new Date(turno.fin_programado) > inicioHoy,
   );
   const abiertos = turnosHoy.filter(
-    (turno) => (turno.aperturas_turno?.length ?? 0) > 0 || turno.estado === "abierto",
+    (turno) => (turno.aperturas_turno?.length ?? 0) > 0 || turno.estado === "programado" || turno.estado === "abierto",
   );
   const pendientes = turnosHoy.filter(
-    (turno) =>
-      turno.estado === "programado" &&
-      (turno.aperturas_turno?.length ?? 0) === 0,
+    () => false,
   );
 
   return (
