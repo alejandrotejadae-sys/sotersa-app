@@ -64,7 +64,7 @@ export async function programarTurno(_: EstadoProgramacion, formData: FormData):
     tipo,
     inicio_programado: inicio.toISOString(),
     fin_programado: fin.toISOString(),
-    estado: "programado",
+    estado: "abierto",
   });
 
   if (error) return { tipo: "error", mensaje: "No fue posible guardar el turno. Revisa los datos e intenta nuevamente." };
