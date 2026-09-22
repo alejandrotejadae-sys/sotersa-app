@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { haySesionSupabase } from "@/lib/supabase/sesion-cookie";
 
 /** Refresca la sesión y protege el flujo de acceso en cada petición. */
 export async function proxy(request: NextRequest) {
@@ -7,6 +8,12 @@ export async function proxy(request: NextRequest) {
     const destino = request.nextUrl.clone(); destino.pathname = "/perfiles"; destino.search = ""; return NextResponse.redirect(destino);
   }
   let respuesta = NextResponse.next({ request });
+
+  // Para visitantes sin sesión no hay nada que refrescar ni verificar. Evitar
+  // esta llamada mantiene disponible la pantalla de ingreso incluso si
+  // Supabase está lento y elimina una consulta remota por cada recurso público.
+  if (!haySesionSupabase(request.cookies.getAll())) return respuesta;
+
   const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
     cookies: {
       getAll() { return request.cookies.getAll(); },

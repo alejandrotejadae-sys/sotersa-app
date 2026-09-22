@@ -8,8 +8,10 @@ import { RegistroPwa } from "@/app/componentes/registro-pwa";
 import { BotonPanel } from "@/app/componentes/boton-panel";
 import { BarraVistaComo } from "@/app/componentes/barra-vista-como";
 import { ExperienciaAdmin } from "@/app/componentes/experiencia-admin";
-import { leerVistaComo } from "@/lib/vista-como";
+import { COOKIE_VISTA_COMO, leerVistaComo } from "@/lib/vista-como";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
+import { haySesionSupabase } from "@/lib/supabase/sesion-cookie";
+import { cookies } from "next/headers";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -49,24 +51,28 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const supabase = await crearClienteServidor();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const vista = await leerVistaComo();
+  const almacenCookies = await cookies();
+  const haySesion = haySesionSupabase(almacenCookies.getAll());
+  const vista = almacenCookies.has(COOKIE_VISTA_COMO) ? await leerVistaComo() : null;
   let esAdmin = false;
   let nombreAdmin = "Administración SOTERSA";
   let rolAdmin = "administración";
-  if (user) {
-    const { data: perfil } = await supabase
-      .from("perfiles")
-      .select("rol,nombre")
-      .eq("id", user.id)
-      .maybeSingle();
-    esAdmin = perfil?.rol === "admin" || perfil?.rol === "operativo";
-    nombreAdmin = perfil?.nombre ?? nombreAdmin;
-    rolAdmin = perfil?.rol ?? rolAdmin;
+  if (haySesion) {
+    const supabase = await crearClienteServidor();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      const { data: perfil } = await supabase
+        .from("perfiles")
+        .select("rol,nombre")
+        .eq("id", user.id)
+        .maybeSingle();
+      esAdmin = perfil?.rol === "admin" || perfil?.rol === "operativo";
+      nombreAdmin = perfil?.nombre ?? nombreAdmin;
+      rolAdmin = perfil?.rol ?? rolAdmin;
+    }
   }
 
   return (

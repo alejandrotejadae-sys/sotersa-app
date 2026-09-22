@@ -2,7 +2,9 @@ import { redirect } from "next/navigation";
 import { Marca } from "@/app/componentes/marca";
 import { IconoEscudoOk } from "@/app/componentes/iconos";
 import { crearClienteServidor } from "@/lib/supabase/servidor";
+import { haySesionSupabase } from "@/lib/supabase/sesion-cookie";
 import { FormularioAcceso } from "./formulario-acceso";
+import { cookies } from "next/headers";
 
 export const metadata = { title: "Ingreso — SOTERSA" };
 
@@ -22,9 +24,14 @@ export default async function PaginaAcceso({ searchParams }: { searchParams: Pro
   const perfil = esPerfil(parametros.perfil) ? parametros.perfil : null;
   const opcion = perfil ? opciones[perfil] : null;
 
-  const supabase = await crearClienteServidor();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user) redirect("/");
+  // La mayoría de visitas son ingresos nuevos. No bloqueamos esta pantalla con
+  // una consulta remota si no existe una sesión que comprobar.
+  const almacenCookies = await cookies();
+  if (haySesionSupabase(almacenCookies.getAll())) {
+    const supabase = await crearClienteServidor();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) redirect("/");
+  }
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-7 px-6 py-10">
