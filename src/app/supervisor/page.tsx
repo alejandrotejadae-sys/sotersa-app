@@ -213,7 +213,7 @@ function FilaPuesto({ puesto: p }: { puesto: PuestoZona }) {
         {p.agente ? (
           <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-300">
             <Link href={p.agente.id ? `/operacion/personal/${p.agente.id}` : "/operacion/personal"} className="font-medium text-[#8ddaff]">{p.agente.nombre}</Link>
-            <span className="text-xs text-slate-500">turno {horaEcuador(p.inicioTurno)}–{horaEcuador(p.finTurno)} · apertura {p.apertura ? horaEcuador(p.apertura) : "pendiente"} · {p.tienePuntosRonda ? (p.ultimaRonda ? `última ronda ${horaEcuador(p.ultimaRonda)} (${p.rondasEnTurno})` : "sin rondas aún") : "sin puntos QR"}</span>
+            <span className="text-xs text-slate-500">turno {horaEcuador(p.inicioTurno)}–{horaEcuador(p.finTurno)} · {p.apertura ? `registro ${horaEcuador(p.apertura)}` : "habilitado por programación"} · {p.tienePuntosRonda ? (p.ultimaRonda ? `última ronda ${horaEcuador(p.ultimaRonda)} (${p.rondasEnTurno})` : "sin rondas aún") : "sin puntos QR"}</span>
           </p>
         ) : (
           <p className="mt-1 text-xs text-slate-500">{p.estado === "sin_programar" ? "Genera el cuadrante en Turnos para supervisarlo desde aquí." : p.proximoTurno ? `Próximo turno ${fechaHoraEcuador(p.proximoTurno)}.` : "Sin turno asignado ahora."}</p>
