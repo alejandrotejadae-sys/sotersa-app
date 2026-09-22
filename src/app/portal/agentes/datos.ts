@@ -43,7 +43,7 @@ export async function agentesDeEmpresa(empresaId: string): Promise<{ agentes: Ag
 
   const porPuesto = new Map<string, PuestoCliente>((puestos ?? []).map((p) => [p.id, { id: p.id, codigo: p.codigo, nombre: p.nombre, tipo_servicio: p.tipo_servicio, direccion: p.direccion, contactos: (p.contactos_puesto ?? []).map((c) => ({ tipo: c.tipo, nombre: c.nombre, telefono: c.telefono })) }]));
   const turnoDe = new Map<string, { puesto_id: string; abierto: boolean }>();
-  for (const t of turnosR.data ?? []) turnoDe.set(t.guardia_id, { puesto_id: t.puesto_id, abierto: (t.aperturas_turno?.length ?? 0) > 0 });
+  for (const t of turnosR.data ?? []) turnoDe.set(t.guardia_id, { puesto_id: t.puesto_id, abierto: (t.aperturas_turno?.length ?? 0) > 0 || t.estado === "abierto" });
 
   const agentes = new Map<string, AgenteCliente>();
   for (const g of fijosR.data ?? []) {
@@ -54,7 +54,7 @@ export async function agentesDeEmpresa(empresaId: string): Promise<{ agentes: Ag
   for (const t of turnosR.data ?? []) {
     const g = uno(t.guardias);
     if (!g || !g.activo || agentes.has(g.id)) continue;
-    const abierto = (t.aperturas_turno?.length ?? 0) > 0;
+    const abierto = (t.aperturas_turno?.length ?? 0) > 0 || t.estado === "abierto";
     agentes.set(g.id, { id: g.id, nombre: g.nombre, credencial: g.credencial, desde: g.creado_en, puesto: porPuesto.get(t.puesto_id) ?? null, esRelevo: true, estado: abierto ? "en_puesto" : "programado" });
   }
 
